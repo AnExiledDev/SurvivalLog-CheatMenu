@@ -4,6 +4,8 @@ using System.Text;
 using CheatMenu.Core;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
+using GameCore.HotUpdate.Battle.Show;
+using GameCore.HotUpdate.ReduxUI;
 using HarmonyLib;
 
 namespace CheatMenu.Adapters;
@@ -41,6 +43,8 @@ internal sealed class Holds
     private float _stepEndsAt;
     private bool _stepWas;
     private bool _durabilityWas;
+    private int _spoilHour;
+    private long _hovered;
 
     public Holds(GmBridge gm, GmFlags flags, Harmony harmony, Action<string> log)
     {
@@ -85,6 +89,8 @@ internal sealed class Holds
         {
             // A save unloaded under the holds: the game's own state they changed went with it. No fuel use is the
             // mod's own switch, so it stays.
+            RotPatch.IsOn = false;
+
             return _on.RemoveWhere(name => name != "nofuel") > 0;
         }
 
@@ -142,6 +148,14 @@ internal sealed class Holds
                 if (!FuelPatch.IsHooked) throw new InvalidOperationException("the fuel hooks could not go in");
                 FuelPatch.IsOn = true;
                 break;
+            case "nospoil":
+                RotPatch.Install(_harmony, _log);
+                RotPatch.IsOn = true;
+                _spoilHour = Hour(world!);
+                break;
+            case "hover":
+                _hovered = 0;
+                break;
             case "eventstep":
                 _stepWas = world!._DynamicEventManager.IsGmAutoComplete;
                 world._DynamicEventManager.IsGmAutoComplete = true;
@@ -164,6 +178,9 @@ internal sealed class Holds
                 break;
             case "nofuel":
                 FuelPatch.IsOn = false;
+                break;
+            case "nospoil":
+                RotPatch.IsOn = false;
                 break;
             case "eventstep":
                 if (world != null) world._DynamicEventManager.IsGmAutoComplete = _stepWas;
@@ -192,12 +209,49 @@ internal sealed class Holds
                 case "instant":
                     FinishMachines(world);
                     break;
+                case "nospoil":
+                    KeepFresh(world);
+                    break;
+                case "hover":
+                    ShowHovered(world);
+                    break;
             }
         }
         catch (Exception ex)
         {
             Report(name, ex.GetType().Name + ": " + ex.Message);
         }
+    }
+
+    private static int Hour(BattleLogicWorld world) => world._GameTimeManager.GetTotalSeconds() / SecondsPerHour;
+
+    /// <summary>Each game hour that passed is given back to every food clock, so freshness stays where it was.</summary>
+    private void KeepFresh(BattleLogicWorld world)
+    {
+        var hour = Hour(world);
+
+        // A different save or a rollback put the clock back: start counting from there.
+        if (hour < _spoilHour) _spoilHour = hour;
+        if (hour == _spoilHour) return;
+
+        RotPatch.Hold(world, hour - _spoilHour);
+        _spoilHour = hour;
+    }
+
+    /// <summary>When the cursor moves onto something new, the game's short text names its instance and config id.</summary>
+    private void ShowHovered(BattleLogicWorld world)
+    {
+        var id = GameSingleton.Existing<BattleShowWorld>()?._CameraManager?.HoveredInstanceId ?? 0;
+
+        if (id == _hovered) return;
+
+        _hovered = id;
+
+        if (id <= 0) return;
+
+        var config = world._AgentManager?.GetAgent(id)?.AgentConfigId;
+
+        Ac_PopText_AddPopText.SendAction(config is { } c ? $"#{id}  config {c}" : $"#{id}");
     }
 
     /// <summary>Each of the five bars below its maximum is set to it with the game's own GM attribute message.</summary>

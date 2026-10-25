@@ -217,7 +217,7 @@ kbd { font: 11px var(--mono); color: var(--steel-3); border: 1px solid var(--lin
 .loghead { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px 6px; font: 600 12px var(--ui); letter-spacing: 2px; text-transform: uppercase; color: var(--steel-3); }
 .loghead button { background: none; border: 0; color: var(--steel-3); cursor: pointer; font: 11px var(--mono); }
 #log { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 12px 12px 18px; list-style: none; font: 11.5px/1.45 var(--mono); scrollbar-width: thin; scrollbar-color: var(--amber-d) transparent; }
-#log li { padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,.05); color: var(--steel-2); animation: logline .3s both; }
+#log li { white-space: pre-line; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,.05); color: var(--steel-2); animation: logline .3s both; }
 #log li time { color: var(--steel-3); margin-right: 6px; }
 #log li .tg { color: var(--amber); }
 #log li.mod .tg { color: var(--mint); }

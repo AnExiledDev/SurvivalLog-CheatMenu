@@ -75,7 +75,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> - v0.2.0 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> - v0.2.1 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="x" id="close" title="Close"><span id="keyname"></span> <span>X</span></button>
@@ -188,11 +188,33 @@
     return id;
   }
 
+  // The container preview comes back as instance|config|searched|itemxcount,... lines; this names the items.
+  let itemNames = null;
+
+  function containerText(text) {
+    if (!itemNames) itemNames = new Map(GAME.items.map((i) => [i.id, i.n]));
+
+    const lines = String(text || '').split('\n').filter(Boolean).map((line) => {
+      const [inst, cfg, searched, items] = line.split('|');
+      const what = (items || '').split(',').filter(Boolean).map((x) => {
+        const [id, count] = x.split('x');
+
+        return `${itemNames.get(Number(id)) || '#' + id} x ${count || 1}`;
+      });
+
+      return `#${inst} (${itemNames.get(Number(cfg)) || 'furniture ' + cfg}, ${searched === '1' ? 'searched' : 'not searched'}): ${what.join(', ') || 'empty'}`;
+    });
+
+    return lines.length ? `${lines.length} containers\n` + lines.join('\n') : 'no containers';
+  }
+
+  const FORMAT = { containers: containerText };
+
   // Runs one of the mod's own cheats. onText gets what the plugin hands back (and the error, if any) instead of the log.
   function act(name, args, label, onText) {
     const id = String(nextId++);
 
-    pending[id] = { label, onText };
+    pending[id] = { label, onText: onText || (FORMAT[name] && ((text, error) => error ? log(`${label}: ${error}`, 'err') : log(`${label}: ${FORMAT[name](text)}`, 'mod'))) };
     send('act|' + id + '|' + name + '|' + JSON.stringify(args || {}));
 
     return id;
@@ -1294,16 +1316,23 @@
 
   // ---------- console ----------
   const NAMES = Object.keys(S);
+  const HISTORY_KEY = 'slcheatmenu.history';
+  const HISTORY_MAX = 50;
+
+  try { const kept = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); if (Array.isArray(kept)) state.history = kept.filter((x) => typeof x === 'string').slice(0, HISTORY_MAX); } catch (e) { /* no saved history */ }
 
   function runCommand(line) {
     const text = line.trim();
 
     if (!text) return;
 
-    state.history.unshift(text);
+    if (state.history[0] !== text) state.history.unshift(text);
+    state.history.length = Math.min(state.history.length, HISTORY_MAX);
     state.hpos = -1;
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history)); } catch (e) { /* history then lasts only while the page is open */ }
 
-    if (text === 'help') return log('A game command and its fields: AddItem ItemConfigId=1203 Count=20. Or a whole message: {"msgHead":52,"Scale":4}. Or tab NAME. Every command is listed in the Game index.', 'mod');
+    if (text === 'help') return log('A game command and its fields: AddItem ItemConfigId=1203 Count=20. Or a whole message: {"msgHead":52,"Scale":4}. Or tab NAME. history lists what you typed before; the up and down arrows bring it back. Every command is listed in the Game index.', 'mod');
+    if (text === 'history') return log(state.history.length > 1 ? 'Earlier commands, newest first:\n' + state.history.slice(1, 21).join('\n') : 'No earlier commands yet.', 'mod');
 
     if (text[0] === '{') {
       let msg;
@@ -1352,6 +1381,7 @@
     cmd.onkeydown = (e) => {
       if (e.key === 'Enter') { runCommand(cmd.value); cmd.value = ''; }
       if (e.key === 'ArrowUp' && state.history.length) { state.hpos = Math.min(state.hpos + 1, state.history.length - 1); cmd.value = state.history[state.hpos]; e.preventDefault(); }
+      if (e.key === 'ArrowDown' && state.hpos >= 0) { state.hpos -= 1; cmd.value = state.hpos >= 0 ? state.history[state.hpos] : ''; e.preventDefault(); }
     };
     host.addEventListener('keydown', (e) => {
       const target = e.composedPath()[0];
@@ -1389,7 +1419,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.2.0. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu 0.2.1. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       state.open = true;
       host.style.display = 'block';

@@ -91,6 +91,9 @@
     'time|Time-of-day light': { cmd: 'GmSetLightType', main: 'Type', opts: [['Dawn', 1], ['Day', 2], ['Dusk', 3], ['Night', 4]], in: [{ f: 'Snap', l: 'instant', t: 'bool', v: true }] },
     'time|Instant light change': { cmd: 'GmSetLightType', main: 'Snap', in: [{ f: 'Type', l: 'light', opts: [['Dawn', 1], ['Day', 2], ['Dusk', 3], ['Night', 4]] }] },
     'time|Freeze the clock': { hold: 'clock' },
+    'time|Skip to a time of day': { act: 'skipto', main: 'hour', opts: [['Morning 07:00', 7], ['Noon 12:00', 12], ['Evening 18:00', 18], ['Night 22:00', 22]] },
+    'items|Never spoil': { hold: 'nospoil' },
+    'items|Make all food fresh': { act: 'fresh' },
 
     // ---------- home ----------
     'home|Install furniture in a slot': { cmd: 'QuickInstallFurniture', main: 'FurnitureConfigId', in: [{ f: 'SlotName', l: 'slot name', t: 'text', v: '' }, { f: 'Overwrite', l: 'replace what is there', t: 'bool', v: true }] },
@@ -106,6 +109,7 @@
     'home|Clear every furniture cooldown': { cmd: 'GmClearDailyCd', d: 'The game clears furniture cooldowns together with every other daily limit.' },
     'home|Force a rat visit': { cmd: 'GmRatVisitMark', d: 'Puts one rat in every storage bag the survivor\'s home has.' },
     'home|Infinite power': { hold: 'power' },
+    'home|Repair all furniture': { act: 'repairall' },
     'home|Instant crafting, cooking, brewing': { hold: 'instant', d: 'Finishes running shredders, compressors, brewers, dye vats, stoves and drone trips. Workbench crafting is not covered.' },
 
     // ---------- farm ----------
@@ -160,6 +164,14 @@
     'explore|Add exposure': { act: 'exposure', main: 'value', u: 'points', d: 'Raw exposure points while exploring. Reaching the maximum ends the run.' },
     'explore|Instant travel': { attr: 'VehicleTravelTimeReduce_Ratio', on: 1, off: 0 },
     'explore|No fuel use': { hold: 'nofuel' },
+    'explore|Container contents preview': { act: 'containers' },
+    'explore|Mark containers unsearched': { act: 'unsearch' },
+    'progress|Unlock every recipe and blueprint': { act: 'recipes' },
+    'debug|Show hovered id': { hold: 'hover' },
+    'debug|Mod health': { act: 'health' },
+    'debug|Fill every trap': { act: 'traps' },
+    'debug|Bring the basket back': { act: 'basket' },
+    'debug|Test toast': { act: 'toast', main: 'kind', opts: [['Game short text', 'game'], ['Info', 'info'], ['Success', 'success'], ['Warning', 'warning'], ['Error', 'error']], in: [{ f: 'text', l: 'text', t: 'text', v: 'Test toast from Cheat Menu' }] },
 
     // ---------- people ----------
     'people|Force a wish': { cmd: 'GenerateWish', main: 'WishId', k: 'sel', opts: [['Next wish', 0]].concat(named(X.wishes)) },

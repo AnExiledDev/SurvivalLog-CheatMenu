@@ -86,7 +86,12 @@
     ], { warn: true })
   ]});
 
-  T.push({ id: 'items', name: 'Items', zh: '物品', blurb: 'Every item in the game, searchable. Spawn into the bag, home storage or the car trunk.', custom: 'items', groups: [] });
+  T.push({ id: 'items', name: 'Items', zh: '物品', blurb: 'Every item in the game, searchable. Spawn into the bag, home storage or the car trunk.', custom: 'items', groups: [
+    grp('Food', '食物', [
+      tog('Never spoil', 'M', 'Nothing rots, and food stays as fresh as it is now while this is on.'),
+      btn('Make all food fresh', 'M', 'Every food item everywhere goes back to as fresh as new.', 'Freshen')
+    ])
+  ] });
 
   T.push({ id: 'money', name: 'Money & Trade', zh: '金钱与交易', blurb: 'Gold, shops, the pawn shop, strangers and trade points.', groups: [
     grp('Money', '金钱', [
@@ -124,7 +129,8 @@
       btn('Skip to 23:00', 'G', '', 'Skip'),
       num('Skip days', 'G', 'Daily and endless ticks run for each day.', 1, 'days', 'Skip'),
       num('Set the day counter', 'G', 'Changes only the number on the HUD; supplies and cooldowns stay.', 50, 'day', 'Set'),
-      tog('Freeze the clock', 'M', '')
+      tog('Freeze the clock', 'M', ''),
+      sel('Skip to a time of day', 'M', 'Moves the clock on to the next one; hourly events still fire.', ['Morning 07:00', 'Noon 12:00', 'Evening 18:00', 'Night 22:00'], 'Skip')
     ]),
     grp('Before the outbreak', '灾前', [
       btn('Jump to the outbreak', 'G', 'Fast-forwards the countdown; the disaster starts next frame.', 'Jump'),
@@ -156,7 +162,8 @@
     grp('Power and furniture', '电力与家具', [
       btn('Fill stored power', 'G', '', 'Fill'), btn('Empty stored power', 'G', '', 'Empty'),
       btn('Clear every furniture cooldown', 'G', 'GmClearAllCd', 'Clear'),
-      tog('Infinite power', 'M', ''), tog('Instant crafting, cooking, brewing', 'M', 'Machine Speed does this too; the menu calls it when it is loaded.')
+      tog('Infinite power', 'M', ''), tog('Instant crafting, cooking, brewing', 'M', 'Machine Speed does this too; the menu calls it when it is loaded.'),
+      btn('Repair all furniture', 'M', 'Every piece of furniture at home goes back to full durability.', 'Repair')
     ]),
     grp('Rats and storage', '储物老鼠', [
       btn('Put a rat in every storage', 'G', 'One rat per storage bag (not fridges, doors, lockers, rat cages, the basket).', 'Mark'),
@@ -256,6 +263,10 @@
       btn('Simulate a search run', 'G', 'Plans the best route by budget and shows what you would get.', 'Simulate'),
       btn('Run it', 'G', 'Walks the plan for you.', 'Run'),
       tog('Instant travel', 'M', ''), tog('No fuel use', 'M', '')
+    ]),
+    grp('Containers', '容器', [
+      btn('Container contents preview', 'M', 'Lists what every container here holds, unsearched first, without opening them.', 'Show'),
+      btn('Mark containers unsearched', 'M', 'Brings back the unsearched marker. What is inside stays the same; it does not refill.', 'Mark')
     ])
   ]});
 
@@ -332,6 +343,9 @@
       sel('Revoke a survivor', 'G', '', ['The Veteran (4)'], 'Revoke'),
       sel('Unlock for endless', 'G', '', ['The Veteran (4)', 'All'], 'Unlock')
     ]),
+    grp('Recipes and blueprints', '配方与图纸', [
+      btn('Unlock every recipe and blueprint', 'M', 'Every cooking recipe and every workbench blueprint.', 'Unlock')
+    ]),
     grp('Casual Mode', '休闲模式', [
       btn('Enter Casual Mode', 'G', '', 'Enter'),
       tog('Developer override', 'G', ''),
@@ -404,6 +418,13 @@
       tog('Loading profiler', 'G', ''),
       btn('Stop the music', 'G', 'Comes back on the next scene change.', 'Stop'),
       btn('Scene: reload the 3D menu', 'G', '', 'Reload')
+    ]),
+    grp('Mod testing', '模组测试', [
+      tog('Show hovered id', 'M', 'Names the instance and config id of whatever the cursor is on, in the game\'s short text.'),
+      btn('Mod health', 'M', 'Every loaded plugin with its version and the errors it logged this session. Works from the title screen.', 'Show'),
+      btn('Fill every trap', 'M', 'Every set trap with no catch rolls one now, the game\'s own way.', 'Fill'),
+      btn('Bring the basket back', 'M', 'The neighbour basket out on a trip comes back now.', 'Return'),
+      sel('Test toast', 'M', 'Shows a test message in the style you pick.', ['Game short text', 'Info', 'Success', 'Warning', 'Error'], 'Show')
     ]),
     grp('Telemetry tests', '遥测', [
       btn('Simulate a cheat detection', 'G', 'Sets the game\'s cheat flag and reports it. For testing only.', 'Report', true),

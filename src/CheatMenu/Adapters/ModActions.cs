@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using BepInEx;
+using BepInEx.Unity.IL2CPP;
 using CheatMenu.Core;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
@@ -18,16 +23,24 @@ internal sealed class ModActions
     private const PlantAnomaly CareAnomalies = PlantAnomaly.Pest | PlantAnomaly.Weed | PlantAnomaly.Drought;
     private const int BestFertilizer = 15503;
 
+    private const int MaxRolls = 50;
+    private const int MaxContainers = 60;
+
+    private readonly GmBridge _gm;
     private readonly Action<string> _log;
 
-    public ModActions(Action<string> log)
+    public ModActions(GmBridge gm, Action<string> log)
     {
+        _gm = gm;
         _log = log;
     }
 
     public string? Run(string name, string argsJson, out string text)
     {
         text = "";
+
+        // The health page reads BepInEx, not the save, so it works from the title screen too.
+        if (name == "health") return Health(out text);
 
         if (!GmBridge.IsInGame || GameSingleton.Existing<BattleLogicWorld>() is not { } world) return "load a save first";
 
@@ -52,6 +65,15 @@ internal sealed class ModActions
                 "buff-remove" => args.Int("buff") is { } buff ? BuffRemove(world, buff, out text) : "pick a buff",
                 "snapshot" => Snapshot(world, out text),
                 "list" => List(world, args.Text("of"), out text),
+                "fresh" => Fresh(world, out text),
+                "recipes" => Recipes(world, out text),
+                "skipto" => args.Int("hour") is { } hour ? SkipTo(world, hour, out text) : "pick a time",
+                "repairall" => RepairAll(world, out text),
+                "containers" => Containers(world, out text),
+                "unsearch" => Unsearch(world, out text),
+                "traps" => Traps(world, out text),
+                "basket" => Basket(world, out text),
+                "toast" => Toast(args.Text("kind"), args.Text("text"), out text),
                 _ => "not one of this mod's cheats",
             };
         }
@@ -292,6 +314,308 @@ internal sealed class ModActions
         }
 
         text = lines.Length == 0 ? "no companion or rescue line in this save" : lines.ToString().TrimEnd();
+
+        return null;
+    }
+
+    private static IEnumerable<Furniture> Furnitures(BattleLogicWorld world)
+    {
+        var furnitures = world._AgentManager?.GetAllFurnitures();
+
+        for (var i = 0; furnitures != null && i < furnitures.Count; i++)
+            if (furnitures[i] is { IsDead: false } furniture) yield return furniture;
+    }
+
+    /// <summary>Every food item anywhere (bags, storage, the floor) made as fresh as new.</summary>
+    private static string? Fresh(BattleLogicWorld world, out string text)
+    {
+        text = "";
+
+        var cache = world._ItemManager?.OwnerCache;
+
+        if (cache == null || GameSingleton.Existing<ConfigManager>() is not { } config) return "no items loaded";
+
+        var now = world._GameTimeManager.GetTotalSeconds() / 3600.0;
+        var done = 0;
+
+        foreach (var owner in cache.Values)
+        {
+            if (owner == null) continue;
+
+            foreach (var item in owner.Values)
+            {
+                if (!RotPatch.Spoils(config, item) || Freshness.AsNew(item.OriginalTimeLeft, item.TimeScale, now) is not { } clock) continue;
+
+                item.StartTime = clock.Start;
+                item.TimeLeft = clock.TimeLeft;
+                item.TimeLeftFrac = clock.Frac;
+                done++;
+            }
+        }
+
+        text = $"{done} food stacks as fresh as new (an open bag may show the old freshness until it is reopened)";
+
+        return null;
+    }
+
+    /// <summary>
+    /// Every cooking recipe and every workbench, robot and machine blueprint, the way the game's own unlock rewards do
+    /// it: the survivor's cooking record (then its unlock notice), and the tool table's craft unlocks (which skip
+    /// recipes the game marks unusable and show the game's own unlock tip).
+    /// </summary>
+    private static string? Recipes(BattleLogicWorld world, out string text)
+    {
+        text = "";
+
+        if (GameSingleton.Existing<ConfigManager>() is not { } config) return "the game tables are not loaded";
+
+        var role = world._AgentManager?.GetLeadingRole();
+        var record = role == null ? null : AgentTools.GetAgentComponent<CookingRecordComponent>(role);
+        var cooking = 0;
+
+        if (record != null && config._Config_CookingRecipe_Dict is { } recipes)
+        {
+            foreach (var id in recipes.Keys)
+            {
+                if (!record.IsRecipeUnlocked(id) || !record.IsCraftRecipeUnlocked(id)) cooking++;
+
+                record.UnlockRecipe(id);
+                record.UnlockCraftRecipe(id);
+            }
+
+            RewardSetManager.NotifyCookingRecipeUnlockChanged(record);
+        }
+
+        var blueprints = new Il2CppSystem.Collections.Generic.List<int>();
+
+        if (config._Config_ProductionList_Dict is { } productions)
+            foreach (var id in productions.Keys) blueprints.Add(id);
+
+        if (blueprints.Count > 0) world._ToolTableManager.AddProductionCraftUnlocks(blueprints);
+
+        text = record == null
+            ? $"no survivor, so no cooking recipes; {blueprints.Count} blueprints unlocked at the workbench"
+            : $"{cooking} cooking recipes newly unlocked; {blueprints.Count} blueprints unlocked at the workbench";
+
+        return null;
+    }
+
+    /// <summary>The game's own Advance hours, by as many hours as it takes to reach that hour of the day.</summary>
+    private string? SkipTo(BattleLogicWorld world, int hour, out string text)
+    {
+        text = "";
+
+        var hours = Freshness.HoursUntil(world._GameTimeManager.GetHour24(), hour);
+
+        if (hours == 0) return "pick an hour from 0 to 23";
+
+        if (_gm.Run("{\"msgHead\":132,\"Hours\":" + hours + "}") is { } error) return error;
+
+        text = $"{hours} hours on, to {hour:00}:00";
+
+        return null;
+    }
+
+    /// <summary>Every piece of furniture with durability set to its maximum, the way the game's own door and window repair does it.</summary>
+    private static string? RepairAll(BattleLogicWorld world, out string text)
+    {
+        int repaired = 0, all = 0;
+
+        foreach (var furniture in Furnitures(world))
+        {
+            if (AgentTools.GetAgentComponent<FurnitureDurabilityComponent>(furniture) is not { } durability) continue;
+
+            all++;
+
+            var max = durability.GetMaxDurability();
+
+            if (max <= 0 || durability.GetCurrentDurability() >= max) continue;
+
+            durability.SetCurrentDurability(max);
+            repaired++;
+        }
+
+        text = $"{repaired} of {all} pieces with durability repaired to full";
+
+        return null;
+    }
+
+    /// <summary>What every container here holds, unsearched ones first, one per line as "id|config|searched|itemxcount,...".</summary>
+    private static string? Containers(BattleLogicWorld world, out string text)
+    {
+        var items = world._ItemManager;
+        var found = new List<(bool Searched, string Line)>();
+
+        foreach (var furniture in Furnitures(world))
+        {
+            var list = items?.GetItemDataList(furniture.InstanceId);
+
+            if (list == null || list.Count == 0) continue;
+
+            var line = new StringBuilder();
+            var first = true;
+
+            line.Append(furniture.InstanceId).Append('|').Append(furniture.AgentConfigId).Append('|').Append(furniture.HasSearched ? 1 : 0).Append('|');
+
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (list[i] == null) continue;
+                if (!first) line.Append(',');
+
+                first = false;
+                line.Append(list[i].ItemConfigId).Append('x').Append(list[i].ItemCount);
+            }
+
+            found.Add((furniture.HasSearched, line.ToString()));
+        }
+
+        text = string.Join("\n", found.OrderBy(f => f.Searched).Take(MaxContainers).Select(f => f.Line));
+
+        return found.Count == 0 ? "no container here holds anything" : null;
+    }
+
+    /// <summary>
+    /// The searched mark taken off every container that has it. The loot was rolled when the container was first
+    /// opened and stays what it is now, so this brings back the unsearched marker, not new loot.
+    /// </summary>
+    private static string? Unsearch(BattleLogicWorld world, out string text)
+    {
+        var done = 0;
+
+        foreach (var furniture in Furnitures(world))
+        {
+            if (!furniture.HasSearched) continue;
+
+            furniture.HasSearched = false;
+            done++;
+        }
+
+        text = $"{done} containers marked unsearched again (what is inside stays the same)";
+
+        return null;
+    }
+
+    /// <summary>
+    /// Every armed trap with no catch gets one, through the game's own catch roll and catch handling, so bait, the
+    /// prey store and the HUD follow as if the hour had come. A trap whose room and bait give nothing keeps rolling nothing.
+    /// </summary>
+    private static string? Traps(BattleLogicWorld world, out string text)
+    {
+        text = "";
+
+        var traps = world._TrapManager;
+
+        if (traps?._placedTraps == null) return "no traps in this save";
+
+        var hour = world._GameTimeManager.GetHour24();
+        var waiting = new List<PlacedTrap>();
+        var caught = 0;
+
+        foreach (var trap in traps._placedTraps.Values)
+            if (trap is { HasPrey: false, CaptureStartTotalSeconds: > 0 }) waiting.Add(trap);
+
+        foreach (var trap in waiting)
+        {
+            for (var roll = 0; roll < MaxRolls; roll++)
+            {
+                var prey = traps.PerformCaptureRoll(trap, hour);
+
+                if (prey <= 0) continue;
+
+                traps.OnCaptureSuccess(trap, prey);
+                caught++;
+                break;
+            }
+        }
+
+        text = waiting.Count == 0 ? "no armed trap is waiting for a catch (a trap needs bait to be armed)" : $"{caught} of {waiting.Count} armed traps caught something";
+
+        return null;
+    }
+
+    /// <summary>The neighbour's basket comes home now with what she sends, through the game's own early return.</summary>
+    private static string? Basket(BattleLogicWorld world, out string text)
+    {
+        text = "";
+
+        var returns = world._NeighborBasketReturnManager;
+
+        if (returns == null || !returns.IsBasketBusy()) return "the basket is not away";
+
+        returns.ForceReturnNow();
+        text = "the basket is on its way back";
+
+        return null;
+    }
+
+    /// <summary>A test toast: the game's own short text (which Notifications turns into a toast), or one through Exiled's Toolkit.</summary>
+    private static string? Toast(string? kind, string? said, out string text)
+    {
+        text = "";
+
+        var words = string.IsNullOrWhiteSpace(said) ? "Cheat Menu test toast" : said!.Trim();
+
+        if (kind == "game")
+        {
+            Ac_PopText_AddPopText.SendAction(words);
+            text = "sent as the game's short text";
+
+            return null;
+        }
+
+        if (!OptionalLive.IsToolkitInstalled) return "Exiled's Toolkit is not installed";
+
+        try
+        {
+            ToolkitToast(words, kind);
+        }
+        catch (Exception ex) when (ex is TypeLoadException or MissingMethodException or FileNotFoundException or FileLoadException)
+        {
+            return "this Toolkit has no toasts: " + ex.Message;
+        }
+
+        text = "sent through Exiled's Toolkit";
+
+        return null;
+    }
+
+    // Kept in its own method so the Toolkit's types are only looked up when it is installed.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ToolkitToast(string words, string? kind) =>
+        ExiledToolkit.Toasts.Show(new ExiledToolkit.ToastRequest("Cheat Menu", words)
+        {
+            Kind = kind switch
+            {
+                "success" => ExiledToolkit.ToastKind.Success,
+                "warning" => ExiledToolkit.ToastKind.Warning,
+                "error" => ExiledToolkit.ToastKind.Error,
+                _ => ExiledToolkit.ToastKind.Info,
+            },
+        });
+
+    /// <summary>Every plugin BepInEx found, with its version and the errors it logged this session.</summary>
+    private string? Health(out string text)
+    {
+        var plugins = IL2CPPChainloader.Instance.Plugins.Values.Select(p => new ModHealth.Plugin(
+            p.Metadata.GUID, p.Metadata.Name, p.Metadata.Version?.ToString() ?? "", p.Instance != null)).ToList();
+        var errors = new Dictionary<string, ModHealth.Errors>();
+
+        try
+        {
+            using var stream = new FileStream(Path.Combine(Paths.BepInExRootPath, "LogOutput.log"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            var lines = new List<string>();
+
+            while (reader.ReadLine() is { } line) lines.Add(line);
+
+            errors = ModHealth.ReadErrors(lines);
+        }
+        catch (Exception ex)
+        {
+            _log("could not read the BepInEx log for the health page: " + ex.Message);
+        }
+
+        text = ModHealth.Report(plugins, errors);
 
         return null;
     }

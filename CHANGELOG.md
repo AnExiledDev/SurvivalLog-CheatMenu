@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1
+
+- Never spoil: nothing rots and food stays as fresh as it is while it is on. Make all food fresh puts every food item back to new.
+- Unlock every recipe and blueprint, on the Unlocks tab.
+- Skip to a time of day: morning, noon, evening or night.
+- Repair all furniture at home.
+- Container contents preview lists what every container holds without opening it; Mark containers unsearched brings back the unsearched marker (it does not refill them).
+- Debug tab: Show hovered id, Mod health (every plugin with its version and the errors it logged), Fill every trap, Bring the basket back, and Test toast.
+- The console remembers what you typed: the up and down arrows go through it, and `history` lists it.
+- Long replies in the log keep their line breaks.
+
 ## 0.2.0
 
 - Every row now works: commands that needed fields to be typed have their own lists, number boxes and pickers, and the rest of a command's fields are under "More fields".

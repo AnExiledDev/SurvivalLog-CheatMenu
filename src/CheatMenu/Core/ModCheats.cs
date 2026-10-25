@@ -13,11 +13,12 @@ public static class ModCheats
     public static readonly string[] Actions =
     {
         "mature", "tend", "anomaly", "freebuild", "ally", "allyone", "exposure", "event-choice", "event-end", "event-reset",
-        "loan-clear", "debuffs", "buff-remove", "snapshot", "list",
+        "loan-clear", "debuffs", "buff-remove", "snapshot", "list", "fresh", "recipes", "skipto", "repairall", "containers",
+        "unsearch", "traps", "basket", "toast", "health",
     };
 
     /// <summary>Things the mod keeps true while they are on.</summary>
-    public static readonly string[] Holds = { "god", "power", "peaceful", "clock", "nofuel", "instant", "eventstep" };
+    public static readonly string[] Holds = { "god", "power", "peaceful", "clock", "nofuel", "instant", "eventstep", "nospoil", "hover" };
 
     /// <summary>What a live picker can list.</summary>
     public static readonly string[] Lists = { "pots", "furniture", "events", "buffs" };

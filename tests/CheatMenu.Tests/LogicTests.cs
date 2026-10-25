@@ -126,6 +126,8 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
         Assert.Equal("{\"pot\":12,\"kind\":4}", Json("L.actArgs(ROWSPEC['farm|Force an anomaly'], 4, { pot: '12' })"));
         Assert.Equal("{\"kind\":1}", Json("L.actArgs(ROWSPEC['farm|Force an anomaly'], 1, { pot: '' })"));
         Assert.Equal("{\"on\":false}", Json("L.actArgs(ROWSPEC['home|Free build'], false, {})"));
+        Assert.Equal("{\"hour\":22}", Json("L.actArgs(ROWSPEC['time|Skip to a time of day'], 22, {})"));
+        Assert.Equal("{\"text\":\"hi\",\"kind\":\"warning\"}", Json("L.actArgs(ROWSPEC['debug|Test toast'], 'warning', { text: 'hi' })"));
         Assert.Equal("{\"of\":\"buffs\"}", Json("L.actArgs(ROWSPEC['debug|Buff list'], undefined, {})"));
     }
 
