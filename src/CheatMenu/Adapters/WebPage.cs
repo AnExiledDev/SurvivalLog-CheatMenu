@@ -39,14 +39,15 @@ internal sealed class WebPage
         if (Run(Script())) _log("panel script sent to the web UI");
     }
 
-    /// <param name="stateJson">{ inGame, chinese, key, flags, presets }</param>
+    /// <param name="stateJson">{ inGame, chinese, key, flags, holds, presets }</param>
     public bool Open(string stateJson) => Call($"open({stateJson})");
 
     public void Close() => Call("close()");
 
-    public void Result(string requestId, string? error) => Call($"result({JsText.Literal(requestId)},{(error == null ? "null" : JsText.Literal(error))})");
+    public void Result(string requestId, string? error, string text = "") =>
+        Call($"result({JsText.Literal(requestId)},{(error == null ? "null" : JsText.Literal(error))},{JsText.Literal(text)})");
 
-    public void Flags(string flagsJson) => Call($"flags({flagsJson})");
+    public void Flags(string flagsJson, string holdsJson) => Call($"flags({flagsJson},{holdsJson})");
 
     public void Readouts(List<string> jsonMessages) => Call($"readouts([{string.Join(",", jsonMessages)}])");
 

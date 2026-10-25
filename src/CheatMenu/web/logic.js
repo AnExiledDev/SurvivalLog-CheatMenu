@@ -1,8 +1,10 @@
-// How each menu row reaches the game: one of the game's GM switches, one GM message, a form over the fields of the
-// game's own messages, or nothing yet. No page drawing here, so it can be checked on its own.
+// How each menu row reaches the game: one of the game's GM switches, one GM message, a row spec (rows.js) that builds
+// game messages or the mod's own cheats from the row's controls, or nothing. No page drawing here, so it can be
+// checked on its own.
 (function () {
   const SCHEMA = window.SCHEMA;
   const CATALOG = window.CATALOG || [];
+  const SPEC = window.ROWSPEC || {};
   const FLAGS = ['SkipTimeline', 'SkipOpeningTimeline', 'SkipDailySettlement', 'LockCharacterAttr', 'LockFurnitureDurability', 'LockExploreExposure', 'RightClickCopyFurnitureId', 'RaiseExploreCamera', 'PhotoModeUnlocked', 'ExploreFreeCamera', 'PauseRenderFreezeOff', 'ShowZombieDebugText', 'ShowEnvDebug', 'ShowAudioSourceViz', 'ShowShadowDebug', 'ReviveOnDoorBreak', 'SpeedHotkeyEnabled', 'ForceDanceRecommend', 'EventVerifyLog'];
   const WHOLE = ['int', 'long', 'short', 'byte', 'uint', 'ulong'];
   const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -36,21 +38,24 @@
 
   // One game message from field values typed in the menu. Fields left out are left out of the message, as the game's
   // own panel does; the game then uses its default for them.
-  function message(name, values) {
+  // raw names fields the game's handler reads that its message type does not declare, with their types.
+  function message(name, values, raw) {
     const sc = SCHEMA[name];
 
     if (!sc) return { error: 'The game has no command ' + name };
 
     const msg = { msgHead: sc.id };
     const bad = [];
-
-    sc.f.forEach(([type, field]) => {
+    const one = (type, field) => {
       if (!values || !has(values, field)) return;
 
       const v = coerce(type, values[field]);
 
       if (v === undefined) bad.push(field); else msg[field] = v;
-    });
+    };
+
+    sc.f.forEach(([type, field]) => one(type, field));
+    Object.keys(raw || {}).forEach((field) => { if (!sc.f.some((f) => f[1] === field)) one(raw[field], field); });
 
     return bad.length ? { error: 'Check ' + bad.join(', ') } : { msg };
   }
@@ -59,11 +64,13 @@
   //   flag: one of WebGm's switches, set to the row's toggle
   //   cmd:  one message; field is the one value the row's control supplies, or null for none
   //   form: the row's game commands need more than its control holds, so each gets its fields shown
-  //   none: why is 'mod' (added by this mod, not built yet), 'inactive' (does nothing in the release game) or 'code'
-  //         (it calls game code the GM message handler does not reach)
+  //   spec: rows.js says what the row sends
+  //   none: why is 'inactive' (does nothing in the release game), 'mod' or 'code' (a row with nothing to send, which
+  //         the tests keep from ever shipping)
   function bind(r) {
-    if (r.s === 'M') return { kind: 'none', why: 'mod' };
+    if (SPEC[r.key]) return { kind: 'spec', spec: SPEC[r.key] };
     if (r.s === 'E' || r.s === 'X') return { kind: 'none', why: 'inactive' };
+    if (r.s === 'M') return { kind: 'none', why: 'mod' };
 
     const refs = r.ref || [];
 
@@ -94,6 +101,106 @@
   // The message a bound row sends for the control's current value.
   function rowMessage(b, value) {
     return message(b.name, b.field ? { [b.field]: value } : {});
+  }
+
+  // The control a spec row shows: a switch, a list, a box to type in, or a button.
+  function control(r, sp) {
+    if (sp.k) return sp.k;
+    if (r.k === 'tog') return 'tog';
+    if (sp.opts || sp.live) return 'sel';
+
+    return sp.main || sp.attr ? 'num' : 'btn';
+  }
+
+  // The field sets a spec row sends. main is the row control's value: a field value, an option's object (merged in),
+  // or '*' for every option. inputs are the row's other fields by name; blank ones are left out.
+  function specValues(sp, main, inputs) {
+    const base = Object.assign({}, sp.fix || {});
+
+    Object.keys(inputs || {}).forEach((f) => { const v = inputs[f]; if (v !== '' && v != null) base[f] = v; });
+
+    const withMain = (v) => {
+      const set = Object.assign({}, base);
+
+      if (v && typeof v === 'object') Object.assign(set, v);
+      else if (sp.main && v !== undefined && v !== null && v !== '') set[sp.main] = v;
+
+      return set;
+    };
+    let sets = main === '*' ? (sp.opts || []).filter((o) => o[1] !== '*').map((o) => withMain(o[1])) : [withMain(main)];
+
+    if (sp.each) sets = sets.flatMap((set) => sp.each.map((e) => Object.assign({}, set, e)));
+
+    return sets;
+  }
+
+  // The game messages a cmd spec row sends, in order, or an error naming the fields to check.
+  function specMessages(sp, main, inputs) {
+    const msgs = [];
+
+    for (const set of specValues(sp, main, inputs)) {
+      const m = message(sp.cmd, set, sp.raw);
+
+      if (m.error) return { error: m.error };
+      msgs.push(m.msg);
+    }
+    (sp.also || []).forEach((name) => msgs.push({ msgHead: SCHEMA[name].id }));
+
+    return { msgs };
+  }
+
+  // The arguments of one of the mod's own cheats: numbers and switches typed, everything else as text.
+  function actArgs(sp, main, inputs) {
+    const out = {};
+    const set = specValues(Object.assign({}, sp, { each: null }), main, inputs)[0];
+
+    Object.keys(set).forEach((k) => {
+      const v = set[k];
+      const t = String(v).trim();
+
+      out[k] = typeof v !== 'string' ? v : /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : t === 'true' || t === 'false' ? t === 'true' : v;
+    });
+
+    return out;
+  }
+
+  // The value an attribute row sends for what the menu shows: a percent row shows 100% for "as the game has it"
+  // and sends the ratio the game adds on top (150% sends 0.5); a switch row sends its on or off value.
+  function attrValue(sp, shown) {
+    if (sp.on !== undefined) return shown ? sp.on : sp.off;
+
+    const n = Number(shown);
+
+    if (!isFinite(n)) return undefined;
+
+    return sp.pct === undefined ? n : (n - sp.pct) / 100;
+  }
+
+  // What an attribute row shows for the value the game holds.
+  function attrShown(sp, value) {
+    if (sp.on !== undefined) return value === sp.on;
+
+    return sp.pct === undefined ? value : Math.round(value * 100 + sp.pct);
+  }
+
+  const attrMessage = (key, value) => message('ChangeAttr', { attrKey: key, attrValue: value, type: 0 });
+
+  // [label, value] lines from a list the plugin read ("[[id, label], ...]"), or null when it is not one.
+  function parseList(text) {
+    let v;
+
+    try { v = JSON.parse(text); } catch (e) { return null; }
+
+    return Array.isArray(v) ? v.filter(Array.isArray).map((x) => [`${x[1]} (${x[0]})`, x[0]]) : null;
+  }
+
+  // The saves or backups in a save-list readout, as [label, value, file on disk], or null.
+  function saveList(msg) {
+    if (!msg || !Array.isArray(msg.Items)) return null;
+    if (msg.Items.some((i) => i && 'FileNameOnDisk' in i)) return { of: 'backups', list: msg.Items.filter(Boolean).map((i) => [`${i.BackupName}${i.OriginDay ? ' (day ' + i.OriginDay + ')' : ''}${i.CreatedAt ? ' - ' + i.CreatedAt : ''}`, i.BackupName, i.FileNameOnDisk]) };
+    if (msg.Items.some((i) => i && 'FileName' in i)) return { of: 'saves', list: msg.Items.filter(Boolean).map((i) => [i.FileName + (i.IsCurrent ? ' (playing)' : ''), i.FileName]) };
+
+    return null;
   }
 
   // ---------- what the game sends back ----------
@@ -137,5 +244,5 @@
     return readName(msg) + (text ? ': ' + text : '');
   }
 
-  window.__slcheatmenuLogic = { FLAGS, flagOf, coerce, message, bind, rowMessage, readName, vitals, currentSave, describe };
+  window.__slcheatmenuLogic = { FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
 })();

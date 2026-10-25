@@ -13,10 +13,10 @@
   --steel-3: #7d735f;
   --line: rgba(255, 200, 58, 0.16);
   --line-2: rgba(236, 228, 210, 0.08);
-  --disp: "Big Shoulders Stencil Display", "Chakra Petch", sans-serif;
-  --ui: "Chakra Petch", "Noto Sans SC", sans-serif;
-  --mono: "JetBrains Mono", Consolas, monospace;
-  --zh: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --disp: "Bahnschrift", "SL Cheat Sans", "Arial Narrow", sans-serif;
+  --ui: "Segoe UI", "SL Cheat Sans", "Microsoft YaHei UI", sans-serif;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+  --zh: "SL Cheat Sans", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: var(--steel); font-family: var(--ui); }

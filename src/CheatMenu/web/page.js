@@ -1,5 +1,6 @@
 // The Cheat Menu panel, drawn over the game's web UI in its own shadow root so the game's styles and ids never meet
-// ours. Every action goes to the plugin as a GM message the game's own handler runs; nothing here changes the game.
+// ours. Every action goes to the plugin: a GM message the game's own handler runs, or one of the mod's own cheats
+// (an action or a hold) the plugin runs through the game's own methods. Nothing here changes the game by itself.
 (function () {
   if (window.__slcheatmenu) return;
 
@@ -13,6 +14,14 @@
   const KIND = { cmd: 'Panel command', read: 'Readout', sub: 'Panel sub-command', gm: 'Gm method', hook: 'GM hook' };
   const CHIP = { G: '<span class="c gm">GAME</span>', M: '<span class="c add">ADDED BY MOD</span>', E: '<span class="c ed">EDITOR</span>', S: '<span class="c steam">STEAM</span>', X: '<span class="c nw">NOT WIRED</span>' };
   const send = (m) => { try { if (window.vuplex) window.vuplex.postMessage(PREFIX + m); } catch (e) { /* the bridge is gone; the plugin reinstalls us */ } };
+
+  // The game's own Chinese font, from its web UI folder; the panel falls back to Windows fonts without it.
+  const fonts = document.createElement('style');
+  const at = location.href.indexOf('/WebUI/');
+  const res = (at >= 0 ? location.href.slice(0, at + 7) : '../../') + 'Res/GameResult/';
+
+  fonts.textContent = `@font-face{font-family:"SL Cheat Sans";src:url("${res}SourceHanSansSC-Regular-2.otf");font-weight:400 600}@font-face{font-family:"SL Cheat Sans";src:url("${res}SourceHanSansSC-Heavy-2.otf");font-weight:700 900}`;
+  (document.head || document.documentElement).appendChild(fonts);
 
   const host = document.createElement('div');
 
@@ -45,6 +54,18 @@
 .statusbox b { color: var(--steel); }
 .statusbox .bad { color: #ffb08f; }
 .wait { padding: 10px 14px; font-size: 12px; color: var(--steel-3); }
+.row.specrow { grid-template-columns: 1fr auto; }
+.row .fields { margin-top: 6px; }
+.row .fields .fl { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.row .fields label { display: flex; align-items: center; gap: 6px; font: 11.5px var(--mono); color: var(--steel-2); }
+.row .fields .num { width: 110px; }
+.row .fields .sel { max-width: 260px; }
+.row details.more { margin-top: 6px; }
+.row details.more summary { cursor: pointer; font: 11px var(--mono); color: var(--steel-3); }
+.row details.more .fl { margin-top: 6px; }
+.pick { display: inline-flex; align-items: center; gap: 4px; }
+.pick .filt { width: 90px; }
+.ctl .pick .sel { max-width: 230px; }
 `;
 
   const css = (window.__slcheatmenuCss || '').replace(/:root/g, ':host').replace(/html, body \{[^}]*\}/, '') + EXTRA;
@@ -54,7 +75,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> - v0.1.0 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> - v0.2.0 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="x" id="close" title="Close"><span id="keyname"></span> <span>X</span></button>
@@ -88,7 +109,14 @@
     inGame: false,
     key: 'F3',
     flags: {},
+    holds: {},
     toggles: {},
+    lists: {},
+    attrs: {},
+    attrSet: {},
+    lastRead: {},
+    saveFile: null,
+    riskyBackup: true,
     weather: null,
     vitals: [],
     cat: 1,
@@ -122,6 +150,10 @@
         r.tab = t.id;
         r.ref = REFS[key] || [];
         r.bind = L.bind(r);
+        if (r.bind.kind === 'spec') {
+          if (r.bind.spec.d) r.d = r.bind.spec.d;
+          if (r.bind.spec.u) r.u = r.bind.spec.u;
+        }
         if (r.k === 'sel') r.cur = r.cur || ['x1', 'Normal'].find((o) => r.o.includes(o)) || r.o[0];
       }));
     });
@@ -156,6 +188,16 @@
     return id;
   }
 
+  // Runs one of the mod's own cheats. onText gets what the plugin hands back (and the error, if any) instead of the log.
+  function act(name, args, label, onText) {
+    const id = String(nextId++);
+
+    pending[id] = { label, onText };
+    send('act|' + id + '|' + name + '|' + JSON.stringify(args || {}));
+
+    return id;
+  }
+
   // The first change of a session waits for a backup of the save being played, so it can always be undone.
   const backup = { step: 'none', queue: [], name: null, timer: null };
 
@@ -185,21 +227,63 @@
     if (state.tab === 'changes') refresh();
   }
 
+  // With "Back up before every risky cheat" on, a red row waits for a fresh backup of the save being played, and
+  // does not run without one.
+  const risky = { wait: null };
+
+  function guarded(fn, isRisky) {
+    if (!isRisky || !state.riskyBackup || !state.inGame) return cheat(fn);
+
+    const first = backup.step !== 'done';
+
+    cheat(() => {
+      if (first && backup.step === 'done') return fn();
+      if (!state.saveFile) return log('Not run: the menu could not tell which save to back up first. Turn off "Back up before every risky cheat" in Saves to run it without a backup.', 'err');
+      if (risky.wait) return log('Not run: still waiting for the last backup.', 'err');
+
+      const name = stamp('BeforeRisky');
+
+      risky.wait = { name, fn, timer: setTimeout(() => doneRisky(false, 'the game did not answer'), 8000) };
+      post({ msgHead: S.BackupSave.id, FileName: state.saveFile, BackupName: name }, 'Backup before a risky cheat', () => doneRisky(false, 'the game refused it'));
+    });
+  }
+
+  function doneRisky(ok, why) {
+    const w = risky.wait;
+
+    if (!w) return;
+
+    risky.wait = null;
+    clearTimeout(w.timer);
+    if (!ok) return log(`Not run: the backup before it failed (${why}). Turn off "Back up before every risky cheat" in Saves to run it without one.`, 'err');
+
+    log(`Backed up the save as "${w.name}" first`, 'mod');
+    w.fn();
+  }
+
+  function stamp(prefix) {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+
+    return `${prefix}_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  }
+
   function onBackupReadouts(msg) {
-    if (backup.step === 'listing' && Array.isArray(msg.Items)) {
+    const saves = L.saveList(msg);
+
+    if (backup.step === 'listing' && saves && saves.of === 'saves') {
       const file = L.currentSave(msg);
 
       if (!file) return finishBackup(false, 'no save is marked as the one being played');
 
-      const d = new Date();
-      const p = (n) => String(n).padStart(2, '0');
-
-      backup.name = `BeforeCheating_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+      backup.name = stamp('BeforeCheating');
       backup.step = 'saving';
       post({ msgHead: S.BackupSave.id, FileName: file, BackupName: backup.name }, null);
     } else if (backup.step === 'saving' && typeof msg.Ok === 'boolean' && 'BackupName' in msg) {
       if (msg.BackupName) backup.name = msg.BackupName;
       finishBackup(msg.Ok, msg.Reason || 'the game said no');
+    } else if (risky.wait && typeof msg.Ok === 'boolean' && 'BackupName' in msg) {
+      doneRisky(msg.Ok, msg.Reason || 'the game said no');
     }
   }
 
@@ -249,19 +333,125 @@
     show: (x) => x === null ? 'forecast' : ((GAME.weather.find((w) => w.id === x) || {}).n || 'weather ' + x)
   };
 
+  const onOff = (x) => x ? 'on' : 'off';
+
+  // One of the mod's holds: the plugin keeps it true while it is on.
+  function holdSetting(r) {
+    const name = r.bind.spec.hold;
+
+    return { key: 'hold:' + name, l: r.l, s: r.s, tab: r.tab, get: () => !!state.holds[name], set: (x) => { state.holds[name] = !!x; send('hold|' + name + '|' + (x ? '1' : '0')); }, show: onOff };
+  }
+
+  // A switch row from rows.js: a game message (its field set to on or off, or sent again to flip the game's own
+  // switch) or one of the mod's actions told on or off.
+  function specToggleSetting(r) {
+    const sp = r.bind.spec;
+
+    return {
+      key: 'row:' + r.key,
+      l: r.l,
+      s: r.s,
+      tab: r.tab,
+      get: () => !!state.toggles[r.key],
+      set: (x) => {
+        if (!!state.toggles[r.key] === !!x) return;
+
+        const back = () => { state.toggles[r.key] = !x; refresh(); };
+
+        state.toggles[r.key] = !!x;
+        if (sp.act) return act(sp.act, L.actArgs(sp, !!x, specInputs(r)), r.l, (text, error) => error ? (log(`${r.l}: ${error}`, 'err'), back()) : text && log(`${r.l}: ${text}`, 'mod'));
+
+        const m = L.specMessages(sp, sp.opts && sp.opts.length === 2 ? sp.opts[x ? 0 : 1][1] : !!x, specInputs(r));
+
+        if (m.error) return log(`${r.l}: ${m.error}`, 'err');
+        m.msgs.forEach((msg) => post(msg, r.l, back));
+      },
+      show: onOff
+    };
+  }
+
+  // An attribute of the survivor, set with the game's own ChangeAttr. Ratios start at the game's 0, so "as before"
+  // is known; a maximum is known once the game has sent the survivor's attributes.
+  function attrSetting(r) {
+    const sp = r.bind.spec;
+    const key = 'attr:' + r.key;
+    const ratio = sp.on !== undefined || sp.pct !== undefined || /Ratio$|Bonus$/.test(sp.attr);
+
+    return {
+      key,
+      l: r.l,
+      s: r.s,
+      tab: r.tab,
+      get: () => key in state.attrSet ? state.attrSet[key] : ratio ? L.attrShown(sp, 0) : state.attrs[sp.attr] === undefined ? null : state.attrs[sp.attr],
+      set: (x) => {
+        if (x === null || x === undefined) return;
+
+        const m = L.attrMessage(sp.attr, L.attrValue(sp, x));
+
+        if (m.error) return log(`${r.l}: ${m.error}`, 'err');
+        state.attrSet[key] = x;
+        post(m.msg, r.l, () => { delete state.attrSet[key]; refresh(); });
+      },
+      show: (x) => x === null || x === undefined ? 'as the game had it' : sp.on !== undefined ? onOff(x) : sp.pct !== undefined ? x + '%' : String(x)
+    };
+  }
+
+  // A list row that sets several attributes to one value.
+  function attrsSetting(r) {
+    const sp = r.bind.spec;
+    const key = 'attrs:' + r.key;
+
+    return {
+      key,
+      l: r.l,
+      s: r.s,
+      tab: r.tab,
+      get: () => key in state.attrSet ? state.attrSet[key] : sp.opts[0][1],
+      set: (x) => {
+        state.attrSet[key] = x;
+        sp.attrs.forEach((a) => { const m = L.attrMessage(a, x); if (m.msg) post(m.msg, r.l); });
+      },
+      show: (x) => (sp.opts.find((o) => o[1] === x) || [String(x)])[0]
+    };
+  }
+
   function setting(key) {
     if (key === 'weather') return weatherSetting;
     if (key.indexOf('flag:') === 0) return L.FLAGS.indexOf(key.slice(5)) >= 0 ? flagSetting(key.slice(5)) : null;
-    if (key.indexOf('row:') === 0) {
-      const r = ROW.get(key.slice(4));
+    if (key.indexOf('hold:') === 0) {
+      const r = ALLROWS.find((x) => rowSettingKey(x) === key);
 
-      return r && r.k === 'tog' && r.bind.kind === 'cmd' ? toggleSetting(r) : null;
+      return r ? holdSetting(r) : null;
     }
 
-    return null;
+    const r = ROW.get(key.slice(key.indexOf(':') + 1));
+
+    if (!r || rowSettingKey(r) !== key) return null;
+    if (key.indexOf('attr:') === 0) return attrSetting(r);
+    if (key.indexOf('attrs:') === 0) return attrsSetting(r);
+
+    return r.bind.kind === 'spec' ? specToggleSetting(r) : toggleSetting(r);
   }
-  const rowSettingKey = (r) => r.bind.kind === 'flag' ? 'flag:' + r.bind.flag : r.k === 'tog' && r.bind.kind === 'cmd' ? 'row:' + r.key : null;
-  const allSettingKeys = () => [...L.FLAGS.filter((f) => f in state.flags).map((f) => 'flag:' + f), ...ALLROWS.filter((r) => r.k === 'tog' && r.bind.kind === 'cmd').map((r) => 'row:' + r.key), 'weather'];
+
+  function rowSettingKey(r) {
+    const b = r.bind;
+
+    if (b.kind === 'flag') return 'flag:' + b.flag;
+    if (b.kind === 'spec') {
+      const sp = b.spec;
+
+      if (sp.hold) return 'hold:' + sp.hold;
+      if (sp.attr) return 'attr:' + r.key;
+      if (sp.attrs) return 'attrs:' + r.key;
+      if (sp.page || sp.pulse || sp.readout) return null;
+
+      return L.control(r, sp) === 'tog' ? 'row:' + r.key : null;
+    }
+
+    return r.k === 'tog' && b.kind === 'cmd' ? 'row:' + r.key : null;
+  }
+
+  const allSettingKeys = () => [...new Set([...L.FLAGS.filter((f) => f in state.flags).map((f) => 'flag:' + f), ...ALLROWS.map(rowSettingKey).filter((k) => k && k.indexOf('flag:') !== 0), 'weather'])];
   const BASE = new Map();
 
   // ---------- rail ----------
@@ -365,19 +555,19 @@
     return el;
   }
 
-  const NOTE = {
-    mod: '<span class="c nb">NOT BUILT YET</span>',
-    code: '<span class="c nr" title="This tool is game code the GM message handler does not call, so the menu cannot reach it yet">NOT REACHABLE YET</span>'
-  };
-
   function rowEl(r) {
     const b = r.bind;
     const refs = r.ref.length ? `<code class="refs" title="${esc(r.ref.join('\n'))}">${esc(r.ref[0])}${r.ref.length > 1 ? ` +${r.ref.length - 1}` : ''}</code>` : '';
     const off = b.kind === 'none';
-    const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${off ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}`;
-    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${NOTE[b.why] || ''}${r.d ? `<p>${esc(r.d)}</p>` : ''}${refs}</div><div class="ctl"></div></div>`);
+    const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${off ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${b.kind === 'spec' ? ' specrow' : ''}`;
+    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${r.d ? `<p>${esc(r.d)}</p>` : ''}${refs}</div><div class="ctl"></div></div>`);
 
-    if (b.kind === 'form') {
+    if (b.kind === 'spec') {
+      const f = fieldsEl(r);
+
+      if (f) $('.lab', el).append(f);
+      $('.ctl', el).append(...specControls(r));
+    } else if (b.kind === 'form') {
       $('.ctl', el).remove();
       b.cmds.forEach((name) => $('.lab', el).append(formEl(name, r)));
     } else {
@@ -424,6 +614,237 @@
     return el;
   }
 
+  // ---------- rows from rows.js ----------
+  const listReq = {};
+
+  // Reads a live list (the pots, furniture, events or buffs in the save, or the saves and backups) once; Reload reads
+  // it again.
+  function loadList(of) {
+    listReq[of] = true;
+    if (of === 'saves') return post({ msgHead: S.ListGameSaves.id }, 'Save list', () => { listReq[of] = false; state.lists[of] = []; refresh(); });
+    if (of === 'backups') return post({ msgHead: S.ListBackups.id }, 'Backup list', () => { listReq[of] = false; state.lists[of] = []; refresh(); });
+
+    act('list', { of }, 'List', (text, error) => {
+      listReq[of] = false;
+      state.lists[of] = (!error && L.parseList(text)) || [];
+      if (error) log(`List of ${of}: ${error}`, 'err');
+      refresh();
+    });
+  }
+
+  const listOf = (of) => { if (!state.lists[of] && !listReq[of]) loadList(of); return state.lists[of] || null; };
+  const ui = (r) => r.ui || (r.ui = {});
+
+  // The value picked in one of a row's lists, by the slot it is kept in.
+  function picked(r, slot, x) {
+    const list = x.live ? state.lists[x.live] : x.opts;
+    const i = ui(r)[slot];
+
+    if (i === undefined && !x.blank && !x.live && list && list.length) return list[0][1];
+    if (i === '' || i === undefined || !list || !list[+i]) return '';
+
+    return x.pickFile ? list[+i][2] : list[+i][1];
+  }
+
+  function pickedLabel(r, slot, x) {
+    const list = x.live ? state.lists[x.live] : x.opts;
+    const i = ui(r)[slot] === undefined ? (x.blank || x.live ? '' : 0) : ui(r)[slot];
+
+    return list && list[+i] && i !== '' ? list[+i][0] : '';
+  }
+
+  // A list, with a filter box when it is long and Reload when it is read from the game.
+  function pickEl(r, slot, x) {
+    const u = ui(r);
+    const list = x.live ? listOf(x.live) : x.opts;
+    const wrap = h('<span class="pick"></span>');
+    const sel = h('<select class="sel"></select>');
+    const paint = () => {
+      const q = (u['q:' + slot] || '').toLowerCase();
+      const items = (list || []).map((o, i) => [o, i]).filter(([o]) => !q || String(o[0]).toLowerCase().indexOf(q) >= 0).slice(0, 500);
+
+      sel.innerHTML = (x.blank ? `<option value="">${esc(x.blank)}</option>` : '')
+        + (!list ? '<option value="">(reading the game)</option>' : !list.length ? '<option value="">(none found)</option>' : items.map(([o, i]) => `<option value="${i}"${String(i) === u[slot] ? ' selected' : ''}>${esc(o[0])}</option>`).join(''));
+      if (u[slot] !== undefined && sel.value !== u[slot]) u[slot] = sel.value;
+    };
+
+    if ((list || []).length > 30) {
+      const f = h(`<input class="num filt" placeholder="Filter" value="${esc(u['q:' + slot] || '')}">`);
+
+      f.oninput = () => { u['q:' + slot] = f.value; paint(); u[slot] = sel.value; };
+      wrap.append(f);
+    }
+    paint();
+    sel.onchange = () => { u[slot] = sel.value; };
+    wrap.append(sel);
+    if (x.live) {
+      const b = h('<button class="btn ghost" title="Read the list from the game again">Reload</button>');
+
+      b.onclick = () => { delete state.lists[x.live]; loadList(x.live); };
+      wrap.append(b);
+    }
+
+    return wrap;
+  }
+
+  function boxEl(r, slot, value, wide) {
+    const u = ui(r);
+    const n = h(`<input class="num${wide ? ' wide' : ''}" value="${esc(u[slot] !== undefined ? u[slot] : value == null ? '' : value)}">`);
+
+    n.oninput = () => { u[slot] = n.value; };
+
+    return n;
+  }
+
+  const BOOL = [['true', true], ['false', false]];
+  const inputOf = (x) => x.t === 'bool' ? Object.assign({ opts: x.v ? BOOL : BOOL.slice().reverse() }, x) : x.live && !x.blank ? Object.assign({ blank: '(none)' }, x) : x;
+
+  // The fields of a game message a row leaves out of its own inputs; blank ones are not sent.
+  function moreFields(sp) {
+    if (!sp.cmd || sp.more === false || !S[sp.cmd]) return [];
+
+    const used = new Set([sp.main, ...Object.keys(sp.fix || {}), ...(sp.in || []).map((x) => x.f), ...(sp.opts || []).flatMap((o) => o[1] && typeof o[1] === 'object' ? Object.keys(o[1]) : []), ...(sp.each || []).flatMap((e) => Object.keys(e))]);
+
+    return S[sp.cmd].f.filter(([, f]) => !used.has(f)).map(([type, f]) => type === 'bool' ? { f, l: f, opts: BOOL, blank: '(leave out)' } : { f, l: `${f} (${type})`, v: '' });
+  }
+
+  // The row's other inputs by field name, from what is typed and picked.
+  function specInputs(r) {
+    const sp = r.bind.spec;
+    const out = {};
+    const one = (x, slot) => {
+      const y = inputOf(x);
+
+      out[x.f] = y.opts || y.live ? picked(r, slot, y) : ui(r)[slot] !== undefined ? ui(r)[slot] : y.v == null ? '' : y.v;
+    };
+
+    (sp.in || []).forEach((x) => one(x, 'in:' + x.f));
+    moreFields(sp).forEach((x) => one(x, 'more:' + x.f));
+
+    return out;
+  }
+
+  function fieldsEl(r) {
+    const sp = r.bind.spec;
+    const box = h('<div class="fields"><div class="fl"></div></div>');
+    const add = (to, x, slot) => {
+      const y = inputOf(x);
+      const lab = h(`<label><span>${esc(y.l || y.f)}</span></label>`);
+
+      lab.append(y.opts || y.live ? pickEl(r, slot, y) : boxEl(r, slot, y.v, y.t === 'text'));
+      to.append(lab);
+    };
+    const more = moreFields(sp);
+
+    (sp.in || []).forEach((x) => add($('.fl', box), x, 'in:' + x.f));
+    if (more.length) {
+      const d = h(`<details class="more"${ui(r).more ? ' open' : ''}><summary>More fields (${more.length})</summary><div class="fl"></div></details>`);
+
+      d.ontoggle = () => { ui(r).more = d.open; };
+      more.forEach((x) => add($('.fl', d), x, 'more:' + x.f));
+      box.append(d);
+    }
+
+    return (sp.in || []).length || more.length ? box : null;
+  }
+
+  function specControls(r) {
+    const sp = r.bind.spec;
+    const kind = L.control(r, sp);
+
+    if (sp.page === 'riskybackup') {
+      const sw = h(`<button class="sw${state.riskyBackup ? ' on' : ''}" aria-label="${esc(r.l)}"></button>`);
+
+      sw.onclick = () => { state.riskyBackup = !state.riskyBackup; log(`${r.l}: ${onOff(state.riskyBackup)}`, 'mod'); refresh(); };
+
+      return [sw];
+    }
+    if (kind === 'tog') return controlFor(r);
+
+    const parts = [];
+    const key = rowSettingKey(r);
+    const x = key && setting(key);
+
+    if (kind === 'sel') {
+      if (x && ui(r).main === undefined) { const i = sp.opts.findIndex((o) => o[1] === x.get()); if (i >= 0) ui(r).main = String(i); }
+      parts.push(pickEl(r, 'main', sp));
+    } else if (kind === 'num' || kind === 'text') {
+      parts.push(boxEl(r, 'main', x ? x.get() : sp.v !== undefined ? sp.v : r.v, kind === 'text'));
+      if (r.u) parts.push(h(`<span class="unit">${esc(r.u)}</span>`));
+    }
+
+    const btn = h(`<button class="btn${r.red || sp.risky ? ' red' : ''}">${esc(sp.readout ? 'Show' : r.b || 'Run')}</button>`);
+
+    btn.onclick = () => runSpec(r);
+    parts.push(btn);
+
+    return parts;
+  }
+
+  // The value of a row's own control.
+  function mainValue(r) {
+    const sp = r.bind.spec;
+    const kind = L.control(r, sp);
+
+    if (kind === 'sel') return picked(r, 'main', sp);
+    if (kind === 'num' || kind === 'text') {
+      const x = rowSettingKey(r) && setting(rowSettingKey(r));
+
+      return ui(r).main !== undefined ? ui(r).main : x ? x.get() : sp.v !== undefined ? sp.v : r.v;
+    }
+
+    return undefined;
+  }
+
+  function showReadout(name) {
+    const m = state.lastRead[name];
+
+    if (!m) return log(`${name}: the game has not sent one since the menu opened. Wait a second and try again.`, 'err');
+
+    log(L.describe(m));
+    log(JSON.stringify(m).slice(0, 2000));
+  }
+
+  function runSpec(r) {
+    const sp = r.bind.spec;
+    const kind = L.control(r, sp);
+    const main = mainValue(r);
+    const inputs = specInputs(r);
+    const label = kind === 'sel' ? pickedLabel(r, 'main', sp) : main === undefined || main === '' ? '' : main + (r.u ? ' ' + r.u : '');
+    const what = [label, ...Object.keys(inputs).filter((k) => inputs[k] !== '' && inputs[k] != null).map((k) => k + ' ' + inputs[k])].filter(Boolean).join(', ') || 'done';
+    const isRisky = !!(sp.risky || r.red);
+
+    if (sp.readout) return showReadout(sp.readout);
+    if (kind === 'sel' && sp.main && main === '') return log(`${r.l}: pick one first`, 'err');
+    if (sp.pulse) return guarded(() => { send('hold|' + sp.pulse + '|1'); log(`${r.l}`); once(r, 'stepped'); });
+    if (sp.attr || sp.attrs) {
+      const x = setting(rowSettingKey(r));
+      const v = sp.attrs ? main : Number(main);
+
+      if (sp.attr && (main === null || main === undefined || String(main).trim() === '' || !isFinite(v))) return log(`${r.l}: type a number (the game has not sent this value yet)`, 'err');
+
+      return guarded(() => {
+        const was = x.get();
+
+        x.set(v);
+        log(`${r.l}: ${x.show(v)}`);
+        journal(x, x.show(was), x.show(v), was === null ? null : () => x.set(was), x.key);
+        refresh();
+      });
+    }
+    if (sp.act) {
+      const args = L.actArgs(sp, main, inputs);
+
+      return guarded(() => { log(`${r.l}: ${what}`); once(r, what); act(sp.act, args, r.l); }, isRisky);
+    }
+
+    const m = L.specMessages(sp, main, inputs);
+
+    if (m.error) return log(`${r.l}: ${m.error}`, 'err');
+
+    guarded(() => { log(`${r.l}: ${what}`); once(r, what); m.msgs.forEach((msg) => post(msg, r.l)); }, isRisky);
+  }
+
   function controlFor(r) {
     const b = r.bind;
     const key = rowSettingKey(r);
@@ -457,11 +878,11 @@
 
       if (m.error) return log(`${r.l}: ${m.error}`, 'err');
 
-      cheat(() => {
+      guarded(() => {
         log(`${r.l}: ${shownValue}`);
         once(r, shownValue);
         post(m.msg, r.l);
-      });
+      }, !!r.red);
     };
 
     if (r.k === 'num') {
@@ -681,7 +1102,7 @@
 
     const was = x.get();
 
-    if (was === v) return false;
+    if (was === v || v === null || v === undefined) return false;
     x.set(v);
     journal(x, x.show(was), x.show(v), () => x.set(was), key);
     state.journal[0].why = why;
@@ -957,16 +1378,18 @@
 
   // ---------- what the plugin calls ----------
   window.__slcheatmenu = {
-    // st: { inGame, chinese, key, flags, presets }
+    // st: { inGame, chinese, key, flags, holds, presets }
     open(st) {
+      if (state.inGame !== !!st.inGame) { state.lists = {}; state.saveFile = null; }
       state.inGame = !!st.inGame;
       state.key = st.key || '';
       state.flags = st.flags || {};
+      state.holds = st.holds || {};
       if (Array.isArray(st.presets)) state.presets = st.presets;
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.1.0. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu 0.2.0. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       state.open = true;
       host.style.display = 'block';
@@ -978,19 +1401,25 @@
       state.open = false;
       host.style.display = 'none';
     },
-    // The game ran a message (error null) or refused it.
-    result(id, error) {
+    // The game ran a message or one of the mod's cheats (error null) or refused it; text is what a cheat handed back.
+    result(id, error, text) {
       const p = pending[id];
 
       delete pending[id];
-      if (!error) return;
+      if (p && p.onText) return p.onText(text || '', error);
+      if (!error) {
+        if (text) { const list = L.parseList(text); log(`${(p && p.label) || 'Cheat'}: ${list ? list.map((x) => x[0]).join(', ') || 'none' : text}`, 'mod'); }
+
+        return;
+      }
 
       log(((p && p.label) || 'GM') + ': ' + error, 'err');
       if (p && p.onFail) p.onFail();
       if (backup.step === 'listing' || backup.step === 'saving') finishBackup(false, error);
     },
-    flags(f) {
+    flags(f, holds) {
       state.flags = f || {};
+      if (holds) state.holds = holds;
       if (state.open && state.tab !== 'changes') refresh();
     },
     // What the game's GM handler sent back while the menu is open.
@@ -999,6 +1428,21 @@
         if (!msg) return;
 
         onBackupReadouts(msg);
+        state.lastRead[L.readName(msg)] = msg;
+
+        const saves = L.saveList(msg);
+
+        if (saves) {
+          state.lists[saves.of] = saves.list;
+          listReq[saves.of] = false;
+          if (saves.of === 'saves') state.saveFile = L.currentSave(msg) || state.saveFile;
+          if (state.tab === 'saves') refresh();
+        }
+        if (Array.isArray(msg.attrs)) {
+          msg.attrs.forEach((a) => { if (a && a.key != null) state.attrs[a.key] = typeof a.baseValue === 'number' ? a.baseValue : a.baseTotal; });
+          // A maximum the menu could not read when it opened is "before cheating" once the game sends it.
+          BASE.forEach((v, k) => { if (v === null && k.indexOf('attr:') === 0 && !(k in state.attrSet)) { const x = setting(k); if (x) BASE.set(k, x.get()); } });
+        }
 
         const v = L.vitals(msg);
 

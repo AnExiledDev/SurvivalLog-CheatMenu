@@ -9,15 +9,19 @@ internal sealed class CheatSession
 {
     private readonly GmBridge _gm;
     private readonly GmFlags _flags;
+    private readonly ModActions _actions;
+    private readonly Holds _holds;
     private readonly PresetStore _presets;
     private readonly WebPage _page;
     private readonly Action<string> _log;
     private bool _isOpen;
 
-    public CheatSession(GmBridge gm, GmFlags flags, PresetStore presets, WebPage page, Action<string> log)
+    public CheatSession(GmBridge gm, GmFlags flags, ModActions actions, Holds holds, PresetStore presets, WebPage page, Action<string> log)
     {
         _gm = gm;
         _flags = flags;
+        _actions = actions;
+        _holds = holds;
         _presets = presets;
         _page = page;
         _log = log;
@@ -34,6 +38,8 @@ internal sealed class CheatSession
         while (PageMessages.TryTake(out var command)) Handle(command);
 
         _gm.Tick(Time.deltaTime, Time.unscaledDeltaTime);
+
+        if (_holds.Tick(Time.unscaledTime) && _isOpen) Switches();
 
         var sent = _gm.TakeSent();
 
@@ -53,6 +59,7 @@ internal sealed class CheatSession
                     ",\"chinese\":" + (GameLanguage.IsChinese() ? "true" : "false") +
                     ",\"key\":" + JsText.Literal(Key == KeyCode.None ? "" : Key.ToString()) +
                     ",\"flags\":" + _flags.Json() +
+                    ",\"holds\":" + _holds.Json() +
                     ",\"presets\":" + _presets.Load() + "}";
 
         if (!_page.Open(state)) return;
@@ -83,7 +90,15 @@ internal sealed class CheatSession
             case PageCommand.Flag flag:
                 var isSet = _flags.Set(flag.Name, flag.IsOn);
                 _log($"cheat: {flag.Name} {(flag.IsOn ? "on" : "off")}{(isSet ? "" : " (not set)")}");
-                _page.Flags(_flags.Json());
+                Switches();
+                break;
+            case PageCommand.Act act:
+                RunAct(act);
+                break;
+            case PageCommand.Hold hold:
+                var isHeld = _holds.Set(hold.Name, hold.IsOn, Time.unscaledTime);
+                _log($"cheat: hold {hold.Name} {(hold.IsOn ? "on" : "off")}{(isHeld ? "" : " (not set)")}");
+                Switches();
                 break;
             case PageCommand.SavePresets presets:
                 _presets.Save(presets.Json);
@@ -118,6 +133,21 @@ internal sealed class CheatSession
         }
 
         _page.Result(gm.RequestId, error);
-        _page.Flags(_flags.Json());
+        Switches();
     }
+
+    private void RunAct(PageCommand.Act act)
+    {
+        // Lists only read the game, so they stay out of the cheat log.
+        if (act.Name != "list") _log($"cheat: {act.Name} {act.ArgsJson}".TrimEnd());
+
+        var error = _actions.Run(act.Name, act.ArgsJson, out var text);
+
+        if (error != null) _log($"cheat {act.Name}: {error}");
+
+        _page.Result(act.RequestId, error, text);
+        Switches();
+    }
+
+    private void Switches() => _page.Flags(_flags.Json(), _holds.Json());
 }

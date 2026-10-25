@@ -14,7 +14,7 @@ public class LogicTests
     public LogicTests()
     {
         js.Execute("var window = this;");
-        foreach (var name in new[] { "schema.js", "catalog.js", "tabs.js", "refs.js", "logic.js" }) js.Execute(Web(name));
+        foreach (var name in new[] { "schema.js", "catalog.js", "gamedata.js", "tabs.js", "refs.js", "rows.js", "logic.js" }) js.Execute(Web(name));
 
         // Each row with its game tools, as the panel merges them.
         js.Execute(@"var L = window.__slcheatmenuLogic;
@@ -61,13 +61,91 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
     }
 
     [Fact]
-    public void Rows_the_mod_adds_are_never_sent_to_the_game_yet()
+    public void Every_row_reaches_the_game_except_the_ones_the_game_itself_no_longer_runs()
     {
-        var sent = js.Evaluate("ROWS.filter(function (r) { return r.s === 'M' && L.bind(r).kind !== 'none'; }).length").AsNumber();
-        var added = js.Evaluate("ROWS.filter(function (r) { return r.s === 'M'; }).length").AsNumber();
+        var stranded = Json("ROWS.filter(function (r) { var b = L.bind(r); return b.kind === 'none' && b.why !== 'inactive'; }).map(function (r) { return r.key; })");
 
-        Assert.True(added > 0);
-        Assert.Equal(0, sent);
+        Assert.Equal("[]", stranded);
+        Assert.True(js.Evaluate("ROWS.filter(function (r) { return r.s === 'M' && L.bind(r).kind === 'spec'; }).length").AsNumber() > 20);
+    }
+
+    [Fact]
+    public void The_mods_own_cheats_the_rows_name_are_exactly_ones_the_plugin_runs()
+    {
+        var acts = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { return ROWSPEC[k].act; }).filter(Boolean)"))!;
+        var holds = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { return ROWSPEC[k].hold || ROWSPEC[k].pulse; }).filter(Boolean)"))!;
+        var lists = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { var s = ROWSPEC[k]; return [s.live].concat((s.in || []).map(function (x) { return x.live; })).concat(s.act === 'list' ? [s.fix.of] : []); }).reduce(function (a, b) { return a.concat(b); }, []).filter(function (x) { return x && x !== 'saves' && x !== 'backups'; })"))!;
+
+        Assert.All(acts, a => Assert.True(ModCheats.IsAction(a), a));
+        Assert.All(holds, h => Assert.True(ModCheats.IsHold(h), h));
+        Assert.All(lists, l => Assert.True(ModCheats.IsList(l), l));
+        Assert.Equal(ModCheats.Holds.OrderBy(x => x), holds.Distinct().OrderBy(x => x));
+    }
+
+    [Fact]
+    public void Every_spec_row_builds_its_messages_for_its_starting_values()
+    {
+        var broken = Json(@"Object.keys(ROWSPEC).filter(function (k) {
+  var sp = ROWSPEC[k];
+  if (!sp.cmd) return false;
+  var main = sp.opts ? sp.opts[0][1] : sp.v !== undefined ? sp.v : sp.main ? '1' : undefined;
+  var m = L.specMessages(sp, main, {});
+  return !m.msgs || !m.msgs.length || m.msgs[0].msgHead !== SCHEMA[sp.cmd].id;
+})");
+
+        Assert.Equal("[]", broken);
+    }
+
+    [Fact]
+    public void All_in_a_list_sends_one_message_per_choice_and_fixed_fields_ride_along()
+    {
+        var sp = "ROWSPEC['progress|Unlock a survivor']";
+        var count = js.Evaluate(sp + ".opts.filter(function (o) { return o[1] !== '*'; }).length").AsNumber();
+        var msgs = Json("L.specMessages(" + sp + ", '*', {}).msgs");
+        var all = JsonSerializer.Deserialize<JsonElement[]>(msgs)!;
+
+        Assert.Equal(count, all.Length);
+        Assert.All(all, m => Assert.False(m.GetProperty("Revoke").GetBoolean()));
+        Assert.Equal(all.Length, all.Select(m => m.GetProperty("PlayerSelectId").GetInt32()).Distinct().Count());
+    }
+
+    [Fact]
+    public void Each_sends_the_message_once_per_line()
+    {
+        var lines = js.Evaluate("ROWSPEC['debug|Neighbour line probe'].each.length").AsNumber();
+        var msgs = JsonSerializer.Deserialize<JsonElement[]>(Json("L.specMessages(ROWSPEC['debug|Neighbour line probe'], undefined, {}).msgs"))!;
+
+        Assert.True(lines > 1);
+        Assert.Equal(lines, msgs.Length);
+        Assert.All(msgs, m => Assert.Equal("query", m.GetProperty("Op").GetString()));
+    }
+
+    [Fact]
+    public void Cheat_arguments_type_numbers_and_switches_and_leave_blanks_out()
+    {
+        Assert.Equal("{\"pot\":12,\"kind\":4}", Json("L.actArgs(ROWSPEC['farm|Force an anomaly'], 4, { pot: '12' })"));
+        Assert.Equal("{\"kind\":1}", Json("L.actArgs(ROWSPEC['farm|Force an anomaly'], 1, { pot: '' })"));
+        Assert.Equal("{\"on\":false}", Json("L.actArgs(ROWSPEC['home|Free build'], false, {})"));
+        Assert.Equal("{\"of\":\"buffs\"}", Json("L.actArgs(ROWSPEC['debug|Buff list'], undefined, {})"));
+    }
+
+    [Fact]
+    public void Percent_rows_send_the_ratio_the_game_adds_and_show_it_back()
+    {
+        Assert.Equal(0.5, js.Evaluate("L.attrValue(ROWSPEC['survivor|Move speed'], 150)").AsNumber());
+        Assert.Equal(100, js.Evaluate("L.attrShown(ROWSPEC['survivor|Move speed'], 0)").AsNumber());
+        Assert.Equal(1, js.Evaluate("L.attrValue(ROWSPEC['explore|Instant travel'], true)").AsNumber());
+        Assert.Equal(0, js.Evaluate("L.attrValue(ROWSPEC['explore|Instant travel'], false)").AsNumber());
+        Assert.Equal("{\"msg\":{\"msgHead\":" + js.Evaluate("SCHEMA.ChangeAttr.id").AsNumber() + ",\"attrKey\":\"MoveSpeed_Ratio\",\"attrValue\":0.5,\"type\":0}}", Json("L.attrMessage('MoveSpeed_Ratio', 0.5)"));
+    }
+
+    [Fact]
+    public void Lists_from_the_plugin_and_the_game_become_picker_lines()
+    {
+        Assert.Equal("[[\"Tomato (7)\",7]]", Json("L.parseList('[[7,\"Tomato\"]]')"));
+        Assert.Equal("null", Json("L.parseList('Done')"));
+        Assert.Equal("{\"of\":\"saves\",\"list\":[[\"a.sav\",\"a.sav\"],[\"b.sav (playing)\",\"b.sav\"]]}", Json("L.saveList({ Items: [{ FileName: 'a.sav', IsCurrent: false }, { FileName: 'b.sav', IsCurrent: true }] })"));
+        Assert.Equal("{\"of\":\"backups\",\"list\":[[\"Mine (day 3)\",\"Mine\",\"m.bak\"]]}", Json("L.saveList({ Items: [{ FileNameOnDisk: 'm.bak', BackupName: 'Mine', OriginDay: 3 }] })"));
     }
 
     [Fact]

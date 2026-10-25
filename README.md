@@ -16,25 +16,27 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 - **Stats**: drag a bar to set Satiety, Morale, Stamina, Health or Vitality, and lock them where they are with the game's own stat lock.
 - **Item spawner**: pick an item by picture, search by name, Chinese name or id, or type any item id. Items go to your bag.
 - **Weather and maps**: set any weather or go back to the forecast; enter any explore map at once.
+- **Cheats the mod adds**: God mode, Infinite power, Peaceful mode, Freeze the clock, No fuel use, Instant crafting, cooking and brewing, Free build, Mature one pot or every plant, Water and fertilize all, Force a pot anomaly, Ally with everyone or one contact, Add exposure, step, pick a choice, end or reset the current event, Clear loan shark debt, Clear every debuff, Remove one buff. They use the game's own code to do it, and are marked **ADDED BY MOD**.
+- **Survivor values**: max stats, how fast each stat drains, move and interact speed, shop discount, loan cap and instant travel.
 - **The game's own switches**: skip cutscenes and the daily summary, lock door and window durability, lock explore exposure, revive on door break, debug overlays and more.
-- **Every game command**: rows that need more than one value show the command's fields to fill in, and the **Game index** tab runs any of the game's 167 GM commands with its fields.
+- **Every game command**: every row has its own lists and number boxes, with pickers for your own pots, furniture, events, buffs, saves and backups (**Reload** reads them again, long lists have a filter). The rest of a command's fields are under **More fields**. The **Game index** tab runs any of the game's 167 GM commands with its fields.
 - **Console**: type a command and its fields (`AddItem ItemConfigId=1203 Count=20`), a whole message (`{"msgHead":52,"Scale":4}`), `tab NAME`, or `help`.
-- **Changes**: every change you make, newest first, with what it was before. Switches and the weather can be undone. **Restore settings** puts every switch back the way it was when you first opened the menu.
+- **Changes**: every change you make, newest first, with what it was before. Switches, the mod's cheats that stay on, survivor values and the weather can be undone. **Restore settings** puts every switch back the way it was when you first opened the menu.
 - **Presets**: save the current switches as a named preset and apply it again later. **Default (no cheats)** goes back to the start.
 - **Backup before cheating**: your first cheat in a session waits while the menu backs up your save with the game's own backup (named `BeforeCheating_<date>_<time>`). **Load backup** on the Changes tab loads it, undoing everything, items and skipped days too.
+- **Back up before every risky cheat**: a switch on the Saves tab, on by default. Red rows (game over, deleting saves, zombie waves and the like) back up your save first, named `BeforeRisky_<date>_<time>`, and don't run if the backup fails. Turn it off to run them without a backup.
 - **Game log**: the right column shows the game's own replies and each thing you did. Everything is also written to `BepInEx\cheat-menu.log`.
 
 Each row is marked with where it comes from: **GAME** (the game's own tool), **ADDED BY MOD** (a tool this mod adds), **EDITOR** and **NOT WIRED** (built into the game but doing nothing in the release game, shown greyed). Each tab can be filtered to the game's own tools or the mod's.
 
 ## Known issues
 
-- Rows marked **NOT BUILT YET** are tools this mod will add later; they do nothing yet.
-- Rows marked **NOT REACHABLE YET** use game code the GM handler doesn't call, so the menu can't run them yet.
-- Many rows show the game command's fields instead of a single slider or list, for now.
-- Undo covers the switches and the weather. One-time actions (items, stats, skipped days, kills) can only be undone by loading the backup.
+- Rows marked **EDITOR** or **NOT WIRED** are greyed and can't be pressed: the release game ignores them.
+- The mod's cheats that stay on (God mode, Freeze the clock and the rest) start off every time the game starts.
+- Instant crafting finishes shredders, compressors, brewers, dye vats, stoves and drone trips, not workbench crafting.
+- Undo covers switches, the mod's cheats that stay on, survivor values and the weather. One-time actions (items, stats, skipped days, kills) can only be undone by loading the backup.
 - Loading the backup loses everything since your first cheat, not only the cheats.
 - Some tools need to be at home, on an expedition, or in a certain story step; the game refuses them otherwise and the log says so.
-- The menu's own fonts aren't bundled, so it uses the game's fallback fonts.
 
 ## Requirements
 

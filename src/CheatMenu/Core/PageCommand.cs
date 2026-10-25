@@ -25,6 +25,12 @@ public abstract record PageCommand
     /// <summary>The whole preset list, to be written to the presets file.</summary>
     public sealed record SavePresets(string Json) : PageCommand;
 
+    /// <summary>One of the mod's own actions, with its JSON arguments ("" for none), tagged with the panel's request id.</summary>
+    public sealed record Act(string RequestId, string Name, string ArgsJson) : PageCommand;
+
+    /// <summary>One of the mod's holds turned on or off.</summary>
+    public sealed record Hold(string Name, bool IsOn) : PageCommand;
+
     public sealed record Ready : PageCommand;
 
     public sealed record NoScript : PageCommand;
@@ -60,6 +66,19 @@ public abstract record PageCommand
                 var name = Head(ref rest);
 
                 return GmFlagNames.IsKnown(name) && rest is "0" or "1" ? new Flag(name, rest == "1") : new Unknown(message);
+            }
+            case "act":
+            {
+                var id = Head(ref rest);
+                var name = Head(ref rest);
+
+                return id.Length > 0 && ModCheats.IsAction(name) ? new Act(id, name, rest) : new Unknown(message);
+            }
+            case "hold":
+            {
+                var name = Head(ref rest);
+
+                return ModCheats.IsHold(name) && rest is "0" or "1" ? new Hold(name, rest == "1") : new Unknown(message);
             }
             case "presets" when rest.Length > 0:
                 return new SavePresets(rest);

@@ -47,6 +47,18 @@ internal sealed class GmFlags
         }
     }
 
+    public bool IsOn(string name)
+    {
+        try
+        {
+            return _fields.TryGetValue(name, out var field) && field.GetValue(null) is true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     /// <summary>Every switch the build has, as a JSON object of name to on or off.</summary>
     public string Json()
     {

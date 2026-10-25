@@ -40,6 +40,45 @@ public class PageCommandTests
         Assert.False(PageCommand.IsOurs("slmod|defensemanager|close"));
         Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "close|now"));
     }
+
+    [Fact]
+    public void Only_the_mods_own_cheats_and_holds_run_and_their_arguments_stay_whole()
+    {
+        Assert.Equal(new PageCommand.Act("4", "mature", "{\"pot\":\"a|b\"}"), PageCommand.Parse(P + "act|4|mature|{\"pot\":\"a|b\"}"));
+        Assert.Equal(new PageCommand.Act("5", "tend", ""), PageCommand.Parse(P + "act|5|tend"));
+        Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "act|5|format-disk|{}"));
+        Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "act||tend|{}"));
+        Assert.Equal(new PageCommand.Hold("god", true), PageCommand.Parse(P + "hold|god|1"));
+        Assert.Equal(new PageCommand.Hold("clock", false), PageCommand.Parse(P + "hold|clock|0"));
+        Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "hold|god|on"));
+        Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "hold|fly|1"));
+    }
+}
+
+public class ActArgsTests
+{
+    [Fact]
+    public void Numbers_typed_as_text_still_count_and_bad_values_are_null()
+    {
+        var a = ActArgs.Parse("{\"pot\":\"12\",\"kind\":4,\"value\":2.5,\"on\":false,\"name\":\"x\",\"bad\":\"lots\"}");
+
+        Assert.Equal(12, a.Int("pot"));
+        Assert.Equal(4, a.Int("kind"));
+        Assert.Null(a.Int("value"));
+        Assert.Equal(2.5, a.Number("value"));
+        Assert.False(a.Bool("on"));
+        Assert.Equal("x", a.Text("name"));
+        Assert.Null(a.Number("bad"));
+        Assert.Null(a.Int("missing"));
+    }
+
+    [Fact]
+    public void Anything_but_an_object_reads_as_no_arguments()
+    {
+        Assert.Null(ActArgs.Parse("").Int("pot"));
+        Assert.Null(ActArgs.Parse("[1]").Int("pot"));
+        Assert.Null(ActArgs.Parse("{nope").Int("pot"));
+    }
 }
 
 public class GmRequestTests
