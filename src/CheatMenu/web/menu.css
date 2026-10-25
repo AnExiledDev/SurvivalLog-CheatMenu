@@ -60,6 +60,10 @@ kbd { font: 11px var(--mono); color: var(--steel-3); border: 1px solid var(--lin
 .x { height: 40px; padding: 0 12px; background: none; border: 1px solid var(--line-2); color: var(--steel-3); font: 12px var(--mono); cursor: pointer; }
 .x span { font-size: 20px; vertical-align: -2px; margin-left: 6px; color: var(--steel); }
 .x:hover { border-color: var(--rust); color: var(--rust); }
+.lang { height: 40px; padding: 0 4px; margin-right: 8px; background: none; border: 1px solid var(--line-2); cursor: pointer; display: flex; align-items: center; gap: 2px; }
+.lang b { padding: 4px 8px; font: 600 12px var(--zh); color: var(--steel-3); }
+.lang b.on { background: var(--amber); color: #1a1407; }
+.lang:hover { border-color: var(--amber); }
 
 /* ---------- rail ---------- */
 #rail { grid-area: rail; padding: 12px 0; border-right: 1px solid var(--line); overflow-y: auto; scrollbar-width: none; }

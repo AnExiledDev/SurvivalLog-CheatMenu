@@ -31,7 +31,49 @@
   const root = host.attachShadow({ mode: 'open' });
   const $ = (s, el) => (el || root).querySelector(s);
   const $$ = (s, el) => Array.from((el || root).querySelectorAll(s));
-  const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; };
+  const HAN = /[\u4e00-\u9fff]/;
+  const h = (html) => {
+    const t = document.createElement('template');
+
+    t.innerHTML = html.trim();
+
+    const el = t.content.firstChild;
+
+    if (state.lang === 'zh' || HAN.test(html)) localize(el);
+
+    return el;
+  };
+  const tr = (s) => L.tr(s, state.lang);
+
+  // Puts every text and tooltip under el in the menu's language. Each keeps its English, so switching back works.
+  // The game log (data-nolang) stays as the game wrote it.
+  function localize(el) {
+    if (!el) return el;
+
+    const walk = document.createTreeWalker(el, 5, { acceptNode: (n) => n.nodeType === 1 && n.hasAttribute('data-nolang') ? 2 : 1 });
+
+    for (let n = walk.currentNode; n; n = walk.nextNode()) {
+      if (n.nodeType === 3) {
+        const en = n.__en !== undefined ? n.__en : n.data;
+        const out = L.tr(en, state.lang);
+
+        if (out !== n.data) { n.__en = en; n.data = out; }
+      } else if (n.nodeType === 1 && n.tagName !== 'STYLE') {
+        ['title', 'placeholder'].forEach((a) => {
+          if (!n.hasAttribute(a)) return;
+
+          const key = '__en_' + a;
+          const en = n[key] !== undefined ? n[key] : n.getAttribute(a);
+          const out = L.tr(en, state.lang);
+
+          if (out !== n.getAttribute(a)) { n[key] = en; n.setAttribute(a, out); }
+        });
+      }
+    }
+
+    return el;
+  }
+  const nameOf = (x) => (state.lang === 'zh' && x.zh) || x.n;
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   const EXTRA = `
@@ -75,9 +117,10 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> - v0.2.1 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.1 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
+      <button class="lang" id="lang" title="Switch between English and Chinese"><b data-l="en">EN</b><b data-l="zh">中文</b></button>
       <button class="x" id="close" title="Close"><span id="keyname"></span> <span>X</span></button>
     </header>
     <nav id="rail"></nav>
@@ -86,7 +129,7 @@
       <div class="statusbox" id="status"></div>
       <div class="vitals" id="vitals"></div>
       <div class="loghead"><span>Game log</span><button id="clearlog">clear</button></div>
-      <ol id="log"></ol>
+      <ol id="log" data-nolang></ol>
     </aside>
     <footer id="console">
       <span class="prompt">gm&gt;</span>
@@ -101,7 +144,6 @@
 
   const ITEM_CATS = { 1: 'Food', 2: 'Medicine', 3: 'Books', 5: 'Leisure', 6: 'Tools', 9: 'Materials', 10: 'Seeds', 11: 'Fertilizer', 12: 'Traps', 13: 'Fuel', 14: 'Packages', 15: 'Flowers', 16: 'Weapons & bait', 17: 'Robot modules', 18: 'Story items', 19: 'Decor', 20: 'Records', 21: 'Renovation', 22: 'Keys' };
   const COLORS = { Satiety: '#c9a14a', Morale: '#d36aa0', Stamina: '#e2b23a', Health: '#d9534f', Vitality: '#7fbf6a' };
-  const ZH = { Satiety: '饱食', Morale: '心情', Stamina: '体力', Health: '生命', Vitality: '活力' };
 
   const state = {
     tab: 'quick',
@@ -128,7 +170,8 @@
     journal: [],
     backedUp: null,
     presets: [],
-    started: false
+    started: false,
+    lang: 'en'
   };
 
   // Fold in the rows the coverage check added, the tag fixes, each row's game tools, and how it reaches the game.
@@ -488,7 +531,7 @@
 
       const key = i < 10 ? (i + 1) % 10 : '';
       const count = countTools(t);
-      const b = h(`<button class="tab${t.danger ? ' danger' : ''}${t.id === state.tab ? ' on' : ''}" data-tab="${t.id}"><span class="k">${key}</span><svg viewBox="0 0 24 24">${window.TAB_ICONS[t.id]}</svg><span class="t">${t.name}<small>${t.zh}</small></span><span class="n">${count || ''}</span></button>`);
+      const b = h(`<button class="tab${t.danger ? ' danger' : ''}${t.id === state.tab ? ' on' : ''}" data-tab="${t.id}"><span class="k">${key}</span><svg viewBox="0 0 24 24">${window.TAB_ICONS[t.id]}</svg><span class="t">${t.name}</span><span class="n">${count || ''}</span></button>`);
 
       b.onclick = () => openTab(t.id);
       rail.append(b);
@@ -528,13 +571,15 @@
       : t.custom === 'items' ? `<span><b>${GAME.itemTotal}</b> items in the game</span><span><b>${GAME.items.length}</b> with pictures here; any id works</span>`
       : '';
 
-    $('#tabhead').innerHTML = `<h1>${t.title || t.name}<small>${t.zh}</small></h1><p>${t.blurb}</p><div class="counts">${counts}</div>`;
+    $('#tabhead').innerHTML = `<h1>${t.title || t.name}</h1><p>${t.blurb}</p><div class="counts">${counts}</div>`;
+    localize($('#tabhead'));
     if (t.custom === 'items' || t.page) return;
 
     const f = $('#tabhead .counts');
 
     f.classList.add('filter');
     f.innerHTML = [['all', 'All', rows.length], ['game', "Game's own", rows.length - mod], ['mod', 'Added by mod', mod]].map(([k, l, n]) => `<button data-f="${k}" class="${state.filter === k ? 'on' : ''}"><b>${n}</b> ${l}</button>`).join('') + (ed ? `<span title="Editor-only or not wired: shown greyed, they do nothing in the release game"><b>${ed}</b> inactive</span>` : '');
+    localize(f);
     $$('button', f).forEach((b) => { b.onclick = () => { state.filter = b.dataset.f; openTab(t.id); }; });
   }
 
@@ -576,7 +621,7 @@
   }
 
   function groupEl(g) {
-    const el = h(`<section class="group${g.warn ? ' warn' : ''}"><h2>${g.t}<small>${g.zh}</small><em>${g.rows.length}</em></h2>${g.note ? `<div class="gnote">${g.note}</div>` : ''}</section>`);
+    const el = h(`<section class="group${g.warn ? ' warn' : ''}"><h2>${g.t}<em>${g.rows.length}</em></h2>${g.note ? `<div class="gnote">${g.note}</div>` : ''}</section>`);
 
     g.rows.filter(shown).forEach((r) => el.append(rowEl(r)));
 
@@ -689,10 +734,11 @@
     const sel = h('<select class="sel"></select>');
     const paint = () => {
       const q = (u['q:' + slot] || '').toLowerCase();
-      const items = (list || []).map((o, i) => [o, i]).filter(([o]) => !q || String(o[0]).toLowerCase().indexOf(q) >= 0).slice(0, 500);
+      const items = (list || []).map((o, i) => [o, i]).filter(([o]) => !q || String(o[0]).toLowerCase().indexOf(q) >= 0 || tr(String(o[0])).indexOf(q) >= 0).slice(0, 500);
 
       sel.innerHTML = (x.blank ? `<option value="">${esc(x.blank)}</option>` : '')
         + (!list ? '<option value="">(reading the game)</option>' : !list.length ? '<option value="">(none found)</option>' : items.map(([o, i]) => `<option value="${i}"${String(i) === u[slot] ? ' selected' : ''}>${esc(o[0])}</option>`).join(''));
+      localize(sel);
       if (u[slot] !== undefined && sel.value !== u[slot]) u[slot] = sel.value;
     };
 
@@ -939,7 +985,7 @@
   // ---------- custom groups ----------
   function statGroup() {
     const lockOn = !!state.flags.LockCharacterAttr;
-    const g = h(`<section class="group"><h2>Stats<small>属性</small><em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw${lockOn ? ' on' : ''}"></button></div></div></section>`);
+    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw${lockOn ? ' on' : ''}"></button></div></div></section>`);
 
     $('.sw', g).onclick = () => {
       const x = flagSetting('LockCharacterAttr');
@@ -955,7 +1001,7 @@
 
   function statRow(v) {
     const max = v.max || Math.max(100, v.v);
-    const el = h(`<div class="stat"><b>${v.k}<small>${ZH[v.k] || ''}</small></b><div class="bar" style="--col:${COLORS[v.k] || '#ccc'}"><i style="width:${Math.min(100, v.v / max * 100)}%"></i></div><span class="v">${Math.round(v.v)}/${Math.round(max)}</span><span></span></div>`);
+    const el = h(`<div class="stat"><b>${v.k}</b><div class="bar" style="--col:${COLORS[v.k] || '#ccc'}"><i style="width:${Math.min(100, v.v / max * 100)}%"></i></div><span class="v">${Math.round(v.v)}/${Math.round(max)}</span><span></span></div>`);
     const bar = $('.bar', el);
     let to = v.v;
     const setFrom = (e) => {
@@ -984,7 +1030,7 @@
   }
 
   function weatherGroup() {
-    const g = h(`<section class="group"><h2>Weather<small>天气</small><em>${GAME.weather.length}</em></h2><div class="row"><div class="lab"><b>Back to the forecast</b>${CHIP.G}<p>Hands the weather back to the game's tables (ResetWeather).</p></div><div class="ctl"><button class="btn ghost">Reset</button></div></div><div class="tiles"></div></section>`);
+    const g = h(`<section class="group"><h2>Weather<em>${GAME.weather.length}</em></h2><div class="row"><div class="lab"><b>Back to the forecast</b>${CHIP.G}<p>Hands the weather back to the game's tables (ResetWeather).</p></div><div class="ctl"><button class="btn ghost">Reset</button></div></div><div class="tiles"></div></section>`);
     const tiles = $('.tiles', g);
     const setW = (id) => {
       const was = weatherSetting.get();
@@ -999,7 +1045,7 @@
 
     $('.btn', g).onclick = () => setW(null);
     GAME.weather.forEach((w) => {
-      const t = h(`<button class="tile${state.weather === w.id ? ' on' : ''}"><img src="${w.i}" alt=""><span>${esc(w.n)}</span><small>${esc(w.zh)}</small></button>`);
+      const t = h(`<button class="tile${state.weather === w.id ? ' on' : ''}"><img src="${w.i}" alt=""><span>${esc(nameOf(w))}</span></button>`);
 
       t.onclick = () => setW(w.id);
       tiles.append(t);
@@ -1009,11 +1055,11 @@
   }
 
   function mapGroup() {
-    const g = h(`<section class="group"><h2>Go there now<small>一键进探索</small><em>${GAME.maps.length}</em></h2><div class="gnote" style="color:var(--steel-3)">Skips the map, the day and time rules, and the trip (BypassEnterExplore).</div><div class="tiles maps"></div></section>`);
+    const g = h(`<section class="group"><h2>Go there now<em>${GAME.maps.length}</em></h2><div class="gnote" style="color:var(--steel-3)">Skips the map, the day and time rules, and the trip (BypassEnterExplore).</div><div class="tiles maps"></div></section>`);
     const tiles = $('.tiles', g);
 
     GAME.maps.forEach((m) => {
-      const t = h(`<button class="tile">${m.i ? `<img src="${m.i}" alt="">` : ''}<span>${esc(m.n)}</span><small>${esc(m.zh)} - ${m.id}</small></button>`);
+      const t = h(`<button class="tile">${m.i ? `<img src="${m.i}" alt="">` : ''}<span>${esc(nameOf(m))}</span><small>${m.id}</small></button>`);
 
       t.onclick = () => cheat(() => {
         log(`Enter explore: ${m.n} (map point ${m.id})`);
@@ -1027,7 +1073,7 @@
   }
 
   function peopleGroup() {
-    const g = h(`<section class="group"><h2>Neighbour<small>救助与陪伴</small><em>quick</em></h2><div class="row"><div class="lab"><b>Affinity and rescue</b>${CHIP.G}<p>Adds to the neighbour's affinity or rescue progress (AddNeighborAffinity, AddNeighborRescueProgress).</p></div><div class="ctl"><input class="num" value="10"><button class="btn" data-c="AddNeighborAffinity">Affinity</button><button class="btn" data-c="AddNeighborRescueProgress">Rescue</button></div></div></section>`);
+    const g = h(`<section class="group"><h2>Neighbour<em>quick</em></h2><div class="row"><div class="lab"><b>Affinity and rescue</b>${CHIP.G}<p>Adds to the neighbour's affinity or rescue progress (AddNeighborAffinity, AddNeighborRescueProgress).</p></div><div class="ctl"><input class="num" value="10"><button class="btn" data-c="AddNeighborAffinity">Affinity</button><button class="btn" data-c="AddNeighborRescueProgress">Rescue</button></div></div></section>`);
     const n = $('.num', g);
 
     $$('[data-c]', g).forEach((b) => {
@@ -1060,7 +1106,7 @@
 
       grid.innerHTML = '';
       list.forEach((it) => {
-        const c = h(`<button class="cell${state.item === it ? ' on' : ''}" title="${esc(it.n)} - ${it.id}"><img src="${it.i}" alt="" loading="lazy"><span>${esc(it.n)}</span></button>`);
+        const c = h(`<button class="cell${state.item === it ? ' on' : ''}" title="${esc(nameOf(it))} - ${it.id}"><img src="${it.i}" alt="" loading="lazy"><span>${esc(nameOf(it))}</span></button>`);
 
         c.onclick = () => { state.item = it; paintGrid(); paintDetail(wrap); };
         grid.append(c);
@@ -1087,7 +1133,8 @@
     const it = state.item;
     const d = $('.detail', wrap);
 
-    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(it.n)}</h3><div class="zhn">${esc(it.zh)}</div><div class="meta">id ${it.id} - stack ${it.st} - ${ITEM_CATS[it.c] || 'Other'}</div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's own add-item (AddItem).</div>`;
+    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(nameOf(it))}</h3><div class="meta">id ${it.id} - <span>stack</span> ${it.st} - <span>${ITEM_CATS[it.c] || 'Other'}</span></div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's own add-item (AddItem).</div>`;
+    localize(d);
 
     const n = $('.num', d);
 
@@ -1168,10 +1215,10 @@
     const changed = changedNow();
     const oneTime = live.filter((j) => !j.key);
     const bak = state.backedUp;
-    const top = h(`<section class="group before"><h2>Before cheating<small>作弊前</small><em>${bak ? 'backup: ' + esc(bak) : backup.step === 'failed' ? 'backup failed' : 'no cheats yet'}</em></h2>
+    const top = h(`<section class="group before"><h2>Before cheating<em>${bak ? 'backup: ' + esc(bak) : backup.step === 'failed' ? 'backup failed' : 'no cheats yet'}</em></h2>
       <div class="bstat"><div><b>${changed.length}</b><span>settings differ from before</span></div><div><b>${oneTime.length}</b><span>one-time actions</span></div><div><b>${live.length}</b><span>changes in the journal</span></div></div>
       <div class="row"><div class="lab"><b>Return to before cheating</b><span class="c add">ADDED BY MOD</span><p>Puts every switch back the way it was when you first opened the menu this session, and the weather back to the forecast. One-time actions (items, skipped days, kills) stay.</p></div><div class="ctl"><button class="btn" id="tobase"${changed.length ? '' : ' disabled'}>Restore settings</button></div></div>
-      <div class="row"><div class="lab"><b>Load the before-cheating backup</b><span class="c gm">GAME</span><p>${bak ? `Undoes everything, one-time actions too, by loading the save the menu backed up before your first cheat (${esc(bak)}). Uses the game's own InjectSave. Anything since then is lost.` : 'The menu backs up your save with the game\'s own BackupSave the moment you make your first change, so this has something to load.'}</p></div><div class="ctl"><button class="btn red" id="loadbak"${bak ? '' : ' disabled'}>${confirmLoad ? 'Click again to load' : 'Load backup'}</button></div></div></section>`);
+      <div class="row"><div class="lab"><b>Load the before-cheating backup</b><span class="c gm">GAME</span><p>${bak ? `Undoes everything, one-time actions too, by loading the save the menu backed up before your first cheat: <b>${esc(bak)}</b>. Uses the game's own InjectSave. Anything since then is lost.` : 'The menu backs up your save with the game\'s own BackupSave the moment you make your first change, so this has something to load.'}</p></div><div class="ctl"><button class="btn red" id="loadbak"${bak ? '' : ' disabled'}>${confirmLoad ? 'Click again to load' : 'Load backup'}</button></div></div></section>`);
 
     $('#tobase', top).onclick = returnToBefore;
     $('#loadbak', top).onclick = () => {
@@ -1185,7 +1232,7 @@
     };
     body.append(top);
 
-    const pg = h(`<section class="group"><h2>Presets<small>预设</small><em>${state.presets.length + 1}</em></h2><div class="gnote" style="color:var(--steel-3)">A preset is a saved set of switches. Apply one to set up a test, then pick Default to go back. They are kept in BepInEx/config/CheatMenu/presets.json.</div><div class="presets"></div>
+    const pg = h(`<section class="group"><h2>Presets<em>${state.presets.length + 1}</em></h2><div class="gnote" style="color:var(--steel-3)">A preset is a saved set of switches. Apply one to set up a test, then pick Default to go back. They are kept in BepInEx/config/CheatMenu/presets.json.</div><div class="presets"></div>
       <div class="row"><div class="lab"><b>Save the current settings as a preset</b><p>${changed.length ? `Saves the ${changed.length} settings that differ from before cheating.` : 'Change some settings first; a preset only stores what differs from before cheating.'}</p></div><div class="ctl"><input class="num wide" id="pname" placeholder="Preset name"><button class="btn" id="psave"${changed.length ? '' : ' disabled'}>Save</button></div></div></section>`);
     const list = $('.presets', pg);
     const card = (p, builtin) => {
@@ -1212,7 +1259,7 @@
     };
     body.append(pg);
 
-    const jg = h('<section class="group journal"><h2>Journal<small>变更记录</small><em>every change, newest first</em></h2></section>');
+    const jg = h('<section class="group journal"><h2>Journal<em>every change, newest first</em></h2></section>');
 
     if (!state.journal.length) jg.append(h('<div class="empty">No changes yet. Everything you do in the menu shows up here, with what it was before.</div>'));
     state.journal.forEach((j) => {
@@ -1249,7 +1296,7 @@
 
         if (!list.length) return;
 
-        const g = h(`<section class="group"><h2>${KIND[kind]}s<small>${{ cmd: '面板命令', read: '回报', sub: '子命令', gm: 'Gm 方法', hook: 'GM 钩子' }[kind]}</small><em>${list.length}</em></h2></section>`);
+        const g = h(`<section class="group"><h2>${KIND[kind]}s<em>${list.length}</em></h2></section>`);
 
         list.forEach((c) => {
           const w = where.get(c.key) || [];
@@ -1282,12 +1329,14 @@
 
   // ---------- live column ----------
   function renderStatus() {
-    $('#keyname').textContent = state.key || 'Close';
+    $('#keyname').textContent = state.key || tr('Close');
     $('#status').innerHTML = `${state.inGame ? '<b>In a save</b>: cheats go to the game.' : '<span class="bad">No save loaded</span>: load one to use cheats.'}<br>${state.key ? `<b>${esc(state.key)}</b> opens and closes this menu.` : 'No key set; see the config.'}<br>Backup: ${state.backedUp ? esc(state.backedUp) : backup.step === 'failed' ? '<span class="bad">failed</span>' : 'made at your first cheat'}`;
+    localize($('#status'));
   }
 
   function renderVitals() {
     $('#vitals').innerHTML = state.vitals.map((v) => { const max = v.max || Math.max(100, v.v); return `<div class="vit${state.flags.LockCharacterAttr ? ' locked' : ''}"><span>${v.k}</span><div class="bar" style="--col:${COLORS[v.k] || '#ccc'}"><i style="width:${Math.min(100, v.v / max * 100)}%"></i></div><span class="v">${Math.round(v.v)}/${Math.round(max)}</span></div>`; }).join('');
+    if (state.lang === 'zh') localize($('#vitals'));
   }
 
   // ---------- search ----------
@@ -1298,10 +1347,11 @@
     const hits = [];
 
     TABS.forEach((tab) => tab.groups.forEach((g) => g.rows.forEach((r) => {
-      if ((r.l + ' ' + (r.d || '') + ' ' + g.t + ' ' + g.zh + ' ' + r.ref.join(' ')).toLowerCase().includes(needle)) hits.push({ tab, g, r });
+      if ((r.l + ' ' + (r.d || '') + ' ' + g.t + ' ' + g.zh + ' ' + r.ref.join(' ') + (state.lang === 'zh' ? ' ' + tr(r.l) + ' ' + tr(r.d || '') : '')).toLowerCase().includes(needle)) hits.push({ tab, g, r });
     })));
 
-    $('#tabhead').innerHTML = `<h1>Search<small>搜索</small></h1><p>Every tab, every tool. Run it from here or jump to its tab.</p><div class="counts"><span><b>${hits.length}</b> found</span></div>`;
+    $('#tabhead').innerHTML = `<h1>Search</h1><p>Every tab, every tool. Run it from here or jump to its tab.</p><div class="counts"><span><b>${hits.length}</b> found</span></div>`;
+    localize($('#tabhead'));
 
     const body = $('#body');
 
@@ -1309,7 +1359,7 @@
     body.classList.add('flat');
     if (!hits.length) return body.append(h('<div class="empty">Nothing matches. Try a Chinese word, or a game command in the Game index.</div>'));
 
-    const box = h('<section class="group results"><h2>Results<small>结果</small></h2></section>');
+    const box = h('<section class="group results"><h2>Results</h2></section>');
 
     hits.filter(({ r }) => shown(r)).slice(0, 60).forEach(({ tab, g, r }) => {
       const row = rowEl(r);
@@ -1400,6 +1450,28 @@
     });
     $('#clearlog').onclick = () => { $('#log').innerHTML = ''; };
     $('#close').onclick = () => send('close');
+    $('#lang').onclick = () => setLang(state.lang === 'zh' ? 'en' : 'zh');
+  }
+
+  // The menu starts in the game's language. A switch is kept until the game's own language changes.
+  const LANG_KEY = 'slcheatmenu.lang';
+
+  function startLang(chinese) {
+    let saved = null;
+
+    try { saved = window.localStorage.getItem(LANG_KEY); } catch (e) { saved = null; }
+
+    return L.startLang(saved, chinese);
+  }
+
+  function setLang(lang, game) {
+    state.lang = lang;
+    if (game) state.gameLang = game;
+    try { window.localStorage.setItem(LANG_KEY, JSON.stringify({ game: state.gameLang, lang })); } catch (e) { /* no storage: the switch lasts this session */ }
+    $$('#lang b').forEach((b) => b.classList.toggle('on', b.dataset.l === lang));
+    $('#rail').innerHTML = '';
+    localize(root);
+    if (state.open) { refresh(); renderVitals(); }
   }
 
   TABS.push(
@@ -1408,6 +1480,12 @@
   );
   window.TAB_ICONS.changes = '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4h4M12 8v4l3 2"/>';
   window.TAB_ICONS.index = '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>';
+
+  window.ZH = window.ZH || {};
+  TABS.forEach((t) => {
+    [t.name, t.title].forEach((n) => { if (n && t.zh && !(n in window.ZH)) window.ZH[n] = t.zh; });
+    t.groups.forEach((g) => { if (g.t && g.zh && !(g.t in window.ZH)) window.ZH[g.t] = g.zh; });
+  });
 
   (document.body || document.documentElement).appendChild(host);
   wire();
@@ -1427,6 +1505,9 @@
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
         log(`Cheat Menu 0.2.1. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
+      const game = st.chinese ? 'zh' : 'en';
+
+      if (state.gameLang !== game) setLang(startLang(st.chinese), game);
       state.open = true;
       host.style.display = 'block';
       fitStage();

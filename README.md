@@ -11,6 +11,7 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 ## Features
 
 - **Menu key**: `F3` opens and closes the menu. `Esc` or the close button also closes it. The game's own hotkeys are off while it is open.
+- **Language**: the menu starts in the game's language. The `EN` / `中文` button at the top right switches between English and Chinese, and the menu remembers your choice until the game's language changes.
 - **16 tabs**: Quick, Survivor, Items, Money & Trade, Time & Weather, Home & Build, Farm & Robots, Danger, Explore, People, Story & Events, Unlocks, Saves and Debug, plus **Changes** and **Game index**. Number keys `1`-`0` jump to the first ten tabs.
 - **Search**: `Ctrl+K` or the search box finds any tool on any tab, by English or Chinese words or by the game's command name.
 - **Stats**: drag a bar to set Satiety, Morale, Stamina, Health or Vitality, and lock them where they are with the game's own stat lock.

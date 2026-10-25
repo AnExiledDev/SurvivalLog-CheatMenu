@@ -244,5 +244,66 @@
     return readName(msg) + (text ? ': ' + text : '');
   }
 
-  window.__slcheatmenuLogic = { FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
+  // The menu shows one language. English drops the game's Chinese names written in brackets; Chinese looks each
+  // piece of text up in the menu's own table (zh.js), then the game's (gamedata.js). "Name (id ...)" keeps its
+  // bracket and translates the name. Text with no entry stays as it is.
+  const HAN = /[\u4e00-\u9fff]/;
+  const ZH_BRACKET = / ?[(\uff08][^()\uff08\uff09]*[\u4e00-\u9fff][^()\uff08\uff09]*[)\uff09]/g;
+
+  function zhOf(s) {
+    const own = window.ZH || {};
+    const game = window.GAMEZH || {};
+
+    if (has(own, s)) return own[s];
+    if (has(game, s)) return game[s];
+
+    const m = s.match(/^(.+?) \((.*)\)$/);
+
+    const known = (x) => zhOf(x) !== x;
+
+    if (m && known(m[1])) return zhOf(m[1]) + ' (' + m[2].replace(/\bhp\b/, '\u751f\u547d').replace(/\battack\b/, '\u653b\u51fb') + ')';
+    // "Tab > Row" is two names; "Panel command 12" is a name and a number; "5 Ending line 1" is a number first.
+    if (s.indexOf(' > ') > 0) return s.split(' > ').map(zhOf).join(' > ');
+
+    const n = s.match(/^(.+) (\d+)$/);
+
+    if (n && known(n[1])) return zhOf(n[1]) + ' ' + n[2];
+
+    const lead = s.match(/^(\d+) (.+)$/);
+
+    if (lead && known(lead[2])) return lead[1] + ' ' + zhOf(lead[2]);
+
+    return s;
+  }
+
+  function tr(s, lang) {
+    if (typeof s !== 'string' || !s.trim()) return s;
+    if (lang !== 'zh') return HAN.test(s) ? s.replace(ZH_BRACKET, '') : s;
+
+    const core = s.trim();
+    const at = s.indexOf(core);
+    let out = zhOf(core);
+
+    // The table is keyed by the English as shown, without the game's Chinese name in brackets.
+    if (out === core && HAN.test(core)) {
+      const en = core.replace(ZH_BRACKET, '');
+      const z = zhOf(en);
+
+      if (z !== en) out = z;
+    }
+
+    return s.slice(0, at) + out + s.slice(at + core.length);
+  }
+
+  // The game's language, unless the player switched while the game was in the language it is in now.
+  function startLang(saved, chinese) {
+    const game = chinese ? 'zh' : 'en';
+    let s = null;
+
+    try { s = JSON.parse(saved || 'null'); } catch (e) { s = null; }
+
+    return s && s.game === game && (s.lang === 'zh' || s.lang === 'en') ? s.lang : game;
+  }
+
+  window.__slcheatmenuLogic = { tr, startLang, FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
 })();

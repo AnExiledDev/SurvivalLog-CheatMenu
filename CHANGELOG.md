@@ -2,6 +2,9 @@
 
 ## 0.2.1
 
+- The menu is much faster: buttons and lists respond right away.
+- One language at a time: the menu starts in the game's language, and the EN / 中文 button at the top right switches between English and Chinese.
+- Zombie and wave pickers show names instead of numbers.
 - Never spoil: nothing rots and food stays as fresh as it is while it is on. Make all food fresh puts every food item back to new.
 - Unlock every recipe and blueprint, on the Unlocks tab.
 - Skip to a time of day: morning, noon, evening or night.

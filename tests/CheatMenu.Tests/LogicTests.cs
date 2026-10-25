@@ -14,7 +14,7 @@ public class LogicTests
     public LogicTests()
     {
         js.Execute("var window = this;");
-        foreach (var name in new[] { "schema.js", "catalog.js", "gamedata.js", "tabs.js", "refs.js", "rows.js", "logic.js" }) js.Execute(Web(name));
+        foreach (var name in new[] { "schema.js", "catalog.js", "gamedata.js", "tabs.js", "refs.js", "rows.js", "zh.js", "logic.js" }) js.Execute(Web(name));
 
         // Each row with its game tools, as the panel merges them.
         js.Execute(@"var L = window.__slcheatmenuLogic;
@@ -94,6 +94,54 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
 })");
 
         Assert.Equal("[]", broken);
+    }
+
+    private string Tr(string text, string lang) => js.Evaluate("L.tr(" + JsonSerializer.Serialize(text) + ", '" + lang + "')").AsString();
+
+    [Fact]
+    public void English_shows_no_chinese_and_chinese_shows_the_menus_own_words()
+    {
+        Assert.Equal("Durability lock.", Tr("Durability lock (门窗耐久锁定).", "en"));
+        Assert.Equal("Add money", Tr("Add money", "en"));
+        Assert.Equal("增加金钱", Tr("Add money", "zh"));
+        Assert.Equal("门窗耐久锁定。", Tr("Durability lock (门窗耐久锁定).", "zh"));
+        Assert.Equal("  关闭 ", Tr("  Close ", "zh"));
+        Assert.Equal("Not in any table", Tr("Not in any table", "zh"));
+    }
+
+    [Fact]
+    public void Chinese_translates_the_name_part_of_built_up_labels()
+    {
+        Assert.Equal("护士 (9106, 生命 100, 攻击 5)", Tr("Nurse (9106, hp 100, attack 5)", "zh"));
+        Assert.Equal("物品 > 物品生成器", Tr("Item > Item spawner", "zh"));
+        Assert.Equal("WebGm 面板命令 12", Tr("WebGm panel command 12", "zh"));
+        Assert.Equal("5 结局线 1", Tr("5 Ending line 1", "zh"));
+        Assert.Equal("更多字段 (3)", Tr("More fields (3)", "zh"));
+    }
+
+    [Fact]
+    public void Every_row_has_its_name_and_description_in_chinese()
+    {
+        // A description that is only game method names, or already Chinese, stays as it is.
+        var missing = Json("ROWS.filter(function (r) { var prose = r.d && / /.test(r.d) && !/^\\w+( \\/ \\w+)*$/.test(r.d) && !/[\\u4e00-\\u9fff]/.test(r.d); return L.tr(r.l, 'zh') === r.l || (prose && L.tr(r.d, 'zh') === r.d); }).map(function (r) { return r.key; })");
+
+        Assert.Equal("[]", missing);
+    }
+
+    [Theory]
+    [InlineData(null, false, "en")]
+    [InlineData(null, true, "zh")]
+    [InlineData("{\"game\":\"en\",\"lang\":\"zh\"}", false, "zh")]
+    [InlineData("{\"game\":\"en\",\"lang\":\"zh\"}", true, "zh")]
+    [InlineData("{\"game\":\"zh\",\"lang\":\"en\"}", false, "en")]
+    [InlineData("{\"game\":\"zh\",\"lang\":\"en\"}", true, "en")]
+    [InlineData("{\"game\":\"en\",\"lang\":\"en\"}", true, "zh")]
+    [InlineData("not json", true, "zh")]
+    public void The_menu_starts_in_the_games_language_unless_switched_in_that_language(string? saved, bool chinese, string expected)
+    {
+        var got = js.Evaluate("L.startLang(" + (saved == null ? "null" : JsonSerializer.Serialize(saved)) + ", " + (chinese ? "true" : "false") + ")").AsString();
+
+        Assert.Equal(expected, got);
     }
 
     [Fact]

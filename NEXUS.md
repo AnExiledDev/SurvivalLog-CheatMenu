@@ -35,7 +35,7 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 [/list]
 F3 can be changed or turned off in the config. The game's own hotkeys are off while the menu is open.
 
-Works in English and Chinese.
+Works in English and Chinese. The menu starts in the game's language; the EN / 中文 button at the top right switches it.
 
 [size=5]Known issues[/size]
 [list]
@@ -112,7 +112,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu
 [/list]
 F3 可以在配置中修改或停用。菜单打开时游戏自己的快捷键不起作用。
 
-支持英文和中文。
+支持英文和中文。菜单默认使用游戏的语言；右上角的 EN / 中文 按钮可以切换。
 
 [size=5]已知问题[/size]
 [list]
