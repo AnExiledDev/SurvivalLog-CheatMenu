@@ -54,10 +54,10 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> · v0.1.0 · game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span class="zh">作弊与开发者菜单</span> - v0.1.0 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
-      <button class="x" id="close" title="Close"><span id="keyname"></span> <span>×</span></button>
+      <button class="x" id="close" title="Close"><span id="keyname"></span> <span>X</span></button>
     </header>
     <nav id="rail"></nav>
     <main id="main"><div id="tabhead"></div><div id="body"></div></main>
@@ -69,8 +69,8 @@
     </aside>
     <footer id="console">
       <span class="prompt">gm&gt;</span>
-      <input id="cmd" placeholder="AddItem ItemConfigId=1203 Count=20 · {&quot;msgHead&quot;:52,&quot;Scale&quot;:4} · help" autocomplete="off">
-      <span class="hint">Enter to run · ↑ history</span>
+      <input id="cmd" placeholder="AddItem ItemConfigId=1203 Count=20 - {&quot;msgHead&quot;:52,&quot;Scale&quot;:4} - help" autocomplete="off">
+      <span class="hint">Enter to run - Up history</span>
     </footer>
   </section>
 </div>`;
@@ -564,7 +564,7 @@
     const tiles = $('.tiles', g);
 
     GAME.maps.forEach((m) => {
-      const t = h(`<button class="tile">${m.i ? `<img src="${m.i}" alt="">` : ''}<span>${esc(m.n)}</span><small>${esc(m.zh)} · ${m.id}</small></button>`);
+      const t = h(`<button class="tile">${m.i ? `<img src="${m.i}" alt="">` : ''}<span>${esc(m.n)}</span><small>${esc(m.zh)} - ${m.id}</small></button>`);
 
       t.onclick = () => cheat(() => {
         log(`Enter explore: ${m.n} (map point ${m.id})`);
@@ -611,7 +611,7 @@
 
       grid.innerHTML = '';
       list.forEach((it) => {
-        const c = h(`<button class="cell${state.item === it ? ' on' : ''}" title="${esc(it.n)} · ${it.id}"><img src="${it.i}" alt="" loading="lazy"><span>${esc(it.n)}</span></button>`);
+        const c = h(`<button class="cell${state.item === it ? ' on' : ''}" title="${esc(it.n)} - ${it.id}"><img src="${it.i}" alt="" loading="lazy"><span>${esc(it.n)}</span></button>`);
 
         c.onclick = () => { state.item = it; paintGrid(); paintDetail(wrap); };
         grid.append(c);
@@ -638,7 +638,7 @@
     const it = state.item;
     const d = $('.detail', wrap);
 
-    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(it.n)}</h3><div class="zhn">${esc(it.zh)}</div><div class="meta">id ${it.id} · stack ${it.st} · ${ITEM_CATS[it.c] || 'Other'}</div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's own add-item (AddItem).</div>`;
+    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(it.n)}</h3><div class="zhn">${esc(it.zh)}</div><div class="meta">id ${it.id} - stack ${it.st} - ${ITEM_CATS[it.c] || 'Other'}</div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's own add-item (AddItem).</div>`;
 
     const n = $('.num', d);
 
@@ -741,9 +741,9 @@
     const list = $('.presets', pg);
     const card = (p, builtin) => {
       const entries = builtin ? changed.map((k) => [k, BASE.get(k)]) : Object.entries(p.values);
-      const items = entries.map(([k, v]) => { const x = setting(k); return x ? `<li><span>${esc(tabName(x.tab))} › ${esc(x.l)}</span><b>${esc(x.show(v))}</b>${x.s === 'M' ? '<i class="c add">MOD</i>' : ''}</li>` : ''; }).join('');
+      const items = entries.map(([k, v]) => { const x = setting(k); return x ? `<li><span>${esc(tabName(x.tab))} > ${esc(x.l)}</span><b>${esc(x.show(v))}</b>${x.s === 'M' ? '<i class="c add">MOD</i>' : ''}</li>` : ''; }).join('');
       const active = !builtin && entries.every(([k, v]) => setting(k) && setting(k).get() === v);
-      const el = h(`<div class="preset${builtin ? ' base' : ''}${active || (builtin && !changed.length) ? ' active' : ''}"><header><b>${esc(p.name)}</b><small>${builtin ? 'built in · the settings this session started with' : esc(p.made)}</small></header><ul>${items || `<li class="none">${builtin ? 'Nothing to change: you are at the default.' : 'Empty'}</li>`}</ul><footer><button class="btn">${builtin ? 'Apply default' : 'Apply'}</button>${builtin ? '' : '<button class="btn ghost del">Delete</button>'}</footer></div>`);
+      const el = h(`<div class="preset${builtin ? ' base' : ''}${active || (builtin && !changed.length) ? ' active' : ''}"><header><b>${esc(p.name)}</b><small>${builtin ? 'built in - the settings this session started with' : esc(p.made)}</small></header><ul>${items || `<li class="none">${builtin ? 'Nothing to change: you are at the default.' : 'Empty'}</li>`}</ul><footer><button class="btn">${builtin ? 'Apply default' : 'Apply'}</button>${builtin ? '' : '<button class="btn ghost del">Delete</button>'}</footer></div>`);
 
       $('.btn', el).onclick = () => builtin ? returnToBefore() : applyPreset(p);
       if (!builtin) $('.del', el).onclick = () => { state.presets = state.presets.filter((x) => x !== p); savePresets(); log(`Deleted preset "${p.name}"`, 'mod'); refresh(); };
@@ -770,7 +770,7 @@
       const act = j.undone ? '<span class="st">undone</span>'
         : j.key ? (latest(j) ? '<button class="btn ghost">Undo</button>' : '<span class="st">replaced later</span>')
           : j.undo ? '<button class="btn ghost">Undo</button>' : '<span class="st" title="Load the before-cheating backup to undo this">one-time</span>';
-      const el = h(`<div class="jrow${j.undone ? ' gone' : ''}${j.s === 'M' ? ' added' : ''}"><span class="jn">${j.n}</span><time>${j.t}</time><span class="jw">${esc(tabName(j.tab))} › <b>${esc(j.l)}</b>${CHIP[j.s] || ''}${j.why ? `<small>${esc(j.why)}</small>` : ''}</span><span class="jv">${j.before === null ? '' : `<s>${esc(j.before)}</s> → `}<b>${esc(j.after)}</b></span><span class="ja">${act}</span></div>`);
+      const el = h(`<div class="jrow${j.undone ? ' gone' : ''}${j.s === 'M' ? ' added' : ''}"><span class="jn">${j.n}</span><time>${j.t}</time><span class="jw">${esc(tabName(j.tab))} > <b>${esc(j.l)}</b>${CHIP[j.s] || ''}${j.why ? `<small>${esc(j.why)}</small>` : ''}</span><span class="jv">${j.before === null ? '' : `<s>${esc(j.before)}</s> -> `}<b>${esc(j.after)}</b></span><span class="ja">${act}</span></div>`);
       const b = $('.ja .btn', el);
 
       if (b) b.onclick = () => undo(j);
@@ -804,7 +804,7 @@
 
         list.forEach((c) => {
           const w = where.get(c.key) || [];
-          const el = h(`<div class="irow"><code>${esc(c.key)}</code><span class="isrc">${esc(c.src)}${c.via ? ' · via ' + esc(c.via) : ''}${kind === 'cmd' && S[c.key] ? '<a class="run">run</a>' : ''}</span><span class="iw">${w.length ? w.map((x, i) => `<a data-i="${i}">${esc(x.tab.name)} › ${esc(x.l)}</a>`).join('') : '<em>not in the menu</em>'}</span></div>`);
+          const el = h(`<div class="irow"><code>${esc(c.key)}</code><span class="isrc">${esc(c.src)}${c.via ? ' - via ' + esc(c.via) : ''}${kind === 'cmd' && S[c.key] ? '<a class="run">run</a>' : ''}</span><span class="iw">${w.length ? w.map((x, i) => `<a data-i="${i}">${esc(x.tab.name)} > ${esc(x.l)}</a>`).join('') : '<em>not in the menu</em>'}</span></div>`);
 
           $$('a[data-i]', el).forEach((a) => { a.onclick = () => jumpTo(w[+a.dataset.i]); });
 
@@ -865,7 +865,7 @@
     hits.filter(({ r }) => shown(r)).slice(0, 60).forEach(({ tab, g, r }) => {
       const row = rowEl(r);
 
-      $('.lab', row).append(h(`<p class="where">${tab.name} › ${g.t}</p>`));
+      $('.lab', row).append(h(`<p class="where">${tab.name} > ${g.t}</p>`));
       box.append(row);
     });
     body.append(box);

@@ -46,7 +46,7 @@
       num('Skip days', 'G', 'Forward only; daily ticks run for each day.', 1, 'days', 'Skip')
     ]),
     grp('Test kit', '跑测套装', [
-      btn('Apply the developers\' test kit', 'G', 'Their one-click set: thinking AI off, skip settlement, stat lock, door lock, event oracle, auto-confirm, buff 999 and every stat at 100.', 'Apply'),
+      btn('Apply the developers\' test kit', 'G', 'Their one-click set: character thinking off, skip settlement, stat lock, door lock, event oracle, auto-confirm, buff 999 and every stat at 100.', 'Apply'),
       btn('Skip prologue and pre-disaster', 'G', 'Ends the prologue, skips the opening, lands you after the disaster.', 'Skip')
     ])
   ]});
