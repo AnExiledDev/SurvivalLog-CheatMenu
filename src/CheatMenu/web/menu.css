@@ -237,7 +237,6 @@ kbd { font: 11px var(--mono); color: var(--steel-3); border: 1px solid var(--lin
 .c.add { color: #061316; background: var(--cyan); border: 1px solid var(--cyan); }
 .c.nw { color: #ffb08f; border: 1px dashed rgba(255,176,143,.6); }
 .row.added { box-shadow: inset 3px 0 0 var(--cyan); background: linear-gradient(90deg, rgba(95,212,224,.07), transparent 40%); }
-.row .refs { display: block; width: fit-content; margin-top: 3px; font: 10.5px var(--mono); color: var(--amber-d); cursor: help; }
 #tabhead .counts span.m { border-color: rgba(95,212,224,.4); }
 #tabhead .counts span.m b { color: var(--cyan); }
 .counts.filter { gap: 0; border: 1px solid var(--line-2); flex-shrink: 0; }

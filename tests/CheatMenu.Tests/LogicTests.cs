@@ -122,10 +122,30 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
     [Fact]
     public void Every_row_has_its_name_and_description_in_chinese()
     {
-        // A description that is only game method names, or already Chinese, stays as it is.
-        var missing = Json("ROWS.filter(function (r) { var prose = r.d && / /.test(r.d) && !/^\\w+( \\/ \\w+)*$/.test(r.d) && !/[\\u4e00-\\u9fff]/.test(r.d); return L.tr(r.l, 'zh') === r.l || (prose && L.tr(r.d, 'zh') === r.d); }).map(function (r) { return r.key; })");
+        var missing = Json("ROWS.filter(function (r) { var d = L.shownDesc(r.d); return L.tr(r.l, 'zh') === r.l || (d && L.tr(d, 'zh') === d); }).map(function (r) { return r.key; })");
 
         Assert.Equal("[]", missing);
+    }
+
+    [Theory]
+    [InlineData("MaxSatiety", "")]
+    [InlineData("MoveSpeed_Ratio", "")]
+    [InlineData("PsOpPawn / GmPawnFurniture", "")]
+    [InlineData("探索自由视角", "")]
+    [InlineData("Robot, action, pot.", "Robot, action, pot.")]
+    [InlineData("Durability lock.", "Durability lock.")]
+    [InlineData("Machine Speed does this too; the menu calls it when it is loaded.", "Machine Speed does this too; the menu calls it when it is loaded.")]
+    public void Rows_hide_the_games_method_names_and_keep_plain_descriptions(string d, string expected)
+    {
+        Assert.Equal(expected, js.Evaluate("L.shownDesc(" + JsonSerializer.Serialize(d) + ")").AsString());
+    }
+
+    [Fact]
+    public void No_row_shows_a_game_method_name()
+    {
+        var shown = Json("ROWS.map(function (r) { return L.shownDesc(r.d); }).filter(function (d) { return /\\b(Gm|PsOp)[A-Z]|[a-z][A-Z]\\w*_Ratio/.test(d); })");
+
+        Assert.Equal("[]", shown);
     }
 
     [Theory]

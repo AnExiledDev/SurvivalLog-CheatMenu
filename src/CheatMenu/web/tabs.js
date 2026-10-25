@@ -96,15 +96,15 @@
   T.push({ id: 'money', name: 'Money & Trade', zh: '金钱与交易', blurb: 'Gold, shops, the pawn shop, strangers and trade points.', groups: [
     grp('Money', '金钱', [
       num('Add money', 'G', 'Pre-disaster only.', 5000, 'gold', 'Add'),
-      num('Set money', 'G', 'GmSetGold / PsOpSetMoney.', 99999, 'gold', 'Set'),
+      num('Set money', 'G', '', 99999, 'gold', 'Set'),
       btn('Clear loan shark debt', 'M', '', 'Clear'),
       num('Loan cap bonus', 'M', 'LoanMaxBonus', 10000, 'gold')
     ]),
     grp('Pre-disaster shopping', '灾前物资', [
-      btn('Buy everything in this shop', 'G', 'PsOpBuyShopAll. Free; the ledger records it.', 'Buy all'),
-      btn('Search every container here', 'G', 'PsOpSearchAll, with the game\'s own search rolls.', 'Search'),
+      btn('Buy everything in this shop', 'G', 'Free; the ledger records it.', 'Buy all'),
+      btn('Search every container here', 'G', 'With the game\'s own search rolls.', 'Search'),
       btn('Grab the ground loot', 'G', 'PsOpGroundLoot', 'Grab'),
-      btn('Run the rush sale', 'G', 'PsOpRush: the first shelf of the rush shop.', 'Rush'),
+      btn('Run the rush sale', 'G', 'The first shelf of the rush shop.', 'Rush'),
       btn('Buy a vehicle', 'G', 'PsOpBuyVehicle', 'Buy'), btn('Sell the vehicle', 'G', 'PsOpSellVehicle', 'Sell'),
       btn('Pawn furniture', 'G', 'PsOpPawn / GmPawnFurniture', 'Pawn'),
       btn('Return every package', 'G', 'Sends every home package back for a refund.', 'Return all'),

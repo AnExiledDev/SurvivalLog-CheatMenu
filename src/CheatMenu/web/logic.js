@@ -295,6 +295,16 @@
     return s.slice(0, at) + out + s.slice(at + core.length);
   }
 
+  // A row description worth showing: not the game's method names, and not the game's own Chinese name alone.
+  const METHOD = /^[A-Za-z]*[a-z][A-Z_][A-Za-z_]*$/;
+  function shownDesc(d) {
+    if (typeof d !== 'string' || !d.trim()) return '';
+    if (d.split(' / ').every((p) => METHOD.test(p.trim()))) return '';
+    if (!/[A-Za-z]/.test(d)) return '';
+
+    return d;
+  }
+
   // The game's language, unless the player switched while the game was in the language it is in now.
   function startLang(saved, chinese) {
     const game = chinese ? 'zh' : 'en';
@@ -305,5 +315,5 @@
     return s && s.game === game && (s.lang === 'zh' || s.lang === 'en') ? s.lang : game;
   }
 
-  window.__slcheatmenuLogic = { tr, startLang, FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
+  window.__slcheatmenuLogic = { tr, startLang, shownDesc,FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
 })();

@@ -630,10 +630,10 @@
 
   function rowEl(r) {
     const b = r.bind;
-    const refs = r.ref.length ? `<code class="refs" title="${esc(r.ref.join('\n'))}">${esc(r.ref[0])}${r.ref.length > 1 ? ` +${r.ref.length - 1}` : ''}</code>` : '';
+    const d = L.shownDesc(r.d);
     const off = b.kind === 'none';
     const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${off ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${b.kind === 'spec' ? ' specrow' : ''}`;
-    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${r.d ? `<p>${esc(r.d)}</p>` : ''}${refs}</div><div class="ctl"></div></div>`);
+    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${d ? `<p>${esc(d)}</p>` : ''}</div><div class="ctl"></div></div>`);
 
     if (b.kind === 'spec') {
       const f = fieldsEl(r);
