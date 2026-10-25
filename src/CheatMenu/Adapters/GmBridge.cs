@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CheatMenu.Core;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using HarmonyLib;
@@ -128,6 +129,8 @@ internal sealed class GmBridge
             var bridge = _active;
 
             if (bridge?._gm == null || instance.Pointer != bridge._gm.Pointer) return false;
+
+            if (GmReadouts.IsUnused(msg.msgHead)) return true;
 
             bridge._sent.Add(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
 

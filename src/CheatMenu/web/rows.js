@@ -145,9 +145,9 @@
     'farm|Switch a robot\'s job': plan('switch', { k: 'btn', in: [{ f: 'FurnitureId', l: 'container', live: 'furniture' }, { f: 'Put', l: 'robots store here', opts: [['Yes', 1], ['No', 0]] }, { f: 'Take', l: 'robots take from here', opts: [['Yes', 1], ['No', 0]] }], d: 'Sets whether robots store into and take from one container.' }),
 
     // ---------- danger ----------
-    'danger|Start a wave': { cmd: 'GmTowerWaveStart', in: [{ f: 'WaveEventId', l: 'wave event', opts: (X.waves || []).filter((w) => w > 0).map((w) => [String(w), w]) }, { f: 'TotalBudget', l: 'budget', v: '' }, { f: 'SpawnIntervalSeconds', l: 'seconds per zombie', v: '' }], risky: true },
+    'danger|Start a wave': { cmd: 'GmTowerWaveStart', in: [{ f: 'WaveEventId', l: 'wave event', opts: (X.waves || []).filter((w) => w[0] > 0).map((w) => [`${w[1]} (${w[0]})`, w[0]]) }, { f: 'TotalBudget', l: 'budget', v: '' }, { f: 'SpawnIntervalSeconds', l: 'seconds per zombie', v: '' }], risky: true },
     'danger|Force the wave state': { cmd: 'GmTowerWaveSetState', main: 'State', opts: [['Idle', 0], ['Spawning', 1], ['Final charge', 2], ['Retreat', 3]] },
-    'danger|Spawn zombies': { cmd: 'GmTowerZombieSpawn', main: 'Count', in: [{ f: 'ZombieTypeId', l: 'type', opts: (X.ztype || []).map((z) => [`${z[0]} (hp ${z[1]}, attack ${z[2]})`, z[0]]) }], risky: true },
+    'danger|Spawn zombies': { cmd: 'GmTowerZombieSpawn', main: 'Count', in: [{ f: 'ZombieTypeId', l: 'type', opts: (X.ztype || []).map((z) => [`${z[3]} (${z[0]}, hp ${z[1]}, attack ${z[2]})`, z[0]]) }], risky: true },
     'danger|Remove a defence device': { cmd: 'GmTowerDeviceRemove', main: 'SlotName', k: 'text', v: '', d: 'By slot name; blank removes any one.' },
     'danger|Start a horde wave': { cmd: 'GmEndlessWaveStart', main: 'Tier', opts: [1, 2, 3, 4, 5].map((t) => ['Tier ' + t, t]), in: [{ f: 'DaySlot', l: 'day slot (0 = mid wave)', v: 0 }], risky: true },
     'danger|Start a crisis': { cmd: 'GmEndlessCrisis', main: 'PoolRowId', k: 'sel', opts: (X.crisis || []).map((c) => [`Row ${c[0]}: event ${c[1]}, ${c[2]} days`, c[0]]), fix: { Close: false } },

@@ -111,6 +111,23 @@ public class ModHealthTests
     }
 }
 
+public class GmReadoutsTests
+{
+    [Theory]
+    [InlineData(41)] // UIStack
+    [InlineData(43)] // NearbyFurnitureList
+    [InlineData(57)] // EnvironmentSnapshot
+    public void Readouts_nothing_reads_are_dropped(int msgHead) => Assert.True(GmReadouts.IsUnused(msgHead));
+
+    [Theory]
+    [InlineData(5)] // ReportAttrInfo: the stat bars
+    [InlineData(48)] // GameSavesList: saves and the backup before cheating
+    [InlineData(50)] // BackupResult
+    [InlineData(78)] // TestSense: the Sense test row
+    [InlineData(80)] // ReportAIStatus: the Character behaviour row
+    public void Readouts_the_panel_reads_are_kept(int msgHead) => Assert.False(GmReadouts.IsUnused(msgHead));
+}
+
 public class NewCheatNameTests
 {
     [Theory]

@@ -97,6 +97,17 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
     }
 
     [Fact]
+    public void Zombie_and_wave_pickers_show_names_and_still_send_the_id()
+    {
+        var zombie = JsonSerializer.Deserialize<JsonElement[]>(Json("ROWSPEC['danger|Spawn zombies'].in[0].opts.find(function (o) { return o[1] === 9106; })"))!;
+        var wave = JsonSerializer.Deserialize<JsonElement[]>(Json("ROWSPEC['danger|Start a wave'].in[0].opts.find(function (o) { return o[1] === 40631; })"))!;
+
+        Assert.StartsWith("Nurse (9106", zombie[0].GetString());
+        Assert.Equal("Zombie Siege (40631)", wave[0].GetString());
+        Assert.Equal(40631, wave[1].GetInt32());
+    }
+
+    [Fact]
     public void All_in_a_list_sends_one_message_per_choice_and_fixed_fields_ride_along()
     {
         var sp = "ROWSPEC['progress|Unlock a survivor']";

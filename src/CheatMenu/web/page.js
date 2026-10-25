@@ -477,10 +477,12 @@
   const BASE = new Map();
 
   // ---------- rail ----------
+  // The rail is built once; later calls only update the counts.
   function renderRail() {
     const rail = $('#rail');
 
-    rail.innerHTML = '';
+    if (rail.children.length) return paintRailCounts();
+
     TABS.forEach((t, i) => {
       if (t.id === 'saves' || t.id === 'changes') rail.append(h('<div class="railsep"></div>'));
 
@@ -491,6 +493,10 @@
       b.onclick = () => openTab(t.id);
       rail.append(b);
     });
+  }
+
+  function paintRailCounts() {
+    $$('.tab').forEach((b) => { $('.n', b).textContent = countTools(TABS.find((t) => t.id === b.dataset.tab)) || ''; });
   }
 
   function countTools(t) {
@@ -1448,6 +1454,10 @@
       if (backup.step === 'listing' || backup.step === 'saving') finishBackup(false, error);
     },
     flags(f, holds) {
+      const isSame = JSON.stringify(f || {}) === JSON.stringify(state.flags) && (!holds || JSON.stringify(holds) === JSON.stringify(state.holds));
+
+      if (isSame) return;
+
       state.flags = f || {};
       if (holds) state.holds = holds;
       if (state.open && state.tab !== 'changes') refresh();
