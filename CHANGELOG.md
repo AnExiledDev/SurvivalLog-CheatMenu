@@ -22,9 +22,11 @@
 - Lists of your own pots, furniture, events, buffs, saves and backups, read from the game, with Reload and a filter for long lists.
 - New "Back up before every risky cheat" switch on the Saves tab, on by default: red rows back up the save first and don't run if the backup fails.
 - The menu uses the game's own Chinese font.
+
 ## 0.1.0
 
-- First version: every cheat and developer tool built into the game, in a tabbed menu on F3.
+- First release.
+- Every cheat and developer tool built into the game, in a menu with tabs that opens with F3.
 - Stats, item spawner, weather, maps, the game's own switches, and every GM command with its fields.
 - Changes tab with undo, presets, and a backup of your save made before your first cheat.
 - Made for Survival Log 1.1.19611.

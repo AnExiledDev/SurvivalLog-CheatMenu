@@ -1,5 +1,5 @@
 Name: Cheat Menu
-Summary: Every cheat and developer tool built into Survival Log, in one tabbed menu on F3: set stats, spawn any item, change weather and game speed, jump to any map, skip days and cutscenes, lock durability and more. Every change is listed with undo, presets save test setups, and your save is backed up before the first cheat. Note: the game reports cheat use.
+Summary: Every cheat and developer tool built into Survival Log, in one menu on F3: set stats, spawn any item, change weather and game speed, jump to any map, skip days and cutscenes, lock durability and more. Every change is listed with undo, presets save test setups, and your save is backed up before the first cheat. Note: the game reports cheat use.
 
 Description (BBCode):
 Survival Log ships with a GM panel its developer uses for testing, but players can't reach it. Cheat Menu opens all of those tools in one menu, for cheating or for testing your own mods and saves.
