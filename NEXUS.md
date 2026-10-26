@@ -47,6 +47,9 @@ Works in English and Chinese. The menu starts in the game's language; the EN / �
 [*]Some tools only work at home, on an expedition, or at a certain story step; the game refuses them otherwise and the menu's log says so.[/*]
 [/list]
 
+[center][img]https://sldb.core-directive.com/img/mods-banner.jpg[/img]
+[size=4][url=https://www.nexusmods.com/survivallog/mods/73]Get Mod Manager[/url] to set up all your mods in game  |  [url=https://sldb.core-directive.com/en/]Open the Survival Log wiki[/url] for items, recipes and maps[/size][/center]
+
 [size=5]Requirements[/size]
 [list]
 [*]Survival Log 1.1.19611. A game update can break it until the mod is updated.[/*]
@@ -71,7 +74,6 @@ To change the key, edit [font=Courier New]BepInEx\config\com.dev.survivallog.che
 [size=5]Feedback[/size]
 Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\cheat-menu.log[/font].
 To reach me directly, message [b]exiled.dev[/b] on Discord; you can find me in the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
-Check out my [url=https://sldb.core-directive.com/en/]Survival Log wiki[/url] for items, crafting, maps and more.
 
 [size=5]Source and license[/size]
 Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu]github.com/AnExiledDev/SurvivalLog-CheatMenu[/url]
@@ -124,6 +126,8 @@ F3 可以在配置中修改或停用。菜单打开时游戏自己的快捷键�
 [*]有些工具只能在家中、探索中或特定剧情阶段使用；其他时候游戏会拒绝，菜单的日志会说明原因。[/*]
 [/list]
 
+[url=https://www.nexusmods.com/survivallog/mods/73]获取 Mod Manager[/url]，在游戏里设置所有模组。[url=https://sldb.core-directive.com/zh/]打开 Survival Log 维基[/url]，物品、配方、地图一查就有。
+
 [size=5]前置要求[/size]
 [list]
 [*]《Survival Log》1.1.19611。游戏更新后，在模组更新前可能无法使用。[/*]
@@ -148,7 +152,6 @@ F3 可以在配置中修改或停用。菜单打开时游戏自己的快捷键�
 [size=5]反馈[/size]
 发现问题或有想法？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url]，或在本页的「Posts」标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\cheat-menu.log[/font]。
 想直接联系我，可以在 Discord 上私信 [b]exiled.dev[/b]；我在 [url=https://discord.gg/MZGg4gQAUe]Survival Log 官方 Discord[/url] 里。我在 X 上是 [url=https://x.com/AnExiledDev]@AnExiledDev[/url]。
-欢迎看看我的 [url=https://sldb.core-directive.com/zh/]Survival Log 维基[/url]，里面有物品、制作、地图等资料。
 
 [size=5]源代码与许可[/size]
 MIT 开源：[url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu]github.com/AnExiledDev/SurvivalLog-CheatMenu[/url]
