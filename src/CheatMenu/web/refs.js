@@ -29,6 +29,7 @@
     'survivor|Trigger a symptom action': ['GmTriggerSymptomAction', 'BTEffectManager.GmTriggerSymptomAction', 'BTEffectManager.GmFindBuffBtArgsId'],
     'survivor|Fill reinforce layers': ['GmFillReinforceLayer'],
     'survivor|Add talent': ['AddTalent', 'TalentComponent.GmForceAddBuff'],
+    'survivor|Set a loop reward level': ['TalentComponent.RevertToLevel', 'TalentComponent.SaveGame', 'FaithManager.AddFaithPoint'],
     'survivor|Activate daily plan': ['SetSurvivalPlan'],
     'survivor|Proficiency': ['AddProficiencyExp', 'AddProficiencyLevel'],
     'survivor|Add proficiency exp': ['AddProficiencyExp'],

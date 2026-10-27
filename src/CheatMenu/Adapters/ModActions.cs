@@ -74,6 +74,7 @@ internal sealed class ModActions
                 "traps" => Traps(world, out text),
                 "basket" => Basket(world, out text),
                 "toast" => Toast(args.Text("kind"), args.Text("text"), out text),
+                "loopreward" => args.Int("talent") is { } talent && args.Int("level") is { } level ? LoopReward(world, talent, level, args.Bool("pay") == true, out text) : "pick a loop reward and a level",
                 _ => "not one of this mod's cheats",
             };
         }
@@ -620,6 +621,90 @@ internal sealed class ModActions
         return null;
     }
 
+    /// <summary>Config_Talent rows of this type are loop rewards; type 2 rows are survival plans.</summary>
+    private const int LoopRewardType = 1;
+
+    private sealed record RewardRow(string Name, int Current, Dictionary<int, int> Costs);
+
+    /// <summary>
+    /// Every loop reward in the game's talent table (New Loop Plus's own included, as it writes them there), by talent
+    /// id, with its name in the game's language, the level the survivor owns and each level's cost.
+    /// </summary>
+    private static SortedDictionary<int, RewardRow> RewardRows(BattleLogicWorld world)
+    {
+        var rewards = new SortedDictionary<int, RewardRow>();
+        var config = GameSingleton.Existing<ConfigManager>();
+        var rows = config?._Config_Talent_Dict;
+
+        if (config == null || rows == null) return rewards;
+
+        var talents = TalentsOf(world);
+        var language = GameLanguage.IsChinese() ? config.customCache?.ChineseLanguageMap : config.customCache?.EnglishLanguageMap;
+
+        foreach (var row in rows.Values)
+        {
+            if (row == null || row._Type_k__BackingField != LoopRewardType) continue;
+
+            var id = row._TalentID_k__BackingField;
+
+            if (!rewards.TryGetValue(id, out var reward))
+            {
+                var key = row._Name_k__BackingField;
+                var name = !string.IsNullOrEmpty(key) && language != null && language.ContainsKey(key) && !string.IsNullOrEmpty(language[key]) ? language[key]
+                    : !string.IsNullOrEmpty(row._Name_Local_k__BackingField) ? row._Name_Local_k__BackingField
+                    : !string.IsNullOrEmpty(key) ? key : "#" + id;
+
+                reward = rewards[id] = new RewardRow(name, talents?.GetCurrentLv(id) ?? 0, new Dictionary<int, int>());
+            }
+
+            reward.Costs[row._Lv_k__BackingField] = row._LvUpCost_k__BackingField;
+        }
+
+        return rewards;
+    }
+
+    private static TalentComponent? TalentsOf(BattleLogicWorld world)
+    {
+        var role = world._AgentManager?.GetLeadingRole();
+
+        return role == null ? null : AgentTools.GetAgentComponent<TalentComponent>(role);
+    }
+
+    /// <summary>
+    /// Sets a loop reward to a level the way the game moves one between levels (RevertToLevel swaps its buff), then
+    /// writes the levels into the save, where the game and New Loop Plus read what is owned. When pay is on, the
+    /// Planning Points change by what the levels cost. The game's own purchase is not called: it only goes up one
+    /// level at a time and reports each purchase online.
+    /// </summary>
+    private static string? LoopReward(BattleLogicWorld world, int talent, int level, bool pay, out string text)
+    {
+        text = "";
+
+        if (TalentsOf(world) is not { } talents || Buffs(world) is not { } buffs) return "no survivor";
+
+        if (!RewardRows(world).TryGetValue(talent, out var reward)) return "not a loop reward";
+
+        var faith = world._FaithManager;
+        var plan = LoopRewards.Plan(reward.Current, level, reward.Costs, pay, faith?.GetFaithPoint() ?? 0);
+
+        if (plan.Error != null) return plan.Error;
+
+        if (plan.Points != 0 && (faith == null || !faith.AddFaithPoint(plan.Points, "Generic"))) return "the game would not change the Planning Points";
+
+        talents.RevertToLevel(buffs, talent, level, true);
+
+        // The save keeps its own copy of the levels; SaveGame copies them over only while any are owned.
+        talents.SaveGame(null);
+
+        var saved = GameSingleton.Existing<GameSaveManager>()?.gameSave?.TalentData?.TalentLevelMap;
+
+        if (level == 0 && saved != null && saved.ContainsKey(talent)) saved.Remove(talent);
+
+        text = LoopRewards.Done(reward.Name, level, plan.Points);
+
+        return null;
+    }
+
     /// <summary>A live picker's choices as a JSON array of [id, label].</summary>
     private static string? List(BattleLogicWorld world, string? of, out string text)
     {
@@ -660,6 +745,9 @@ internal sealed class ModActions
 
                 break;
             }
+            case "talents":
+                foreach (var reward in RewardRows(world)) Add(reward.Key, LoopRewards.Label(reward.Value.Name, reward.Value.Current, reward.Value.Costs.Keys.DefaultIfEmpty(0).Max()));
+                break;
             case "buffs":
             {
                 var ids = Buffs(world)?.GetBuffConfigIds();

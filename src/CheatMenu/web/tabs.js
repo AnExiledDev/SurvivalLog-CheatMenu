@@ -71,7 +71,8 @@
       sel('Proficiency', 'G', 'Pick a skill, then add exp or levels below.', ['Cooking', 'Crafting', 'Farming', 'Repair', 'Trapping'], 'Pick'),
       num('Add proficiency exp', 'G', 'AddProficiencyExp', 500, 'exp', 'Add'),
       num('Add proficiency levels', 'G', 'AddProficiencyLevel', 1, 'lv', 'Add'),
-      num('Add Planning Points', 'G', 'The points loop rewards cost between runs.', 10, 'pts', 'Add')
+      num('Add Planning Points', 'G', 'The points loop rewards cost between runs.', 10, 'pts', 'Add'),
+      sel('Set a loop reward level', 'M', 'Gives you any loop reward at any level now, as buying it between runs would. Level 0 removes it. Turn on paying to spend or get back Planning Points.', ['Early Riser - Lv 0/5', 'Savings Account - Lv 2/5'], 'Set')
     ]),
     grp('Make them do it', '自动行为', [
       sel('Auto behaviour', 'G', 'Starts one of the survivor\'s own idle behaviours.', ['Eat', 'Sleep', 'Nap', 'Play games', 'Leisure (random)', 'Wellness (random)', 'Use the toilet'], 'Start'),

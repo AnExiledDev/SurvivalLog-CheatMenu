@@ -116,3 +116,46 @@ public class JsTextTests
         Assert.Equal("\"a\\\"b\\\\c\\u003c/script>\\u000a\\u2028\"", literal);
     }
 }
+
+public class LoopRewardTests
+{
+    // A reward with three levels; buying level L costs that level's LvUpCost.
+    private static readonly System.Collections.Generic.Dictionary<int, int> Costs = new() { [1] = 5, [2] = 10, [3] = 20 };
+
+    [Fact]
+    public void Paying_for_a_jump_costs_every_level_on_the_way_and_going_down_gives_them_back()
+    {
+        Assert.Equal(new LoopRewards.Change(-35, null), LoopRewards.Plan(0, 3, Costs, true, 100));
+        Assert.Equal(new LoopRewards.Change(-30, null), LoopRewards.Plan(1, 3, Costs, true, 100));
+        Assert.Equal(new LoopRewards.Change(30, null), LoopRewards.Plan(3, 1, Costs, true, 0));
+        Assert.Equal(new LoopRewards.Change(35, null), LoopRewards.Plan(3, 0, Costs, true, 0));
+    }
+
+    [Fact]
+    public void Without_paying_any_level_is_free()
+    {
+        Assert.Equal(new LoopRewards.Change(0, null), LoopRewards.Plan(0, 3, Costs, false, 0));
+        Assert.Equal(new LoopRewards.Change(0, null), LoopRewards.Plan(3, 0, Costs, false, 0));
+    }
+
+    [Fact]
+    public void A_level_the_reward_lacks_the_level_it_has_or_too_few_points_is_refused()
+    {
+        Assert.Equal("no level 4; this reward has levels 1, 2, 3", LoopRewards.Plan(0, 4, Costs, false, 0).Error);
+        Assert.NotNull(LoopRewards.Plan(0, -1, Costs, false, 0).Error);
+        Assert.Equal("already level 2", LoopRewards.Plan(2, 2, Costs, true, 100).Error);
+        Assert.Equal("needs 15 Planning Points, you have 14", LoopRewards.Plan(0, 2, Costs, true, 14).Error);
+        Assert.Equal(new LoopRewards.Change(-15, null), LoopRewards.Plan(0, 2, Costs, true, 15));
+    }
+
+    [Fact]
+    public void The_panel_shows_the_owned_level_and_what_the_change_cost()
+    {
+        Assert.Equal("Early Riser - Lv 2/5", LoopRewards.Label("Early Riser", 2, 5));
+        Assert.Equal("Early Riser now level 3, 35 Planning Points spent", LoopRewards.Done("Early Riser", 3, -35));
+        Assert.Equal("Early Riser removed, 35 Planning Points given back", LoopRewards.Done("Early Riser", 0, 35));
+        Assert.Equal("Early Riser now level 1", LoopRewards.Done("Early Riser", 1, 0));
+        Assert.True(ModCheats.IsAction("loopreward"));
+        Assert.True(ModCheats.IsList("talents"));
+    }
+}

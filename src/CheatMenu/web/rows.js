@@ -3,7 +3,8 @@
 //   act   a menu action the plugin runs (ModCheats.cs); hold a menu switch the plugin keeps true each tick
 //   pulse a hold that ends by itself; attr/attrs a ChangeAttr on the survivor; readout shows the game's last one
 //   opts  [label, value] for the row's list; an object value is merged into the message, '*' sends every option
-//   live  a list read from the game: pots, furniture, events, buffs (from the plugin) or saves, backups (readouts)
+//   live  a list read from the game: pots, furniture, events, buffs, talents (from the plugin) or saves, backups (readouts)
+//   reread  read the row's live list again once its cheat ran, for a cheat that changes what the list shows
 //   in    more inputs on the row: {f, l, v, t: 'bool'|'text'|'num', opts, live}; a blank one is left out
 //   each  one message per entry, each merged over the rest; more: false hides "More fields"
 //   k     the control, when it differs from the row's (num, sel, text)
@@ -47,6 +48,7 @@
     'survivor|Add proficiency exp': { cmd: 'AddProficiencyExp', main: 'Amount', in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
     'survivor|Add proficiency levels': { cmd: 'AddProficiencyLevel', main: 'Delta', in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
     'survivor|Add Planning Points': { cmd: 'AddFaithPoint', main: 'Amount', raw: { Amount: 'int' } },
+    'survivor|Set a loop reward level': { act: 'loopreward', main: 'talent', live: 'talents', reread: true, in: [{ f: 'level', l: 'level', v: 1 }, { f: 'pay', l: 'pay with Planning Points', t: 'bool', v: false }] },
     'survivor|Auto behaviour': { cmd: 'TriggerAutoBehavior', opts: [['Eat', { BehaviorType: 1 }], ['Sleep', { BehaviorType: 2 }], ['Nap', { BehaviorType: 2, Variant: 1 }], ['Play games', { BehaviorType: 3 }], ['Leisure (random)', { BehaviorType: 4 }], ['Wellness (random)', { BehaviorType: 5 }], ['Use the toilet', { BehaviorType: 6 }]] },
     'survivor|Run an action by id': { cmd: 'PlayerAction', main: 'ActionId', in: [{ f: 'TargetId', l: 'target id', v: '' }, { f: 'SkipMoving', l: 'skip walking', t: 'bool', v: false }] },
     'survivor|Break the current action': { cmd: 'BreakAgentAction' },

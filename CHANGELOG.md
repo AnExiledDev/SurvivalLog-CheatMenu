@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+
+- New in the Survivor tab: "Set a loop reward level" gives you any loop reward at any level mid-run, New Loop Plus rewards included. Level 0 removes it, and it can charge or refund the Planning Points.
+
 ## 0.2.4
 
 - "Faith points" are now called Planning Points, as the game calls them.
