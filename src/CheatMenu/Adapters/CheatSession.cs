@@ -14,6 +14,7 @@ internal sealed class CheatSession
     private readonly PresetStore _presets;
     private readonly WebPage _page;
     private readonly Action<string> _log;
+    private readonly WebKeyboard _keyboard = new();
     private bool _isOpen;
 
     public CheatSession(GmBridge gm, GmFlags flags, ModActions actions, Holds holds, PresetStore presets, WebPage page, Action<string> log)
@@ -33,7 +34,8 @@ internal sealed class CheatSession
     {
         _page.KeepInstalled(Time.unscaledTime);
 
-        if (Key != KeyCode.None && Input.GetKeyDown(Key)) Toggle();
+        // While a text box has the keyboard, the panel key is typing, not a toggle.
+        if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key)) Toggle();
 
         while (PageMessages.TryTake(out var command)) Handle(command);
 
@@ -72,6 +74,7 @@ internal sealed class CheatSession
     private void Close()
     {
         _isOpen = false;
+        _keyboard.Release();
         _page.Close();
         InputGate.PanelClosed();
         _gm.Live(false);
@@ -99,6 +102,10 @@ internal sealed class CheatSession
                 var isHeld = _holds.Set(hold.Name, hold.IsOn, Time.unscaledTime);
                 _log($"cheat: hold {hold.Name} {(hold.IsOn ? "on" : "off")}{(isHeld ? "" : " (not set)")}");
                 Switches();
+                break;
+            case PageCommand.Focus focus:
+                if (focus.IsTyping && _isOpen) _keyboard.Claim();
+                else _keyboard.Release();
                 break;
             case PageCommand.SavePresets presets:
                 _presets.Save(presets.Json);

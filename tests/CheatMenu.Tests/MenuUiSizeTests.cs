@@ -56,6 +56,26 @@ public class MenuUiSizeTests
         Assert.Equal(Px("height") / 2, HalfOff("top"));
     }
 
+    /// <summary>
+    /// The game gives keys to the web UI only while it is told a text box is in use; without that the search box
+    /// cannot be typed in. A focused text box asks for the keyboard and gives it back on leaving; a button does not.
+    /// </summary>
+    [Fact]
+    public void A_text_box_asks_for_the_keyboard_while_it_has_focus_and_a_button_does_not()
+    {
+        var page = new Page();
+        var focus = "posted.filter(function (m) { return m.indexOf('|focus|') >= 0; }).join(',')";
+
+        page.Run("posted.length = 0; var box = document.createElement('input'); menuHost().fire('focusin', box)");
+        Assert.Equal(PageCommand.Prefix + "focus|1", page.Text(focus));
+
+        page.Run("menuHost().fire('focusout', box)");
+        Assert.Equal(PageCommand.Prefix + "focus|1," + PageCommand.Prefix + "focus|0", page.Text(focus));
+
+        page.Run("posted.length = 0; var b = document.createElement('button'); var tick = document.createElement('input'); tick.type = 'checkbox'; menuHost().fire('focusin', b); menuHost().fire('focusin', tick)");
+        Assert.Equal("", page.Text(focus));
+    }
+
     /// <summary>The shipped bundle on PageFake.js; <paramref name="before"/> runs between the two.</summary>
     private sealed class Page
     {
@@ -69,6 +89,10 @@ public class MenuUiSizeTests
         }
 
         public int Number(string expression) => (int)_engine.Evaluate($"Number({expression})").AsNumber();
+
+        public void Run(string script) => _engine.Execute(script);
+
+        public string Text(string expression) => _engine.Evaluate($"String({expression})").AsString();
 
         public bool Bool(string expression) => _engine.Evaluate($"!!({expression})").AsBoolean();
 

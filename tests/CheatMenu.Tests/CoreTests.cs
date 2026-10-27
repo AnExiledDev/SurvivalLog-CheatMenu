@@ -35,6 +35,10 @@ public class PageCommandTests
     public void Plain_verbs_and_presets_parse_and_other_mods_messages_are_not_ours()
     {
         Assert.IsType<PageCommand.Close>(PageCommand.Parse(P + "close"));
+        Assert.Equal(new PageCommand.Focus(true), PageCommand.Parse(P + "focus|1"));
+        Assert.Equal(new PageCommand.Focus(false), PageCommand.Parse(P + "focus|0"));
+        Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "focus|yes"));
+        Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "focus"));
         Assert.IsType<PageCommand.Ready>(PageCommand.Parse(P + "ready"));
         Assert.Equal(new PageCommand.SavePresets("[]"), PageCommand.Parse(P + "presets|[]"));
         Assert.False(PageCommand.IsOurs("slmod|defensemanager|close"));

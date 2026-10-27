@@ -22,6 +22,7 @@ class FakeEl {
     this.id = '';
     this.textContent = '';
     this.found = {};
+    this.listeners = {};
   }
 
   appendChild(child) {
@@ -31,7 +32,27 @@ class FakeEl {
     return child;
   }
 
-  addEventListener() {}
+  addEventListener(type, fn) {
+    (this.listeners[type] = this.listeners[type] || []).push(fn);
+  }
+
+  // Fires a bubbling event whose real target is target, as a shadow-root event reaches its host.
+  fire(type, target) {
+    var e = { type: type, key: '', composedPath: function () { return [target]; }, stopPropagation: function () {}, preventDefault: function () {} };
+    (this.listeners[type] || []).forEach(function (fn) { fn(e); });
+  }
+
+  // Enough of CSS for "tag:not([type=x]), tag" lists.
+  matches(selector) {
+    var el = this;
+
+    return selector.split(',').some(function (part) {
+      var tag = part.trim().split(':')[0];
+      var excluded = (part.match(/\[type=(\w+)\]/g) || []).map(function (m) { return m.slice(6, -1); });
+
+      return tag.toUpperCase() === el.tagName && excluded.indexOf(el.type) < 0;
+    });
+  }
 
   querySelector(selector) {
     if (!this.found[selector]) {
@@ -60,6 +81,14 @@ var document = {
   body: new FakeEl('body'),
   createElement: function (tag) { return new FakeEl(tag); }
 };
+
+var posted = [];
+window.vuplex = { postMessage: function (m) { posted.push(m); } };
+
+// The element the bundle puts on the page, which every panel event reaches.
+function menuHost() {
+  return document.body.children[0];
+}
 
 var handed = [];
 window.ExiledUi = { size: function (el, options) { handed.push({ el: el, options: options }); } };

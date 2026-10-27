@@ -31,6 +31,9 @@ public abstract record PageCommand
     /// <summary>One of the mod's holds turned on or off.</summary>
     public sealed record Hold(string Name, bool IsOn) : PageCommand;
 
+    /// <summary>A text box in the menu gained or lost focus, so the keyboard goes to the menu or back to the game.</summary>
+    public sealed record Focus(bool IsTyping) : PageCommand;
+
     public sealed record Ready : PageCommand;
 
     public sealed record NoScript : PageCommand;
@@ -80,6 +83,8 @@ public abstract record PageCommand
 
                 return ModCheats.IsHold(name) && rest is "0" or "1" ? new Hold(name, rest == "1") : new Unknown(message);
             }
+            case "focus" when rest is "0" or "1":
+                return new Focus(rest == "1");
             case "presets" when rest.Length > 0:
                 return new SavePresets(rest);
             default:

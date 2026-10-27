@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- You can type in the search boxes, filters and command line, Chinese input included.
+
 ## 0.2.2
 
 - The menu follows the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and a bigger menu still fits the game's window.
