@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+
+- "Faith points" are now called Planning Points, as the game calls them.
+
 ## 0.2.3
 
 - You can type in the search boxes, filters and command line, Chinese input included.

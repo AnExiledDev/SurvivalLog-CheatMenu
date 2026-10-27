@@ -33,7 +33,7 @@
     'survivor|Proficiency': ['AddProficiencyExp', 'AddProficiencyLevel'],
     'survivor|Add proficiency exp': ['AddProficiencyExp'],
     'survivor|Add proficiency levels': ['AddProficiencyLevel'],
-    'survivor|Add faith points': ['AddFaithPoint'],
+    'survivor|Add Planning Points': ['AddFaithPoint'],
     'survivor|Auto behaviour': ['TriggerAutoBehavior'],
     'survivor|Run an action by id': ['PlayerAction', 'C2S_ActionComplete'],
     'survivor|Break the current action': ['BreakAgentAction'],
