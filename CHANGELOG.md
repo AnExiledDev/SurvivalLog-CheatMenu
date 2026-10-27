@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- The menu follows the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and a bigger menu still fits the game's window.
+
 ## 0.2.1
 
 - The menu is much faster: buttons and lists respond right away.

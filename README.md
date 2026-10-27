@@ -45,7 +45,7 @@ Each row is marked with where it comes from: **GAME** (the game's own tool), **A
 
 - Survival Log 1.1.19611. A game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12).
-- Optional: [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) 0.4.0 or newer, so a new `PanelKey` set on the Mod Manager's Mods screen works without restarting.
+- Optional: [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) 0.4.0 or newer, so a new `PanelKey` set on the Mod Manager's Mods screen works without restarting. With 0.10.0 or newer, its UI size setting also draws the menu bigger or smaller.
 
 ## Install
 

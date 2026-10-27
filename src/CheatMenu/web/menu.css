@@ -29,7 +29,8 @@ button, input { font: inherit; color: inherit; }
 
 /* ---------- frame ---------- */
 #cm {
-  position: absolute; left: 150px; top: 86px; width: 1620px; height: 908px;
+  /* Centered from 50% so it stays centered when the UI size setting zooms it. */
+  position: absolute; left: calc(50% - 810px); top: calc(50% - 454px); width: 1620px; height: 908px;
   display: grid; grid-template-columns: 224px 1fr 300px; grid-template-rows: 78px minmax(0, 1fr) 52px;
   grid-template-areas: "top top top" "rail main live" "con con con";
   background: var(--glass);

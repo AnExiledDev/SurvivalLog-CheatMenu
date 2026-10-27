@@ -54,7 +54,7 @@ Works in English and Chinese. The menu starts in the game's language; the EN / �
 [list]
 [*]Survival Log 1.1.19611. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]. Install it first.[/*]
-[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 or newer. With it, a new menu key set on the Mod Manager's Mods screen works without restarting the game.[/*]
+[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 or newer. With it, a new menu key set on the Mod Manager's Mods screen works without restarting the game. With 0.10.0 or newer, its UI size setting also draws the menu bigger or smaller.[/*]
 [/list]
 
 [size=5]Installation[/size]
@@ -132,7 +132,7 @@ F3 可以在配置中修改或停用。菜单打开时游戏自己的快捷键�
 [list]
 [*]《Survival Log》1.1.19611。游戏更新后，在模组更新前可能无法使用。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]。请先安装它。[/*]
-[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 或更新版本。装了它，在 Mod Manager 的「模组」界面设置的新按键不用重启游戏就能生效。[/*]
+[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 或更新版本。装了它，在 Mod Manager 的「模组」界面设置的新按键不用重启游戏就能生效。0.10.0 或更新版本还能用它的界面大小设置调整菜单的大小。[/*]
 [/list]
 
 [size=5]安装[/size]

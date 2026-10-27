@@ -16,6 +16,7 @@
   <!-- The panel's files as the plugin ships them, run in Jint. -->
   <ItemGroup>
     <EmbeddedResource Include="..\..\src\CheatMenu\web\*" LogicalName="CheatMenu.web.%(Filename)%(Extension)" Link="web\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="PageFake.js" LogicalName="CheatMenu.Tests.PageFake.js" />
   </ItemGroup>
 
   <ItemGroup>
