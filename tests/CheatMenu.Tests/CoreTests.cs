@@ -117,6 +117,77 @@ public class JsTextTests
     }
 }
 
+public class LoopRewardBuffTests
+{
+    /// <summary>
+    /// A survivor mid-run, as the game treats one: RevertToLevel takes off the old level's buff and sets the level but
+    /// adds nothing (a loop reward's buff comes at the start of a run). A level's buff is talent * 100 + level * 10.
+    /// </summary>
+    private sealed class MidRunSurvivor : LoopRewards.ISurvivor
+    {
+        public System.Collections.Generic.Dictionary<int, int> Levels { get; } = new();
+        public System.Collections.Generic.HashSet<int> Buffs { get; } = new();
+        public System.Collections.Generic.HashSet<int> Given { get; } = new();
+
+        public static int Buff(int talent, int level) => talent * 100 + level * 10;
+
+        public void RevertToLevel(int talent, int level)
+        {
+            if (Levels.TryGetValue(talent, out var old)) Buffs.Remove(Buff(talent, old));
+
+            if (level > 0) Levels[talent] = level;
+            else Levels.Remove(talent);
+        }
+
+        public void AddLevelBuff(int talent, int level)
+        {
+            Levels[talent] = level;
+            Buffs.Add(Buff(talent, level));
+            Given.Add(talent);
+        }
+
+        public void ForgetGiven(int talent) => Given.Remove(talent);
+    }
+
+    [Fact]
+    public void A_reward_set_mid_run_puts_its_buff_on_the_survivor_now()
+    {
+        var survivor = new MidRunSurvivor();
+
+        LoopRewards.SetLevel(survivor, 5124, 5);
+
+        Assert.Equal(5, survivor.Levels[5124]);
+        Assert.Equal(new[] { 512450 }, survivor.Buffs);
+        Assert.Contains(5124, survivor.Given);
+    }
+
+    [Fact]
+    public void Moving_a_reward_up_or_down_swaps_its_buff_for_the_new_levels()
+    {
+        var survivor = new MidRunSurvivor();
+
+        LoopRewards.SetLevel(survivor, 5124, 2);
+        LoopRewards.SetLevel(survivor, 5124, 5);
+        Assert.Equal(new[] { 512450 }, survivor.Buffs);
+
+        LoopRewards.SetLevel(survivor, 5124, 1);
+        Assert.Equal(new[] { 512410 }, survivor.Buffs);
+    }
+
+    [Fact]
+    public void Level_0_takes_the_reward_and_its_buff_away()
+    {
+        var survivor = new MidRunSurvivor();
+
+        LoopRewards.SetLevel(survivor, 5124, 3);
+        LoopRewards.SetLevel(survivor, 5124, 0);
+
+        Assert.Empty(survivor.Levels);
+        Assert.Empty(survivor.Buffs);
+        Assert.Empty(survivor.Given);
+    }
+}
+
 public class LoopRewardTests
 {
     // A reward with three levels; buying level L costs that level's LvUpCost.

@@ -37,6 +37,31 @@ public static class LoopRewards
         return new Change(change, null);
     }
 
+    /// <summary>The survivor's loop rewards, as the game keeps them: a level per reward and the buff each level gives.</summary>
+    public interface ISurvivor
+    {
+        /// <summary>The game's move between levels: takes off the old level's buff and sets the new level. Mid-run it adds no buff.</summary>
+        void RevertToLevel(int talent, int level);
+
+        /// <summary>Puts the level's buff on the survivor if it is not there, and marks it given so the next run start does not add it again.</summary>
+        void AddLevelBuff(int talent, int level);
+
+        /// <summary>Forgets that the reward's buff was given, so it is not brought back on load.</summary>
+        void ForgetGiven(int talent);
+    }
+
+    /// <summary>
+    /// Sets a reward's level and its buff. Most loop rewards only get their buff at the start of a run, so the game's
+    /// level change alone leaves a reward bought mid-run with no buff, and it does nothing until the next run.
+    /// </summary>
+    public static void SetLevel(ISurvivor survivor, int talent, int level)
+    {
+        survivor.RevertToLevel(talent, level);
+
+        if (level > 0) survivor.AddLevelBuff(talent, level);
+        else survivor.ForgetGiven(talent);
+    }
+
     /// <summary>A reward's line in the picker: its name, then the level owned out of the most there is (Lv, as the game writes it in both languages).</summary>
     public static string Label(string name, int current, int max) => $"{name} - Lv {current}/{max}";
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.6
+
+- Fixed: "Set a loop reward level" now gives the reward's effect right away. Before, it set the level but the reward did nothing until the next run. If you set one with 0.2.5, set it again to make it work.
+
 ## 0.2.5
 
 - New in the Survivor tab: "Set a loop reward level" gives you any loop reward at any level mid-run, New Loop Plus rewards included. Level 0 removes it, and it can charge or refund the Planning Points.

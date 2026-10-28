@@ -671,7 +671,7 @@ internal sealed class ModActions
     }
 
     /// <summary>
-    /// Sets a loop reward to a level the way the game moves one between levels (RevertToLevel swaps its buff), then
+    /// Sets a loop reward to a level and puts that level's buff on the survivor now (<see cref="LoopRewards.SetLevel"/>), then
     /// writes the levels into the save, where the game and New Loop Plus read what is owned. When pay is on, the
     /// Planning Points change by what the levels cost. The game's own purchase is not called: it only goes up one
     /// level at a time and reports each purchase online.
@@ -691,18 +691,34 @@ internal sealed class ModActions
 
         if (plan.Points != 0 && (faith == null || !faith.AddFaithPoint(plan.Points, "Generic"))) return "the game would not change the Planning Points";
 
-        talents.RevertToLevel(buffs, talent, level, true);
+        LoopRewards.SetLevel(new Survivor(talents, buffs), talent, level);
 
         // The save keeps its own copy of the levels; SaveGame copies them over only while any are owned.
         talents.SaveGame(null);
 
-        var saved = GameSingleton.Existing<GameSaveManager>()?.gameSave?.TalentData?.TalentLevelMap;
+        var saved = GameSingleton.Existing<GameSaveManager>()?.gameSave?.TalentData;
 
-        if (level == 0 && saved != null && saved.ContainsKey(talent)) saved.Remove(talent);
+        if (level == 0 && saved?.TalentLevelMap != null && saved.TalentLevelMap.ContainsKey(talent)) saved.TalentLevelMap.Remove(talent);
+
+        if (level == 0 && saved?.BuffRefreshApplied != null) saved.BuffRefreshApplied.Remove(talent);
 
         text = LoopRewards.Done(reward.Name, level, plan.Points);
 
         return null;
+    }
+
+    /// <summary>
+    /// RevertToLevel adds a buff only when the reward's BuffRefresh stage matches, which for loop rewards is the start of a
+    /// run. GmForceAddBuff adds the level's buff now (once) and marks it in buffRefreshApplied, as the run start would.
+    /// New Loop Plus adds a reward's other buffs when its level buff is added, so they come with it.
+    /// </summary>
+    private sealed class Survivor(TalentComponent talents, BuffComponent buffs) : LoopRewards.ISurvivor
+    {
+        public void RevertToLevel(int talent, int level) => talents.RevertToLevel(buffs, talent, level, true);
+
+        public void AddLevelBuff(int talent, int level) => talents.GmForceAddBuff(buffs, talent, level);
+
+        public void ForgetGiven(int talent) => talents.buffRefreshApplied?.Remove(talent);
     }
 
     /// <summary>A live picker's choices as a JSON array of [id, label].</summary>
