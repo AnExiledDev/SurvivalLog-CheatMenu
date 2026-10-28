@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9
+
+- Fixed: "Set a loop reward level" to the level a reward already has said "already level" and did nothing, so a reward set with 0.2.5 stayed without its effect. It now puts the reward's effect on if it is missing, for free.
+
 ## 0.2.8
 
 - New Mod tests tab: test buttons that other mods add, grouped by mod, to check their features quickly. Loot Restock, for one, adds buttons to restock the location you are in right away or make its restock due today.

@@ -154,7 +154,7 @@ public class LoopRewardBuffTests
     {
         var survivor = new MidRunSurvivor();
 
-        LoopRewards.SetLevel(survivor, 5124, 5);
+        LoopRewards.SetLevel(survivor, 5124, 0, 5);
 
         Assert.Equal(5, survivor.Levels[5124]);
         Assert.Equal(new[] { 512450 }, survivor.Buffs);
@@ -166,11 +166,11 @@ public class LoopRewardBuffTests
     {
         var survivor = new MidRunSurvivor();
 
-        LoopRewards.SetLevel(survivor, 5124, 2);
-        LoopRewards.SetLevel(survivor, 5124, 5);
+        LoopRewards.SetLevel(survivor, 5124, 0, 2);
+        LoopRewards.SetLevel(survivor, 5124, 2, 5);
         Assert.Equal(new[] { 512450 }, survivor.Buffs);
 
-        LoopRewards.SetLevel(survivor, 5124, 1);
+        LoopRewards.SetLevel(survivor, 5124, 5, 1);
         Assert.Equal(new[] { 512410 }, survivor.Buffs);
     }
 
@@ -179,12 +179,32 @@ public class LoopRewardBuffTests
     {
         var survivor = new MidRunSurvivor();
 
-        LoopRewards.SetLevel(survivor, 5124, 3);
-        LoopRewards.SetLevel(survivor, 5124, 0);
+        LoopRewards.SetLevel(survivor, 5124, 0, 3);
+        LoopRewards.SetLevel(survivor, 5124, 3, 0);
 
         Assert.Empty(survivor.Levels);
         Assert.Empty(survivor.Buffs);
         Assert.Empty(survivor.Given);
+    }
+
+    [Fact]
+    public void Setting_the_level_a_reward_already_has_puts_on_its_missing_buff_and_keeps_the_level()
+    {
+        var survivor = new MidRunSurvivor();
+
+        survivor.RevertToLevel(5124, 5);
+        LoopRewards.SetLevel(survivor, 5124, 5, 5);
+
+        Assert.Equal(5, survivor.Levels[5124]);
+        Assert.Equal(new[] { 512450 }, survivor.Buffs);
+        Assert.Contains(5124, survivor.Given);
+    }
+
+    [Fact]
+    public void The_level_a_reward_already_has_is_free_and_says_its_effect_is_on()
+    {
+        Assert.Equal(new LoopRewards.Change(0, null), LoopRewards.Plan(2, 2, new System.Collections.Generic.Dictionary<int, int> { [1] = 5, [2] = 10 }, true, 0));
+        Assert.Equal("Early Riser stays level 2, its effect is on now", LoopRewards.Done("Early Riser", 2, 2, 0));
     }
 }
 
@@ -311,7 +331,7 @@ public class LoopRewardTests
     {
         Assert.Equal("no level 4; this reward has levels 1, 2, 3", LoopRewards.Plan(0, 4, Costs, false, 0).Error);
         Assert.NotNull(LoopRewards.Plan(0, -1, Costs, false, 0).Error);
-        Assert.Equal("already level 2", LoopRewards.Plan(2, 2, Costs, true, 100).Error);
+        Assert.Equal("not owned", LoopRewards.Plan(0, 0, Costs, true, 100).Error);
         Assert.Equal("needs 15 Planning Points, you have 14", LoopRewards.Plan(0, 2, Costs, true, 14).Error);
         Assert.Equal(new LoopRewards.Change(-15, null), LoopRewards.Plan(0, 2, Costs, true, 15));
     }
@@ -320,9 +340,9 @@ public class LoopRewardTests
     public void The_panel_shows_the_owned_level_and_what_the_change_cost()
     {
         Assert.Equal("Early Riser - Lv 2/5", LoopRewards.Label("Early Riser", 2, 5));
-        Assert.Equal("Early Riser now level 3, 35 Planning Points spent", LoopRewards.Done("Early Riser", 3, -35));
-        Assert.Equal("Early Riser removed, 35 Planning Points given back", LoopRewards.Done("Early Riser", 0, 35));
-        Assert.Equal("Early Riser now level 1", LoopRewards.Done("Early Riser", 1, 0));
+        Assert.Equal("Early Riser now level 3, 35 Planning Points spent", LoopRewards.Done("Early Riser", 0, 3, -35));
+        Assert.Equal("Early Riser removed, 35 Planning Points given back", LoopRewards.Done("Early Riser", 3, 0, 35));
+        Assert.Equal("Early Riser now level 1", LoopRewards.Done("Early Riser", 0, 1, 0));
         Assert.True(ModCheats.IsAction("loopreward"));
         Assert.True(ModCheats.IsList("talents"));
     }

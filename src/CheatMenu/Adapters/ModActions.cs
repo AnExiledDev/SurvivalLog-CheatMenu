@@ -700,7 +700,7 @@ internal sealed class ModActions
 
         if (plan.Points != 0 && (faith == null || !faith.AddFaithPoint(plan.Points, "Generic"))) return "the game would not change the Planning Points";
 
-        LoopRewards.SetLevel(new Survivor(talents, buffs), talent, level);
+        LoopRewards.SetLevel(new Survivor(talents, buffs), talent, reward.Current, level);
 
         // The save keeps its own copy of the levels; SaveGame copies them over only while any are owned.
         talents.SaveGame(null);
@@ -711,7 +711,7 @@ internal sealed class ModActions
 
         if (level == 0 && saved?.BuffRefreshApplied != null) saved.BuffRefreshApplied.Remove(talent);
 
-        text = LoopRewards.Done(reward.Name, level, plan.Points);
+        text = LoopRewards.Done(reward.Name, reward.Current, level, plan.Points);
 
         return null;
     }

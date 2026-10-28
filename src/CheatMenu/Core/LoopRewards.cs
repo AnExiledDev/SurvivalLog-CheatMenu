@@ -23,7 +23,9 @@ public static class LoopRewards
         if (target < 0 || (target > 0 && !costs.ContainsKey(target)))
             return new Change(0, $"no level {target}; this reward has levels {string.Join(", ", costs.Keys.OrderBy(k => k))}");
 
-        if (target == current) return new Change(0, $"already level {current}");
+        if (target == 0 && current == 0) return new Change(0, "not owned");
+
+        if (target == current) return new Change(0, null);
 
         if (!pay) return new Change(0, null);
 
@@ -52,10 +54,19 @@ public static class LoopRewards
 
     /// <summary>
     /// Sets a reward's level and its buff. Most loop rewards only get their buff at the start of a run, so the game's
-    /// level change alone leaves a reward bought mid-run with no buff, and it does nothing until the next run.
+    /// level change alone leaves a reward bought mid-run with no buff, and it does nothing until the next run. Setting
+    /// the level a reward already has leaves the level alone and only puts on its buff if it is missing, which mends a
+    /// reward whose level was set without its buff.
     /// </summary>
-    public static void SetLevel(ISurvivor survivor, int talent, int level)
+    public static void SetLevel(ISurvivor survivor, int talent, int current, int level)
     {
+        if (level == current)
+        {
+            if (level > 0) survivor.AddLevelBuff(talent, level);
+
+            return;
+        }
+
         survivor.RevertToLevel(talent, level);
 
         if (level > 0) survivor.AddLevelBuff(talent, level);
@@ -91,7 +102,8 @@ public static class LoopRewards
     public static string Label(string name, int current, int max) => $"{name} - Lv {current}/{max}";
 
     /// <summary>What the panel says once a level is set.</summary>
-    public static string Done(string name, int target, int points) =>
-        (target == 0 ? $"{name} removed" : $"{name} now level {target}")
+    public static string Done(string name, int current, int target, int points) =>
+        target == current ? $"{name} stays level {target}, its effect is on now"
+        : (target == 0 ? $"{name} removed" : $"{name} now level {target}")
         + (points < 0 ? $", {-points} Planning Points spent" : points > 0 ? $", {points} Planning Points given back" : "");
 }

@@ -12,7 +12,7 @@ namespace CheatMenu;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.cheatmenu";
-    private const string Version = "0.2.8";
+    private const string Version = "0.2.9";
 
     public override void Load()
     {
