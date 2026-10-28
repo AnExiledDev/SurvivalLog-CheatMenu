@@ -10,6 +10,7 @@ using CheatMenu.Core;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using GameCore.HotUpdate.ReduxUI;
+using HarmonyLib;
 
 namespace CheatMenu.Adapters;
 
@@ -27,11 +28,14 @@ internal sealed class ModActions
     private const int MaxContainers = 60;
 
     private readonly GmBridge _gm;
+    private readonly Harmony _harmony;
     private readonly Action<string> _log;
+    private Dictionary<int, LoopRewards.Owned>? _rewardsAtOpen;
 
-    public ModActions(GmBridge gm, Action<string> log)
+    public ModActions(GmBridge gm, Harmony harmony, Action<string> log)
     {
         _gm = gm;
+        _harmony = harmony;
         _log = log;
     }
 
@@ -75,6 +79,7 @@ internal sealed class ModActions
                 "basket" => Basket(world, out text),
                 "toast" => Toast(args.Text("kind"), args.Text("text"), out text),
                 "loopreward" => args.Int("talent") is { } talent && args.Int("level") is { } level ? LoopReward(world, talent, level, args.Bool("pay") == true, out text) : "pick a loop reward and a level",
+                "rewardscreen" => RewardScreen(world, out text),
                 _ => "not one of this mod's cheats",
             };
         }
@@ -721,6 +726,63 @@ internal sealed class ModActions
         public void ForgetGiven(int talent) => talents.buffRefreshApplied?.Remove(talent);
     }
 
+    /// <summary>
+    /// Opens the game's loop reward screen mid-run (<see cref="RewardScreenPatch"/>). The rewards owned now, and whether
+    /// each one's buff is on, are kept so the buffs can be put right when it closes.
+    /// </summary>
+    private string? RewardScreen(BattleLogicWorld world, out string text)
+    {
+        text = "";
+
+        RewardScreenPatch.Install(_harmony, _log);
+
+        if (!RewardScreenPatch.IsHooked) return "the screen's close could not be hooked, and closing it would end the run";
+
+        if (TalentsOf(world) is null || Buffs(world) is not { } buffs || GameSingleton.Existing<ConfigManager>() is not { } config) return "no survivor";
+
+        _rewardsAtOpen = RewardRows(world).ToDictionary(r => r.Key, r => new LoopRewards.Owned(r.Value.Current, HasLevelBuff(config, buffs, r.Key, r.Value.Current)));
+        Ac_RebirthUpgrade_Open.SendAction(BattleResult.GameDayEnd, "", RewardScreenPatch.MidRun);
+        text = "loop reward screen open";
+
+        return null;
+    }
+
+    private static bool HasLevelBuff(ConfigManager config, BuffComponent buffs, int talent, int level)
+    {
+        var buff = level > 0 ? config.GetTalentConfig(talent, level)?._BuffID_k__BackingField ?? 0 : 0;
+
+        return buff > 0 && buffs.IsBuffConfigExist(buff);
+    }
+
+    /// <summary>
+    /// Once the menu's reward screen has closed: gives the rewards bought or reset there their level's buff now
+    /// (<see cref="LoopRewards.Rebuff"/>), then writes the levels into the save.
+    /// </summary>
+    public void RewardScreenClosed()
+    {
+        var atOpen = _rewardsAtOpen;
+
+        _rewardsAtOpen = null;
+
+        if (atOpen == null || GameSingleton.Existing<BattleLogicWorld>() is not { } world || TalentsOf(world) is not { } talents || Buffs(world) is not { } buffs) return;
+
+        try
+        {
+            var now = RewardRows(world).ToDictionary(r => r.Key, r => r.Value.Current);
+            var survivor = new Survivor(talents, buffs);
+            var given = LoopRewards.Rebuff(atOpen, now);
+
+            foreach (var (talent, level) in given) survivor.AddLevelBuff(talent, level);
+
+            talents.SaveGame(null);
+            _log($"loop reward screen closed, {given.Count} rewards given their effect");
+        }
+        catch (Exception ex)
+        {
+            _log("loop reward screen closed, but its rewards' effects could not be given: " + ex);
+        }
+    }
+
     /// <summary>A live picker's choices as a JSON array of [id, label].</summary>
     private static string? List(BattleLogicWorld world, string? of, out string text)
     {
@@ -733,10 +795,20 @@ internal sealed class ModActions
             json.Append('[').Append(id).Append(',').Append(JsText.Literal(label)).Append(']');
         }
 
+        var config = GameSingleton.Existing<ConfigManager>();
+        var isChinese = GameLanguage.IsChinese();
+
         switch (of)
         {
             case "pots":
-                foreach (var (furniture, plant) in Pots(world)) Add(furniture.InstanceId, $"Pot {furniture.InstanceId} (plant {plant.PlantConfigId}, state {plant.State})");
+                foreach (var (furniture, plant) in Pots(world))
+                {
+                    var plantId = plant.PlantConfigId;
+                    var row = config?._Config_Plant_Dict is { } plants && plants.TryGetValue(plantId, out var found) ? found : null;
+
+                    Add(furniture.InstanceId, ListLabels.Pot(GameName(config, row?._Name_k__BackingField, row?._Name_Local_k__BackingField), plantId, (ListLabels.Plant)(int)plant.State, isChinese));
+                }
+
                 break;
             case "furniture":
             {
@@ -746,7 +818,12 @@ internal sealed class ModActions
                 {
                     var furniture = furnitures[i];
 
-                    if (furniture != null && !furniture.IsDead) Add(furniture.InstanceId, $"#{furniture.InstanceId} (config {furniture.AgentConfigId})");
+                    if (furniture == null || furniture.IsDead) continue;
+
+                    var kind = furniture.AgentConfigId;
+                    var row = config?._Config_Furniture_Dict is { } kinds && kinds.TryGetValue(kind, out var found) ? found : null;
+
+                    Add(furniture.InstanceId, ListLabels.Furniture(GameName(config, row?._Name_k__BackingField, row?._Name_Local_k__BackingField), kind, isChinese));
                 }
 
                 break;
@@ -757,7 +834,14 @@ internal sealed class ModActions
 
                 if (events != null)
                     foreach (var pair in events)
-                        if (pair.Value != null) Add(pair.Key, $"Event {pair.Value.EventId}{(pair.Value.IsChose ? "" : ", waiting on a choice")}");
+                    {
+                        if (pair.Value == null) continue;
+
+                        var eventId = pair.Value.EventId;
+                        var row = config?._Config_Event_Dict is { } table && table.TryGetValue(eventId, out var found) ? found : null;
+
+                        Add(pair.Key, ListLabels.Event(GameName(config, row?._Name_k__BackingField, row?._Name_Local_k__BackingField), eventId, !pair.Value.IsChose, isChinese));
+                    }
 
                 break;
             }
@@ -768,7 +852,17 @@ internal sealed class ModActions
             {
                 var ids = Buffs(world)?.GetBuffConfigIds();
 
-                for (var i = 0; ids != null && i < ids.Count; i++) Add(ids[i], "");
+                var table = config?._Config_Buff_Dict;
+
+                // The ones the game shows first, then its hidden ones (markers the game keeps for its own use).
+                foreach (var hidden in new[] { false, true })
+                    for (var i = 0; ids != null && i < ids.Count; i++)
+                    {
+                        var row = table != null && table.TryGetValue(ids[i], out var found) ? found : null;
+                        var isHidden = row?._IsHide_k__BackingField == true;
+
+                        if (isHidden == hidden) Add(ids[i], ListLabels.Buff(GameName(config, row?._Name_k__BackingField, row?._Name_Local_k__BackingField), row?._IsGood_k__BackingField == true, isHidden, isChinese));
+                    }
 
                 break;
             }
@@ -781,5 +875,18 @@ internal sealed class ModActions
         text = json.Append(']').ToString();
 
         return null;
+    }
+
+    /// <summary>A table row's name in the game's language: its text key looked up, else the Chinese name the row carries.</summary>
+    private static string? GameName(ConfigManager? config, string? key, string? local)
+    {
+        if (config != null && !string.IsNullOrEmpty(key))
+        {
+            var text = config.GetLocalTxt(key);
+
+            if (!string.IsNullOrWhiteSpace(text) && text != key) return text;
+        }
+
+        return string.IsNullOrWhiteSpace(local) ? null : local;
     }
 }

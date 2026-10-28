@@ -53,37 +53,38 @@
 
   T.push({ id: 'survivor', name: 'Survivor', zh: '角色', blurb: 'Stats, buffs, talents, skills and what the survivor does next. Drag a bar to set a stat; the lock holds it.', custom: 'stats', groups: [
     grp('Max values and rates', '上限与倍率', [
-      num('Max satiety', 'M', 'MaxSatiety', 166, ''), num('Max morale', 'M', 'MaxMorale', 500, ''), num('Max stamina', 'M', 'MaxStamina', 197, ''), num('Max life', 'M', 'MaxHealth', 201, ''),
-      sel('Stat drain', 'M', 'Scales every *AutoDel and *Del ratio.', ['Normal', 'Half', 'None'], 'Set'),
-      sel('Stat gain from food and rest', 'M', 'Scales every *Add ratio.', ['Normal', 'x1.5', 'x2', 'x3'], 'Set'),
-      num('Move speed', 'M', 'MoveSpeed_Ratio', 100, '%'), num('Interact speed', 'M', 'FurnitureInteractSpeed_Ratio', 100, '%')
+      num('Max satiety', 'M', 'The most satiety the survivor can have.', 166, ''), num('Max morale', 'M', 'The most morale the survivor can have.', 500, ''), num('Max stamina', 'M', 'The most stamina the survivor can have.', 197, ''), num('Max life', 'M', 'The most life the survivor can have.', 201, ''),
+      sel('Stat drain', 'M', 'How fast satiety, morale, stamina, life and vitality drop, over time and from what you do.', ['Normal', 'Half', 'None'], 'Set'),
+      sel('Stat gain from food and rest', 'M', 'How much satiety, morale, stamina, life and vitality go up, from food, rest and over time.', ['Normal', 'x1.5', 'x2', 'x3'], 'Set'),
+      num('Move speed', 'M', 'Walking speed, as a percent of normal.', 100, '%'), num('Interact speed', 'M', 'How fast the survivor uses furniture, as a percent of normal.', 100, '%')
     ]),
     grp('Buffs and symptoms', 'Buff 与症状', [
-      sel('Add buff', 'G', 'Any buff from Config_Buff, by name.', ['Well-Fed', 'Wish Fulfilled', 'Steady Focus', 'High Alert', 'Enjoy the Process'], 'Add'),
+      sel('Add buff', 'G', 'Gives the survivor any buff in the game, good or bad.', ['Well-Fed', 'Wish Fulfilled', 'Steady Focus', 'High Alert', 'Enjoy the Process'], 'Add'),
       sel('Remove buff', 'G', 'Removes a buff the survivor has now.', ['Well-Fed', 'Wish Fulfilled', 'Steady Focus', 'High Alert'], 'Remove'),
       btn('Clear every debuff', 'M', 'Cures illness, injuries and bad moods at once.', 'Clear'),
       sel('Trigger a symptom action', 'G', 'Runs a buff\'s forced action now, skipping its timer and odds.', ['Cough', 'Vomit', 'Tremble', 'Faint'], 'Trigger'),
       num('Fill reinforce layers', 'G', 'Sets a stacking buff to its max layer count.', 999, 'buff id', 'Fill')
     ]),
     grp('Talents and skills', '天赋与熟练度', [
-      sel('Add talent', 'G', 'Force-adds any talent at any level, past the stage gate.', ['Night Owl Lv1', 'Iron Stomach Lv2', 'Handyman Lv3', 'Green Thumb Lv1'], 'Add'),
+      sel('Add talent', 'G', 'Adds any talent at any level, even one the game would not offer yet.', ['Night Owl Lv1', 'Iron Stomach Lv2', 'Handyman Lv3', 'Green Thumb Lv1'], 'Add'),
       sel('Activate daily plan', 'G', 'Turns on a daily planning talent now.', ['Early Riser', 'Focused Work', 'Rest Day'], 'Activate'),
-      sel('Proficiency', 'G', 'Pick a skill, then add exp or levels below.', ['Cooking', 'Crafting', 'Farming', 'Repair', 'Trapping'], 'Pick'),
-      num('Add proficiency exp', 'G', 'AddProficiencyExp', 500, 'exp', 'Add'),
-      num('Add proficiency levels', 'G', 'AddProficiencyLevel', 1, 'lv', 'Add'),
+      sel('Proficiency', 'G', 'Adds levels to the skill you pick.', ['Crafting', 'Planting', 'Cooking', 'Traps', 'Exploration', 'Defense'], 'Add'),
+      num('Add proficiency exp', 'G', 'Adds experience to one skill.', 500, 'exp', 'Add'),
+      num('Add proficiency levels', 'G', 'Adds levels to one skill.', 1, 'lv', 'Add'),
       num('Add Planning Points', 'G', 'The points loop rewards cost between runs.', 10, 'pts', 'Add'),
-      sel('Set a loop reward level', 'M', 'Gives you any loop reward at any level now, as buying it between runs would. Level 0 removes it. Turn on paying to spend or get back Planning Points.', ['Early Riser - Lv 0/5', 'Savings Account - Lv 2/5'], 'Set')
+      sel('Set a loop reward level', 'M', 'Gives you any loop reward at any level now, as buying it between runs would. Level 0 removes it. Turn on paying to spend or get back Planning Points.', ['Early Riser - Lv 0/5', 'Savings Account - Lv 2/5'], 'Set'),
+      btn('Open the loop reward screen', 'M', 'Opens the screen you buy loop rewards on, in the middle of a run. Buy and use Reset Changes as usual. Its Start New Loop or Ready button only closes it: the run goes on, and what you bought works at once.', 'Open')
     ]),
     grp('Make them do it', '自动行为', [
       sel('Auto behaviour', 'G', 'Starts one of the survivor\'s own idle behaviours.', ['Eat', 'Sleep', 'Nap', 'Play games', 'Leisure (random)', 'Wellness (random)', 'Use the toilet'], 'Start'),
-      num('Run an action by id', 'G', 'Queues any player action on the survivor (L2 dispatch).', 2167, 'action', 'Queue'),
+      num('Run an action by id', 'G', 'Queues any of the game\'s player actions on the survivor, by its id.', 2167, 'action', 'Queue'),
       btn('Break the current action', 'G', 'Stops what the survivor is doing.', 'Break'),
-      btn('Clear the action queue', 'G', '', 'Clear'),
+      btn('Clear the action queue', 'G', 'Drops every action the survivor has queued.', 'Clear'),
       tog('Always offer dancing', 'G', 'The dance suggestion shows every time, with no stat gate, cooldown or daily cap.')
     ]),
     grp('Death', '死亡', [
       btn('Real death', 'G', 'Drains life to 0 and lets the game\'s death chain play out.', 'Die', true),
-      sel('Force game over', 'G', 'Calls GameOver directly with any result.', ['0 Exhausted', '1 Door broken', '2 Event complete', '3 Days reached', '4 No rebirths left', '5-13 Ending lines'], 'End run')
+      sel('Force game over', 'G', 'Ends the run now with the result you pick, a loss or one of the endings.', ['0 Exhausted', '1 Door broken', '2 Event complete', '3 Days reached', '4 No rebirths left', '5-13 Endings'], 'End run')
     ], { warn: true })
   ]});
 
@@ -99,7 +100,7 @@
       num('Add money', 'G', 'Pre-disaster only.', 5000, 'gold', 'Add'),
       num('Set money', 'G', '', 99999, 'gold', 'Set'),
       btn('Clear loan shark debt', 'M', '', 'Clear'),
-      num('Loan cap bonus', 'M', 'LoanMaxBonus', 10000, 'gold')
+      num('Loan cap bonus', 'M', 'Raises how much you can borrow.', 10000, 'gold')
     ]),
     grp('Pre-disaster shopping', '灾前物资', [
       btn('Buy everything in this shop', 'G', 'Free; the ledger records it.', 'Buy all'),
@@ -117,13 +118,13 @@
       btn('Every trader comes back now', 'G', 'GmForceReturnAll', 'Recall'),
       btn('Unlock active trade points', 'G', 'Tags every trade point entrance.', 'Unlock'),
       num('Trade point relation (Casual)', 'G', '', 100, '', 'Set'),
-      num('Shop discount', 'M', 'SettlementBuyDiscount_Ratio', 0, '%')
+      num('Shop discount', 'M', 'Takes this percent off what you buy.', 0, '%')
     ])
   ]});
 
   T.push({ id: 'time', name: 'Time & Weather', zh: '时间与天气', blurb: 'The clock, the day, the speed, the weather and the light.', custom: 'weather', groups: [
     grp('Clock', '时钟', [
-      sel('Game speed', 'G', 'GmSetCustomGameSpeed', ['x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16', 'x32'], 'Set'),
+      sel('Game speed', 'G', 'Any speed, past the game\'s own buttons.', ['x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16', 'x32'], 'Set'),
       tog('Speed hotkeys', 'G', 'The developers\' speed keys (快捷键倍速).'),
       tog('Pause means pause', 'G', 'Turns off the paused-frame freeze (暂停冻帧禁用).'),
       num('Advance hours', 'G', 'Hourly events still fire.', 6, 'h', 'Advance'),
@@ -229,7 +230,7 @@
     ], { warn: true }),
     grp('Endless', '无尽', [
       sel('Start a horde wave', 'G', 'By tier and day slot.', ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Tier 5'], 'Start'),
-      num('Start a crisis', 'G', 'Row in Config_EndlessCrisisPool.', 1, 'row', 'Start'),
+      num('Start a crisis', 'G', 'Starts one of endless mode\'s crises now.', 1, 'row', 'Start'),
       btn('End every crisis', 'G', '', 'End'),
       sel('Show an endless banner', 'G', '', ['Wave', 'Crisis', 'Season'], 'Show')
     ]),
@@ -255,7 +256,7 @@
     grp('While exploring', '探索中', [
       num('Add exposure', 'G', '', 10, '%', 'Add'),
       tog('Exposure lock', 'G', ''),
-      tog('Free camera', 'G', '探索自由视角'),
+      tog('Free camera', 'G', 'A free camera while exploring.'),
       tog('Raise the camera', 'G', ''),
       sel('Minimap mode', 'G', 'Applies next time you explore.', ['Normal', 'Full', 'Off'], 'Set'),
       sel('Flashlight zoom', 'G', '', ['Narrow', 'Default', 'Wide', 'Reset'], 'Set')
@@ -285,7 +286,7 @@
       btn('Old-class smash test', 'G', 'Visitor event 20230: choice, result, feeding, the watch.', 'Test')
     ]),
     grp('Strangers', '陌生人', [
-      btn('Ally with everyone', 'G', 'GmAutoAlly', 'Ally'),
+      btn('Ally with everyone', 'G', 'Makes every contact an ally.', 'Ally'),
       num('Ally with a contact', 'G', '', 1, 'id', 'Ally'),
       btn('Send a commission', 'G', '', 'Send'),
       btn('Commission snapshot', 'G', '', 'Show')
@@ -321,7 +322,7 @@
       btn('Story prompts unread again', 'G', 'Moves finished story prompts back to unread.', 'Restore')
     ]),
     grp('Endings', '结局', [
-      sel('Force game over', 'G', '', ['0 Exhausted', '1 Door broken', '2 Event complete', '3 Days reached', '4 No rebirths left', '5-13 Ending lines'], 'End run'),
+      sel('Force game over', 'G', 'Ends the run now with the result you pick, a loss or one of the endings.', ['0 Exhausted', '1 Door broken', '2 Event complete', '3 Days reached', '4 No rebirths left', '5-13 Endings'], 'End run'),
       btn('Play the DemoTwo ending', 'G', 'Big Zombie timeline, then day-end settlement.', 'Play')
     ], { warn: true }),
     grp('Rebirth', '重生', [
@@ -403,7 +404,7 @@
       tog('Temperature and light labels', 'G', 'Over furniture, drops and people; bag food shows its spoil rate.'),
       tog('Click ray hits', 'G', ''),
       tog('Zombie behaviour labels', 'G', ''),
-      tog('Photo mode', 'G', '观景截图模式'),
+      tog('Photo mode', 'G', 'The game\'s sightseeing screenshot mode.'),
       tog('Model shadow stats', 'E', 'Editor only.'),
       tog('3D sound ranges', 'E', 'Editor only.')
     ]),

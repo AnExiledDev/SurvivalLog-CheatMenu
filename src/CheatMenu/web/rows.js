@@ -8,15 +8,18 @@
 //   in    more inputs on the row: {f, l, v, t: 'bool'|'text'|'num', opts, live}; a blank one is left out
 //   each  one message per entry, each merged over the rest; more: false hides "More fields"
 //   k     the control, when it differs from the row's (num, sel, text)
+//   info  buffs, talents or plans: the game's own words on what the picked one does, shown under the row
 (function () {
   const X = window.GAMEX || {};
   const named = (list, n) => (list || []).map((r) => [`${r[n || 1] || '#' + r[0]} (${r[0]})`, r[0]]);
-  const BUFFS = named((X.buffs || []).filter((b) => !b[3]));
-  const PROF = [['Production', 1], ['Planting', 2], ['Cooking', 3], ['Trapping', 4], ['Exploring', 5], ['Defence', 6]];
+  // "Name - what it is (id)", so a choice says more than its name.
+  const BUFFS = (X.buffs || []).filter((b) => !b[3]).map((b) => [`${b[1] || '#' + b[0]} - ${b[2] ? 'good' : 'bad'} (${b[0]})`, b[0]]);
+  const TALENTS = (X.talents || []).map((t) => [`${t[1] || '#' + t[0]} - max Lv ${t[2]} (${t[0]})`, t[0]]);
+  const PROF = [['Crafting', 1], ['Planting', 2], ['Cooking', 3], ['Traps', 4], ['Exploration', 5], ['Defense', 6]];
   const SLOT = [['Doors and windows', 0], ['Doors only', 8], ['Windows only', 9]];
   const PS = named(X.ps);
   const RESULT = ['Exhausted', 'Door broken', 'Event complete', 'Days reached', 'No rebirths left'].map((l, i) => [i + ' ' + l, i])
-    .concat([5, 6, 7, 8, 9, 10, 11, 12, 13].map((i) => [i + ' Ending line ' + (i - 4), i]));
+    .concat(['Evacuation', 'Side By Side (girl)', 'Lighthouse at World\'s End', 'Guardian of the City', 'The Truth', 'The Bitter End', 'Doomsday Oasis', 'Side By Side (companion)', 'Supply Hub'].map((l, i) => [(i + 5) + ' Ending: ' + l, i + 5]));
   const LINES = [{ Line: 'companion' }, { Line: 'rescue' }];
   const robot = { f: 'RobotId', l: 'robot id', v: '' };
   const pot = { f: 'PotId', l: 'pot', live: 'pots' };
@@ -38,17 +41,18 @@
     'quick|Apply the developers\' test kit': { cmd: 'ApplyTestSuite', in: [{ f: 'autoConfirmEvents', l: 'auto-confirm events', t: 'bool', v: false }] },
 
     // ---------- survivor ----------
-    'survivor|Add buff': { cmd: 'AddBuff', main: 'buffConfigId', opts: BUFFS },
-    'survivor|Remove buff': { act: 'buff-remove', main: 'buff', live: 'buffs' },
-    'survivor|Trigger a symptom action': { cmd: 'GmTriggerSymptomAction', main: 'BuffConfigId', opts: BUFFS, in: [{ f: 'AutoAddBuff', l: 'add the buff if missing', t: 'bool', v: true }] },
+    'survivor|Add buff': { cmd: 'AddBuff', main: 'buffConfigId', opts: BUFFS, info: 'buffs' },
+    'survivor|Remove buff': { act: 'buff-remove', main: 'buff', live: 'buffs', info: 'buffs' },
+    'survivor|Trigger a symptom action': { cmd: 'GmTriggerSymptomAction', main: 'BuffConfigId', opts: BUFFS, info: 'buffs', in: [{ f: 'AutoAddBuff', l: 'add the buff if missing', t: 'bool', v: true }] },
     'survivor|Fill reinforce layers': { cmd: 'GmFillReinforceLayer', main: 'BuffId', in: [{ f: 'SlotTypeId', l: 'which', opts: SLOT }, { f: 'Layers', l: 'layers (blank = max)', v: '' }] },
-    'survivor|Add talent': { cmd: 'AddTalent', main: 'TalentConfigId', opts: named(X.talents), in: [{ f: 'TalentCount', l: 'level', v: 1 }] },
-    'survivor|Activate daily plan': { cmd: 'SetSurvivalPlan', main: 'TalentId', opts: named(X.plans) },
+    'survivor|Add talent': { cmd: 'AddTalent', main: 'TalentConfigId', opts: TALENTS, info: 'talents', in: [{ f: 'TalentCount', l: 'level', v: 1 }] },
+    'survivor|Activate daily plan': { cmd: 'SetSurvivalPlan', main: 'TalentId', opts: named(X.plans), info: 'plans' },
     'survivor|Proficiency': { cmd: 'AddProficiencyLevel', main: 'ProficiencyTypeId', opts: PROF, in: [{ f: 'Delta', l: 'levels', v: 10 }] },
     'survivor|Add proficiency exp': { cmd: 'AddProficiencyExp', main: 'Amount', in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
     'survivor|Add proficiency levels': { cmd: 'AddProficiencyLevel', main: 'Delta', in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
     'survivor|Add Planning Points': { cmd: 'AddFaithPoint', main: 'Amount', raw: { Amount: 'int' } },
-    'survivor|Set a loop reward level': { act: 'loopreward', main: 'talent', live: 'talents', reread: true, in: [{ f: 'level', l: 'level', v: 1 }, { f: 'pay', l: 'pay with Planning Points', t: 'bool', v: false }] },
+    'survivor|Open the loop reward screen': { act: 'rewardscreen' },
+    'survivor|Set a loop reward level': { act: 'loopreward', main: 'talent', live: 'talents', info: 'talents', reread: true, in: [{ f: 'level', l: 'level', v: 1 }, { f: 'pay', l: 'pay with Planning Points', t: 'bool', v: false }] },
     'survivor|Auto behaviour': { cmd: 'TriggerAutoBehavior', opts: [['Eat', { BehaviorType: 1 }], ['Sleep', { BehaviorType: 2 }], ['Nap', { BehaviorType: 2, Variant: 1 }], ['Play games', { BehaviorType: 3 }], ['Leisure (random)', { BehaviorType: 4 }], ['Wellness (random)', { BehaviorType: 5 }], ['Use the toilet', { BehaviorType: 6 }]] },
     'survivor|Run an action by id': { cmd: 'PlayerAction', main: 'ActionId', in: [{ f: 'TargetId', l: 'target id', v: '' }, { f: 'SkipMoving', l: 'skip walking', t: 'bool', v: false }] },
     'survivor|Break the current action': { cmd: 'BreakAgentAction' },
@@ -152,7 +156,7 @@
     'danger|Spawn zombies': { cmd: 'GmTowerZombieSpawn', main: 'Count', in: [{ f: 'ZombieTypeId', l: 'type', opts: (X.ztype || []).map((z) => [`${z[3]} (${z[0]}, hp ${z[1]}, attack ${z[2]})`, z[0]]) }], risky: true },
     'danger|Remove a defence device': { cmd: 'GmTowerDeviceRemove', main: 'SlotName', k: 'text', v: '', d: 'By slot name; blank removes any one.' },
     'danger|Start a horde wave': { cmd: 'GmEndlessWaveStart', main: 'Tier', opts: [1, 2, 3, 4, 5].map((t) => ['Tier ' + t, t]), in: [{ f: 'DaySlot', l: 'day slot (0 = mid wave)', v: 0 }], risky: true },
-    'danger|Start a crisis': { cmd: 'GmEndlessCrisis', main: 'PoolRowId', k: 'sel', opts: (X.crisis || []).map((c) => [`Row ${c[0]}: event ${c[1]}, ${c[2]} days`, c[0]]), fix: { Close: false } },
+    'danger|Start a crisis': { cmd: 'GmEndlessCrisis', main: 'PoolRowId', k: 'sel', opts: (X.crisis || []).map((c) => [`${c[3] || 'Event ' + c[1]} - ${c[2]} days`, c[0]]), fix: { Close: false } },
     'danger|End every crisis': { cmd: 'GmEndlessCrisis', fix: { Close: true } },
     'danger|Show an endless banner': { cmd: 'GmPlayEndlessBanner', main: 'BannerType', k: 'num', v: 1, in: [{ f: 'P1', l: 'p1', v: '' }, { f: 'P2', l: 'p2', v: '' }] },
     'danger|Close every zombie timeline': { cmd: 'GmToggleDateTimeline', fix: { ConfigId: 0, Active: false } },

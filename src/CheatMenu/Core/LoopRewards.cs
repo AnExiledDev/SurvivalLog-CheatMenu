@@ -62,6 +62,31 @@ public static class LoopRewards
         else survivor.ForgetGiven(talent);
     }
 
+    /// <summary>A reward as it stood when the reward screen opened: the level owned and whether that level's buff was on the survivor.</summary>
+    public readonly record struct Owned(int Level, bool HadBuff);
+
+    /// <summary>
+    /// The rewards to give their level's buff once the game's reward screen closes mid-run, with the level, by talent id.
+    /// Buying or resetting there takes the old level's buff off and, mid-run, adds no new one. A reward owned now gets
+    /// its buff when its level changed or it had its buff when the screen opened. One left alone whose buff was not on
+    /// yet (a reward that starts later in the run) stays as it was. A reward missing from atOpen was not owned then.
+    /// </summary>
+    public static IReadOnlyList<(int Talent, int Level)> Rebuff(IReadOnlyDictionary<int, Owned> atOpen, IReadOnlyDictionary<int, int> now)
+    {
+        var give = new List<(int Talent, int Level)>();
+
+        foreach (var pair in now.OrderBy(p => p.Key))
+        {
+            if (pair.Value <= 0) continue;
+
+            var before = atOpen.TryGetValue(pair.Key, out var owned) ? owned : default;
+
+            if (pair.Value != before.Level || before.HadBuff) give.Add((pair.Key, pair.Value));
+        }
+
+        return give;
+    }
+
     /// <summary>A reward's line in the picker: its name, then the level owned out of the most there is (Lv, as the game writes it in both languages).</summary>
     public static string Label(string name, int current, int max) => $"{name} - Lv {current}/{max}";
 

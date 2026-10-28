@@ -12,7 +12,7 @@ namespace CheatMenu;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.cheatmenu";
-    private const string Version = "0.2.6";
+    private const string Version = "0.2.7";
 
     public override void Load()
     {
@@ -27,7 +27,7 @@ public sealed class Plugin : BasePlugin
         var gm = new GmBridge(log.Write);
         var flags = new GmFlags(log.Write);
         var presets = new PresetStore(Path.Combine(Paths.ConfigPath, "CheatMenu", "presets.json"), log.Write);
-        var session = new CheatSession(gm, flags, new ModActions(gm, log.Write), new Holds(gm, flags, harmony, log.Write), presets, new WebPage(log.Write), log.Write);
+        var session = new CheatSession(gm, flags, new ModActions(gm, harmony, log.Write), new Holds(gm, flags, harmony, log.Write), presets, new WebPage(log.Write), log.Write);
 
         log.Write($"===== Cheat Menu {Version} started");
         InputGate.Apply(harmony, log.Write);

@@ -119,6 +119,63 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
         Assert.Equal("更多字段 (3)", Tr("More fields (3)", "zh"));
     }
 
+    private JsonElement[] Option(string key, int value) => JsonSerializer.Deserialize<JsonElement[]>(Json("ROWSPEC['" + key + "'].opts.find(function (o) { return o[1] === " + value + "; })"))!;
+
+    [Fact]
+    public void Pickers_say_what_each_choice_is_and_still_send_its_id()
+    {
+        Assert.Equal("Vim and Vigor - good (2)", Option("survivor|Add buff", 2)[0].GetString());
+        Assert.Equal("Satiety - bad (1)", Option("survivor|Add buff", 1)[0].GetString());
+        Assert.Equal("Early Riser - max Lv 5 (1001)", Option("survivor|Add talent", 1001)[0].GetString());
+        Assert.Equal("Cold Wave Strikes - 2 days", Option("danger|Start a crisis", 1)[0].GetString());
+        Assert.Equal("13 Ending: Supply Hub", Option("survivor|Force game over", 13)[0].GetString());
+        Assert.Equal("[[\"Crafting\",1],[\"Planting\",2],[\"Cooking\",3],[\"Traps\",4],[\"Exploration\",5],[\"Defense\",6]]", Json("ROWSPEC['survivor|Proficiency'].opts"));
+    }
+
+    [Fact]
+    public void Force_game_over_offers_no_result_the_game_refuses()
+    {
+        // The game's handler turns down any Result above 13.
+        Assert.Equal(13, js.Evaluate("Math.max.apply(null, ROWSPEC['story|Force game over'].opts.map(function (o) { return o[1]; }))").AsNumber());
+    }
+
+    [Theory]
+    [InlineData("Vim and Vigor - good (2)", "神清气爽 - 增益 (2)")]
+    [InlineData("Early Riser - max Lv 5 (1001)", "觉醒 - 最高等级 5 (1001)")]
+    [InlineData("Cold Wave Strikes - 2 days", "寒潮来袭 - 2 天")]
+    [InlineData("Energy Drink - Excited - good (20011)", "功能饮料-兴奋 - 增益 (20011)")]
+    [InlineData("Creative Cook (Medium) (31351)", "创意托底·中档 (31351)")]
+    [InlineData("6 Ending: Side By Side (girl)", "6 结局：共同生活（女孩）")]
+    public void Chinese_translates_each_piece_of_a_picker_choice(string english, string chinese)
+    {
+        Assert.Equal(chinese, Tr(english, "zh"));
+        Assert.Equal(english, Tr(english, "en"));
+    }
+
+    [Fact]
+    public void Every_choice_in_the_game_data_pickers_reads_in_chinese()
+    {
+        var missing = Json("['survivor|Add buff', 'survivor|Add talent', 'survivor|Activate daily plan', 'survivor|Proficiency', 'survivor|Force game over', 'danger|Start a crisis'].map(function (k) { return ROWSPEC[k].opts.filter(function (o) { return L.tr(o[0], 'zh') === o[0]; }).map(function (o) { return o[0]; }); }).reduce(function (a, b) { return a.concat(b); }, [])");
+
+        Assert.Equal("[]", missing);
+    }
+
+    private string Detail(string kind, string id, string lang) => js.Evaluate("L.detail('" + kind + "', " + id + ", '" + lang + "')").AsString();
+
+    [Fact]
+    public void The_line_under_a_picker_is_the_games_own_words_in_the_menus_language()
+    {
+        Assert.StartsWith("Gives you 1 hour of extra time before the disaster hits.\nBy level: +1 hour", Detail("talents", "1001", "en"));
+        Assert.Contains("各等级：", Detail("talents", "1001", "zh"));
+        Assert.Equal("Increases Max Satiety by 15.", Detail("plans", "30011", "en"));
+        Assert.Equal("", Detail("buffs", "''", "en"));
+        Assert.Equal("", Detail("buffs", "999999", "zh"));
+
+        // Each row with the line names a kind the game data has text for.
+        Assert.Equal("[]", Json("Object.keys(ROWSPEC).filter(function (k) { var i = ROWSPEC[k].info; return i && !Object.keys((GAMEX.des || {})[i] || {}).length; })"));
+        Assert.Equal(6, js.Evaluate("Object.keys(ROWSPEC).filter(function (k) { return ROWSPEC[k].info; }).length").AsNumber());
+    }
+
     [Fact]
     public void Every_row_has_its_name_and_description_in_chinese()
     {

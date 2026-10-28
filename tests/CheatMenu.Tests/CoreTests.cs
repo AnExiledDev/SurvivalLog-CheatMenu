@@ -188,6 +188,103 @@ public class LoopRewardBuffTests
     }
 }
 
+public class RewardScreenTests
+{
+    private static System.Collections.Generic.Dictionary<int, LoopRewards.Owned> AtOpen(params (int Talent, int Level, bool HadBuff)[] owned) =>
+        owned.ToDictionary(o => o.Talent, o => new LoopRewards.Owned(o.Level, o.HadBuff));
+
+    private static System.Collections.Generic.Dictionary<int, int> Now(params (int Talent, int Level)[] levels) => levels.ToDictionary(l => l.Talent, l => l.Level);
+
+    [Fact]
+    public void A_reward_bought_on_the_screen_gets_its_new_levels_buff()
+    {
+        var give = LoopRewards.Rebuff(AtOpen((1001, 2, true)), Now((1001, 2), (5124, 3)));
+
+        Assert.Equal(new[] { (1001, 2), (5124, 3) }, give);
+    }
+
+    [Fact]
+    public void A_reward_bought_up_gets_the_buff_of_the_level_it_reached()
+    {
+        Assert.Equal(new[] { (1001, 4) }, LoopRewards.Rebuff(AtOpen((1001, 2, true)), Now((1001, 4))));
+    }
+
+    [Fact]
+    public void A_reward_bought_then_reset_gets_back_the_buff_the_screen_took_off()
+    {
+        // Buying took the level 2 buff off and resetting back to level 2 added none, so the level matches but the buff is gone.
+        Assert.Equal(new[] { (1001, 2) }, LoopRewards.Rebuff(AtOpen((1001, 2, true)), Now((1001, 2))));
+    }
+
+    [Fact]
+    public void A_reward_left_alone_whose_buff_was_not_on_yet_stays_that_way()
+    {
+        // Rewards that start at the disaster have no buff before it; the screen must not hand it out early.
+        Assert.Empty(LoopRewards.Rebuff(AtOpen((4010, 3, false)), Now((4010, 3))));
+    }
+
+    [Fact]
+    public void A_reward_not_owned_gets_nothing()
+    {
+        Assert.Empty(LoopRewards.Rebuff(AtOpen((1001, 0, false)), Now((1001, 0), (1002, 0))));
+    }
+
+    [Fact]
+    public void Opening_the_screen_is_a_cheat_the_plugin_runs_and_closes_the_panel_for()
+    {
+        Assert.True(ModCheats.IsAction("rewardscreen"));
+        Assert.True(ModCheats.OpensScreen("rewardscreen"));
+        Assert.False(ModCheats.OpensScreen("loopreward"));
+    }
+}
+
+public class ListLabelsTests
+{
+    [Fact]
+    public void A_planted_pot_names_its_plant_and_how_it_is_doing()
+    {
+        Assert.Equal("Tomato - ripe", ListLabels.Pot("Tomato", 12, ListLabels.Plant.Mature, false));
+        Assert.Equal("番茄 - 枯萎", ListLabels.Pot("番茄", 12, ListLabels.Plant.Withered, true));
+    }
+
+    [Fact]
+    public void A_pot_with_nothing_planted_reads_as_empty_whatever_state_the_game_left_on_it()
+    {
+        Assert.Equal("Empty pot", ListLabels.Pot(null, 0, ListLabels.Plant.Withered, false));
+        Assert.Equal("空种植盆", ListLabels.Pot(null, 0, ListLabels.Plant.Idle, true));
+    }
+
+    [Fact]
+    public void A_plant_with_no_name_in_the_table_still_shows_which_plant_it_is()
+    {
+        Assert.Equal("Plant 41 - growing", ListLabels.Pot(null, 41, ListLabels.Plant.Growing, false));
+    }
+
+    [Fact]
+    public void A_buff_says_whether_it_helps_and_whether_the_game_hides_it()
+    {
+        Assert.Equal("Refreshed - good", ListLabels.Buff("Refreshed", true, false, false));
+        Assert.Equal("Hungry - bad, hidden", ListLabels.Buff("Hungry", false, true, false));
+        Assert.Equal("饥饿 - 减益，隐藏", ListLabels.Buff("饥饿", false, true, true));
+        Assert.Equal("Unnamed buff - bad", ListLabels.Buff(null, false, false, false));
+    }
+
+    [Fact]
+    public void An_event_waiting_on_an_answer_says_so_and_an_answered_one_does_not()
+    {
+        Assert.Equal("Rats - waiting on a choice", ListLabels.Event("Rats", 2001, true, false));
+        Assert.Equal("Rats", ListLabels.Event("Rats", 2001, false, false));
+        Assert.Equal("事件 2001 - 等待选择", ListLabels.Event(null, 2001, true, true));
+    }
+
+    [Fact]
+    public void Furniture_with_no_name_in_the_table_shows_its_kind()
+    {
+        Assert.Equal("Wooden Door", ListLabels.Furniture("Wooden Door", 7, false));
+        Assert.Equal("Furniture kind 7", ListLabels.Furniture(null, 7, false));
+    }
+}
+
 public class LoopRewardTests
 {
     // A reward with three levels; buying level L costs that level's LvUpCost.

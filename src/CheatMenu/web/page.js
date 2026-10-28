@@ -107,7 +107,8 @@
 .row details.more .fl { margin-top: 6px; }
 .pick { display: inline-flex; align-items: center; gap: 4px; }
 .pick .filt { width: 90px; }
-.ctl .pick .sel { max-width: 230px; }
+.ctl .pick .sel { max-width: 280px; }
+.row .lab p.info { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--line-2); color: var(--steel-2); white-space: pre-line; }
 `;
 
   const css = (window.__slcheatmenuCss || '').replace(/:root/g, ':host').replace(/html, body \{[^}]*\}/, '') + EXTRA;
@@ -117,7 +118,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.6 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.7 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="lang" id="lang" title="Switch between English and Chinese"><b data-l="en">EN</b><b data-l="zh">中文</b></button>
@@ -636,8 +637,19 @@
     const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${d ? `<p>${esc(d)}</p>` : ''}</div><div class="ctl"></div></div>`);
 
     if (b.kind === 'spec') {
+      const sp = b.spec;
       const f = fieldsEl(r);
 
+      // The game's own words on what the picked buff, talent or plan does, kept in step with the list.
+      if (sp.info) {
+        const p = h('<p class="info" data-nolang></p>');
+        const show = () => { p.textContent = L.detail(sp.info, picked(r, 'main', sp), state.lang); p.hidden = !p.textContent; };
+
+        show();
+        el.addEventListener('change', show);
+        el.addEventListener('input', show);
+        $('.lab', el).append(p);
+      }
       if (f) $('.lab', el).append(f);
       $('.ctl', el).append(...specControls(r));
     } else if (b.kind === 'form') {
@@ -1531,7 +1543,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.2.6. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu 0.2.7. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       const game = st.chinese ? 'zh' : 'en';
 

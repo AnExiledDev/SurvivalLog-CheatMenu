@@ -29,6 +29,7 @@
     'survivor|Trigger a symptom action': ['GmTriggerSymptomAction', 'BTEffectManager.GmTriggerSymptomAction', 'BTEffectManager.GmFindBuffBtArgsId'],
     'survivor|Fill reinforce layers': ['GmFillReinforceLayer'],
     'survivor|Add talent': ['AddTalent', 'TalentComponent.GmForceAddBuff'],
+    'survivor|Open the loop reward screen': ['Ac_RebirthUpgrade_Open.SendAction', 'Reducer_Web_RebirthUpgrade.RA_Close', 'TalentComponent.GmForceAddBuff', 'TalentComponent.SaveGame'],
     'survivor|Set a loop reward level': ['TalentComponent.RevertToLevel', 'TalentComponent.GmForceAddBuff', 'TalentComponent.SaveGame', 'FaithManager.AddFaithPoint'],
     'survivor|Activate daily plan': ['SetSurvivalPlan'],
     'survivor|Proficiency': ['AddProficiencyExp', 'AddProficiencyLevel'],

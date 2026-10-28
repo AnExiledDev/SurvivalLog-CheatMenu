@@ -257,11 +257,28 @@
     if (has(own, s)) return own[s];
     if (has(game, s)) return game[s];
 
-    const m = s.match(/^(.+?) \((.*)\)$/);
-
     const known = (x) => zhOf(x) !== x;
 
+    // "Name - what it is (id)" from the pickers: each piece on its own, once the name is known. The longest known
+    // name wins, since some of the game's names have " - " in them.
+    if (s.indexOf(' - ') > 0) {
+      const parts = s.split(' - ');
+
+      for (let i = parts.length - 1; i > 0; i--) {
+        const name = parts.slice(0, i).join(' - ');
+
+        if (known(name)) return [name].concat(parts.slice(i)).map(zhOf).join(' - ');
+      }
+    }
+
+    const m = s.match(/^(.+?) \((.*)\)$/);
+
     if (m && known(m[1])) return zhOf(m[1]) + ' (' + m[2].replace(/\bhp\b/, '\u751f\u547d').replace(/\battack\b/, '\u653b\u51fb') + ')';
+
+    // A name with its own brackets, then the id: "Creative Cook (Medium) (31351)".
+    const last = s.match(/^(.+) \(([^()]*)\)$/);
+
+    if (last && known(last[1])) return zhOf(last[1]) + ' (' + last[2] + ')';
     // "Tab > Row" is two names; "Panel command 12" is a name and a number; "5 Ending line 1" is a number first.
     if (s.indexOf(' > ') > 0) return s.split(' > ').map(zhOf).join(' > ');
 
@@ -295,6 +312,15 @@
     return s.slice(0, at) + out + s.slice(at + core.length);
   }
 
+  // What the game says a picked buff, talent or plan does, in the menu's language; blank when it says nothing.
+  function detail(kind, id, lang) {
+    const t = (((window.GAMEX || {}).des || {})[kind] || {})[id];
+
+    if (!t) return '';
+
+    return (lang === 'zh' && t[1]) || t[0] || '';
+  }
+
   // A row description worth showing: not the game's method names, and not the game's own Chinese name alone.
   const METHOD = /^[A-Za-z]*[a-z][A-Z_][A-Za-z_]*$/;
   function shownDesc(d) {
@@ -315,5 +341,5 @@
     return s && s.game === game && (s.lang === 'zh' || s.lang === 'en') ? s.lang : game;
   }
 
-  window.__slcheatmenuLogic = { tr, startLang, shownDesc,FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
+  window.__slcheatmenuLogic = { tr, detail, startLang, shownDesc,FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
 })();

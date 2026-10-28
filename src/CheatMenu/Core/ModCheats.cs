@@ -14,8 +14,11 @@ public static class ModCheats
     {
         "mature", "tend", "anomaly", "freebuild", "ally", "allyone", "exposure", "event-choice", "event-end", "event-reset",
         "loan-clear", "debuffs", "buff-remove", "snapshot", "list", "fresh", "recipes", "skipto", "repairall", "containers",
-        "unsearch", "traps", "basket", "toast", "health", "loopreward",
+        "unsearch", "traps", "basket", "toast", "health", "loopreward", "rewardscreen",
     };
+
+    /// <summary>Actions that open one of the game's own screens, so the panel closes once they run to let the player use it.</summary>
+    public static readonly string[] OpenScreens = { "rewardscreen" };
 
     /// <summary>Things the mod keeps true while they are on.</summary>
     public static readonly string[] Holds = { "god", "power", "peaceful", "clock", "nofuel", "instant", "eventstep", "nospoil", "hover" };
@@ -28,4 +31,6 @@ public static class ModCheats
     public static bool IsHold(string name) => Holds.Contains(name, StringComparer.Ordinal);
 
     public static bool IsList(string name) => Lists.Contains(name, StringComparer.Ordinal);
+
+    public static bool OpensScreen(string name) => OpenScreens.Contains(name, StringComparer.Ordinal);
 }

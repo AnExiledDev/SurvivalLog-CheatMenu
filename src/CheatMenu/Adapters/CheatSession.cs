@@ -43,6 +43,8 @@ internal sealed class CheatSession
 
         if (_holds.Tick(Time.unscaledTime) && _isOpen) Switches();
 
+        if (RewardScreenPatch.TakeClosed()) _actions.RewardScreenClosed();
+
         var sent = _gm.TakeSent();
 
         if (sent.Count > 0 && _isOpen) _page.Readouts(sent);
@@ -154,6 +156,9 @@ internal sealed class CheatSession
 
         _page.Result(act.RequestId, error, text);
         Switches();
+
+        // The game's screen opens under the panel, so the panel gets out of the way.
+        if (error == null && ModCheats.OpensScreen(act.Name) && _isOpen) Close();
     }
 
     private void Switches() => _page.Flags(_flags.Json(), _holds.Json());

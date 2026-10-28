@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.7
+
+- New in the Survivor tab: "Open the loop reward screen" opens the screen where you buy loop rewards, in the middle of a run. What you buy works right away, and the run goes on when you close the screen.
+- Picking a buff, talent or daily plan now shows the game's own description of it under the row, with what each talent level gives.
+- The buff lists say whether each buff is good or bad, the talent list shows each talent's top level, and the crisis list shows each crisis by name with how many days it lasts.
+- Force game over lists the endings by name instead of "Ending line 1" to "Ending line 9".
+- The lists of your own pots, furniture, events and buffs show names instead of numbers. Pots also show whether the plant is growing, ripe or withered.
+- The proficiency list uses the game's names: Crafting, Planting, Cooking, Traps, Exploration and Defense.
+- More rows say what they do, such as the max stats, stat drain, move speed, shop discount and Start a crisis.
+
 ## 0.2.6
 
 - Fixed: "Set a loop reward level" now gives the reward's effect right away. Before, it set the level but the reward did nothing until the next run. If you set one with 0.2.5, set it again to make it work.
