@@ -118,7 +118,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.7 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.8 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="lang" id="lang" title="Switch between English and Chinese"><b data-l="en">EN</b><b data-l="zh">中文</b></button>
@@ -606,6 +606,7 @@
 
     if (t.page === 'changes') return changesPage(body);
     if (t.page === 'index') return indexPage(body);
+    if (t.page === 'modtests') return modTestsPage(body);
     if (t.custom === 'items') { body.append(itemSpawner()); t.groups.forEach((g, i) => body.append(groupEl(g, i))); return; }
 
     const cols = h('<div class="cols"></div>');
@@ -1295,6 +1296,44 @@
   }
 
   // ---------- game index ----------
+  // Other mods' test cheats (each mod's DevCheats class), read from the plugin every time the tab opens.
+  function modTestsPage(body) {
+    const draw = (mods, error) => {
+      if (state.tab !== 'modtests' || $('#q').value.trim()) return;
+
+      body.innerHTML = '';
+      if (error) return body.append(h(`<section class="group"><div class="gnote">${esc(error)}</div></section>`));
+      if (!mods.length) return body.append(h('<section class="group"><h2>No test cheats</h2><div class="gnote">None of the loaded mods adds test cheats.</div></section>'));
+
+      const zh = state.lang === 'zh';
+
+      mods.forEach((m) => {
+        const el = h(`<section class="group"><h2>${esc(m.name)}<em>${m.cheats.length}</em></h2></section>`);
+
+        m.cheats.forEach((c) => {
+          const label = zh ? c.zh : c.l;
+          const help = zh ? c.dzh : c.d;
+          const row = h(`<div class="row added"><div class="lab"><b>${esc(label)}</b>${CHIP.M}${help ? `<p>${esc(help)}</p>` : ''}</div><div class="ctl"><button class="btn">Run</button></div></div>`);
+          const x = { l: `${m.name}: ${c.l}`, s: 'M', tab: 'modtests', ref: [] };
+
+          $('button', row).onclick = () => cheat(() => {
+            once(x, 'ran');
+            act('modtest', { mod: m.mod, cheat: c.id }, label, (text, err) => err ? log(`${label}: ${err}`, 'err') : log(`${label}: ${text || 'done'}`, 'mod'));
+          });
+          el.append(row);
+        });
+        body.append(el);
+      });
+    };
+
+    body.append(h('<section class="group"><div class="gnote">Reading the loaded mods...</div></section>'));
+    act('modtests', {}, 'Mod tests', (text, error) => {
+      if (error) return draw([], error);
+
+      try { draw(JSON.parse(text || '[]')); } catch (e) { draw([], 'The test cheat list could not be read.'); }
+    });
+  }
+
   function indexPage(body) {
     const where = new Map();
     const at = (k) => where.get(k) || where.set(k, []).get(k);
@@ -1514,9 +1553,11 @@
 
   TABS.push(
     { id: 'changes', name: 'Changes', title: 'Changes & Presets', zh: '变更与预设', page: 'changes', blurb: 'Every change you made, with what it was before. Undo one, save a set as a preset, or go back to before you cheated.', groups: [] },
+    { id: 'modtests', name: 'Mod tests', zh: '模组测试', page: 'modtests', blurb: 'Test cheats other mods add, to check their features quickly. Each mod adds its own.', groups: [] },
     { id: 'index', name: 'Game index', zh: '内置目录', page: 'index', blurb: 'Every built-in GM tool in game build 1.1.19611, read off the game code, and where each one is in this menu. Panel commands run from here with their fields.', groups: [] }
   );
   window.TAB_ICONS.changes = '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4h4M12 8v4l3 2"/>';
+  window.TAB_ICONS.modtests = '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 15h9"/>';
   window.TAB_ICONS.index = '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>';
 
   window.ZH = window.ZH || {};
@@ -1543,7 +1584,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.2.7. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu 0.2.8. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       const game = st.chinese ? 'zh' : 'en';
 

@@ -14,7 +14,7 @@ public static class ModCheats
     {
         "mature", "tend", "anomaly", "freebuild", "ally", "allyone", "exposure", "event-choice", "event-end", "event-reset",
         "loan-clear", "debuffs", "buff-remove", "snapshot", "list", "fresh", "recipes", "skipto", "repairall", "containers",
-        "unsearch", "traps", "basket", "toast", "health", "loopreward", "rewardscreen",
+        "unsearch", "traps", "basket", "toast", "health", "loopreward", "rewardscreen", "modtests", "modtest",
     };
 
     /// <summary>Actions that open one of the game's own screens, so the panel closes once they run to let the player use it.</summary>

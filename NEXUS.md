@@ -9,7 +9,7 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 
 [size=5]Main features[/size]
 [list]
-[*][b]16 tabs[/b]: Quick, Survivor, Items, Money & Trade, Time & Weather, Home & Build, Farm & Robots, Danger, Explore, People, Story & Events, Unlocks, Saves and Debug, plus Changes and Game index.[/*]
+[*][b]17 tabs[/b]: Quick, Survivor, Items, Money & Trade, Time & Weather, Home & Build, Farm & Robots, Danger, Explore, People, Story & Events, Unlocks, Saves and Debug, plus Changes, Mod tests and Game index.[/*]
 [*][b]Search[/b]: find any tool on any tab by English or Chinese words.[/*]
 [*][b]Stats[/b]: drag a bar to set Satiety, Morale, Stamina, Health or Vitality, and lock them with the game's own stat lock.[/*]
 [*][b]Item spawner[/b]: pick an item by picture, search by name or id, or type any item id.[/*]
@@ -20,6 +20,7 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 [*][b]Every row works[/b]: lists and number boxes for every command, with pickers for your own pots, furniture, events, buffs, saves and backups. Picking a buff, talent or daily plan shows the game's own description of it.[/*]
 [*][b]Every game command[/b]: the Game index tab runs any of the game's 167 GM commands with its fields, and a console takes typed commands and remembers them.[/*]
 [*][b]Testing mods[/b]: show the id of whatever the cursor is on, a mod health page with every plugin's version and errors, fill every trap, bring the basket back, and a test toast.[/*]
+[*][b]Mod tests[/b]: test buttons other mods add, grouped by mod. Loot Restock, for one, adds a button that restocks the location you are in right away.[/*]
 [*][b]Changes and undo[/b]: every change is listed with what it was before. Switches and the weather can be undone, and Restore settings puts them all back.[/*]
 [*][b]Presets[/b]: save a set of switches for a test, apply it again later, and go back to Default.[/*]
 [*][b]Backup before cheating[/b]: your first cheat in a session waits while the menu backs up your save with the game's own backup. Load backup undoes everything since. Red rows back up the save again first (a switch on the Saves tab turns that off).[/*]
@@ -88,7 +89,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu
 
 [size=5]主要功能[/size]
 [list]
-[*][b]16 个标签页[/b]：快捷、幸存者、物品、金钱与交易、时间与天气、家园与建造、农场与机器人、危险、探索、人物、剧情与事件、解锁、存档、调试，另有「变更」和「游戏目录」。[/*]
+[*][b]17 个标签页[/b]：快捷、幸存者、物品、金钱与交易、时间与天气、家园与建造、农场与机器人、危险、探索、人物、剧情与事件、解锁、存档、调试，另有「变更」、「模组测试」和「游戏目录」。[/*]
 [*][b]搜索[/b]：用中文或英文在所有标签页中查找任何工具。[/*]
 [*][b]属性[/b]：拖动条来设置饱食、心情、体力、生命或活力，并用游戏自带的属性锁定把它们锁住。[/*]
 [*][b]物品生成[/b]：按图片选物品，按名称或 id 搜索，或直接输入任意物品 id。[/*]
@@ -99,6 +100,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu
 [*][b]每一行都能用[/b]：每条命令都有列表和数字框，还能从你自己的花盆、家具、事件、状态、存档和备份中选择。选中状态、天赋或每日计划时，会显示游戏里对它的说明。[/*]
 [*][b]所有游戏命令[/b]：「游戏目录」标签页可以填写字段运行游戏全部 167 条 GM 命令，控制台也可以输入命令，并会记住输入过的命令。[/*]
 [*][b]测试模组[/b]：显示鼠标所指物体的 id，模组状态页列出每个插件的版本和错误，填满所有陷阱，让篮子马上回来，以及测试提示。[/*]
+[*][b]模组测试[/b]：其他模组添加的测试按钮，按模组分组。比如 Loot Restock 添加了一个按钮，可以让你所在的地点立即补货。[/*]
 [*][b]变更与撤销[/b]：每次改动都会列出改动前的值。开关和天气可以撤销，「恢复设置」会把它们全部恢复。[/*]
 [*][b]预设[/b]：把一组开关保存下来用于测试，之后再次应用，也可以回到「默认」。[/*]
 [*][b]作弊前备份[/b]：每次游戏中的第一次作弊会先等菜单用游戏自带的备份功能备份你的存档。「载入备份」会撤销此后的一切。红色的行会先再备份一次存档（可在「存档」标签页的开关中关闭）。[/*]

@@ -46,6 +46,10 @@ internal sealed class ModActions
         // The health page reads BepInEx, not the save, so it works from the title screen too.
         if (name == "health") return Health(out text);
 
+        // Other mods' test cheats decide for themselves whether they need a save.
+        if (name == "modtests") return ModTestCheats.List(_log, out text);
+        if (name == "modtest") return ModTestCheats.Run(ActArgs.Parse(argsJson).Text("mod"), ActArgs.Parse(argsJson).Text("cheat"), _log, out text);
+
         if (!GmBridge.IsInGame || GameSingleton.Existing<BattleLogicWorld>() is not { } world) return "load a save first";
 
         var args = ActArgs.Parse(argsJson);

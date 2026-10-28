@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.8
+
+- New Mod tests tab: test buttons that other mods add, grouped by mod, to check their features quickly. Loot Restock, for one, adds buttons to restock the location you are in right away or make its restock due today.
+
 ## 0.2.7
 
 - New in the Survivor tab: "Open the loop reward screen" opens the screen where you buy loop rewards, in the middle of a run. What you buy works right away, and the run goes on when you close the screen.
