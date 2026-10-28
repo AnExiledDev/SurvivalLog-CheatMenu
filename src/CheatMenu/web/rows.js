@@ -18,10 +18,10 @@
   const PROF = [['Crafting', 1], ['Planting', 2], ['Cooking', 3], ['Traps', 4], ['Exploration', 5], ['Defense', 6]];
   const SLOT = [['Doors and windows', 0], ['Doors only', 8], ['Windows only', 9]];
   const PS = named(X.ps);
-  const RESULT = ['Exhausted', 'Door broken', 'Event complete', 'Days reached', 'No rebirths left'].map((l, i) => [i + ' ' + l, i])
-    .concat(['Evacuation', 'Side By Side (girl)', 'Lighthouse at World\'s End', 'Guardian of the City', 'The Truth', 'The Bitter End', 'Doomsday Oasis', 'Side By Side (companion)', 'Supply Hub'].map((l, i) => [(i + 5) + ' Ending: ' + l, i + 5]));
+  const RESULT = ['Exhausted', 'Door broken', 'Event complete', 'Days reached', 'No rebirths left'].map((l, i) => [`${l} (${i})`, i])
+    .concat(['Evacuation', 'Side By Side (girl)', 'Lighthouse at World\'s End', 'Guardian of the City', 'The Truth', 'The Bitter End', 'Doomsday Oasis', 'Side By Side (companion)', 'Supply Hub'].map((l, i) => [`Ending: ${l} (${i + 5})`, i + 5]));
   const LINES = [{ Line: 'companion' }, { Line: 'rescue' }];
-  const robot = { f: 'RobotId', l: 'robot id', v: '' };
+  const robot = { f: 'RobotId', l: 'robot', live: 'robots', blank: '(not set)' };
   const pot = { f: 'PotId', l: 'pot', live: 'pots' };
   const ps = (op) => ({ cmd: 'GmPreSupplyOp', fix: { Op: op } });
   const plant = (op, x) => Object.assign({ cmd: 'GmPlantRobot', fix: { Op: op }, in: [robot] }, x || {});
@@ -34,6 +34,55 @@
   const DRAIN = ['Satiety', 'Morale', 'Stamina', 'Health', 'Vitality'].flatMap((s) => [s + 'Del_Ratio', s + 'AutoDel_Ratio']);
   const GAIN = ['Satiety', 'Morale', 'Stamina', 'Health', 'Vitality'].flatMap((s) => [s + 'Add_Ratio', s + 'AutoAdd_Ratio']);
 
+  // A list worked out from lists the game sends (and from one of the row's fields, when on names it), made again only
+  // when one of those changes, so a search box keeps the same list between key presses. of names the lists, so the
+  // picker's reload button can read them again.
+  const from = (of, fn, on) => {
+    let was = null;
+    let out = null;
+    const f = (get, listOf) => {
+      const srcs = of.map((n) => listOf(n));
+
+      if (srcs.some((l) => !l)) return null;
+
+      const k = on ? get(on) : null;
+
+      if (!was || k !== was.k || srcs.some((l, i) => l !== was.srcs[i])) { was = { srcs, k }; out = fn(...srcs, k); }
+
+      return out;
+    };
+
+    f.of = of;
+
+    return f;
+  };
+  const STYPE = new Map(X.stypes || []);
+  const FURN_SLOT = new Map((X.furn || []).map((f) => [f[0], f[2]]));
+  const FURN = (X.furn || []).map((f) => [`${f[1] || '#' + f[0]} - ${STYPE.get(f[2]) || 'slot ' + f[2]} (${f[0]})`, f[0]]);
+  const ENDINGS = named(X.endings);
+  const SEEDS = ((window.GAME || {}).items || []).filter((i) => i.c === 10).map((i) => [`${i.n} (${i.id})`, i.id]);
+  const VEHICLES = (X.vehicles || []).map((v) => [`${v[1]} - price ${v[2]} (${v[0]})`, v[0]]);
+  const POINTS = named((X.points || []).filter((p) => p[2] === 3));
+  // Every tower slot once, by name; the game has the same slots on every map.
+  const TOWER = [...new Map((X.slots || []).filter((s) => s[2] === 10).map((s) => [s[0], [`${s[0]} - row ${s[4]}`, s[0]]])).values()];
+  const BARS = ['Satiety', 'Morale', 'Stamina', 'Health', 'Vitality'];
+  const NPCBARS = ['NpcVitality', 'NpcMorale', 'NpcMaterial', 'NpcAffinity'];
+  // The game's attribute names (AttrName), in its order.
+  const ATTRS = [].concat(BARS, ['Max', 'Interval', 'Target'].flatMap((p) => BARS.map((s) => p + s)),
+    ['MoveSpeed', 'Efficiency', 'PointsInterest', 'ExtraPoints', 'PoorAppetiteRatio', 'SideEffectsRatio', 'WishSubCategoryRatio', 'WishSpecificItemRatio', 'EventDayRate', 'EventAttrAddRate', 'EventDuringAddRate', 'EventItemAddRate', 'RepairFurnitureAddRate'],
+    ['MoveSpeed', 'FurnitureInteractSpeed', 'ExposureValue', 'PowerStorage', 'SettlementBuyDiscount', 'VehicleTravelTimeReduce'].map((s) => s + '_Ratio'), ['LoanMaxBonus'],
+    ['Add', 'Del', 'AutoAdd', 'AutoDel'].flatMap((p) => BARS.map((s) => s + p + '_Ratio')),
+    ['Satiety', 'Morale'].flatMap((s) => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => `${s}Food${n}Add_Ratio`)),
+    NPCBARS, ['Max', 'Interval', 'Target'].flatMap((p) => NPCBARS.map((s) => p + s))).map((a) => [a, a]);
+  // The floors an NPC can walk to: the home's, and the Tech Company's (map points with a floor group).
+  const FLOORS = [['Home - 1st floor (1)', 1], ['Home - basement (101)', 101], ['Home - 2nd floor (102)', 102], ['Tech Company - 1st floor (1003)', 1003], ['Tech Company - basement (10031)', 10031], ['Tech Company - 2nd floor (10032)', 10032]];
+  const CHEAT = [['Attribute changed outside the game', 1], ['Message slipped into the UI', 2], ['Impossible item time scale', 4], ['Bag position tampered with', 8], ['Bag size not allowed', 16]];
+  // A shop from this map's shops (item or furniture ones, or both); the game knows a shop by three fields, all sent.
+  const shopIn = (furniture) => ({ f: 'shop', l: 'shop', need: true, covers: ['GroupKind', 'GroupId', 'ShopId'], opts: from(['shops'], (l) => furniture === undefined ? l : l.filter((o) => o[1].furniture === furniture)) });
+  // What the picked shop sells.
+  const wares = { f: 'Id', l: 'item', need: true, wait: 'Pick a shop first', opts: (get) => (get('shop') || {}).entries || null };
+  const force = { f: 'Force', l: 'even if done already', t: 'bool', v: false };
+
   window.ROWSPEC = {
     // ---------- quick ----------
     'quick|God mode': { hold: 'god' },
@@ -44,22 +93,22 @@
     'survivor|Add buff': { cmd: 'AddBuff', main: 'buffConfigId', opts: BUFFS, info: 'buffs' },
     'survivor|Remove buff': { act: 'buff-remove', main: 'buff', live: 'buffs', info: 'buffs' },
     'survivor|Trigger a symptom action': { cmd: 'GmTriggerSymptomAction', main: 'BuffConfigId', opts: BUFFS, info: 'buffs', in: [{ f: 'AutoAddBuff', l: 'add the buff if missing', t: 'bool', v: true }] },
-    'survivor|Fill reinforce layers': { cmd: 'GmFillReinforceLayer', main: 'BuffId', in: [{ f: 'SlotTypeId', l: 'which', opts: SLOT }, { f: 'Layers', l: 'layers (blank = max)', v: '' }] },
+    'survivor|Fill reinforce layers': { cmd: 'GmFillReinforceLayer', main: 'BuffId', ml: 'buff', opts: BUFFS, info: 'buffs', in: [{ f: 'SlotTypeId', l: 'which', opts: SLOT }, { f: 'Layers', l: 'layers (blank = max)', v: '' }] },
     'survivor|Add talent': { cmd: 'AddTalent', main: 'TalentConfigId', opts: TALENTS, info: 'talents', in: [{ f: 'TalentCount', l: 'level', v: 1 }] },
     'survivor|Activate daily plan': { cmd: 'SetSurvivalPlan', main: 'TalentId', opts: named(X.plans), info: 'plans' },
     'survivor|Proficiency': { cmd: 'AddProficiencyLevel', main: 'ProficiencyTypeId', opts: PROF, in: [{ f: 'Delta', l: 'levels', v: 10 }] },
-    'survivor|Add proficiency exp': { cmd: 'AddProficiencyExp', main: 'Amount', in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
-    'survivor|Add proficiency levels': { cmd: 'AddProficiencyLevel', main: 'Delta', in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
+    'survivor|Add proficiency exp': { cmd: 'AddProficiencyExp', main: 'Amount', ml: 'exp', mainAt: 1, in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
+    'survivor|Add proficiency levels': { cmd: 'AddProficiencyLevel', main: 'Delta', ml: 'levels', mainAt: 1, in: [{ f: 'ProficiencyTypeId', l: 'skill', opts: PROF }] },
     'survivor|Add Planning Points': { cmd: 'AddFaithPoint', main: 'Amount', raw: { Amount: 'int' } },
     'survivor|Open the loop reward screen': { act: 'rewardscreen' },
     'survivor|Set a loop reward level': { act: 'loopreward', main: 'talent', live: 'talents', info: 'talents', reread: true, in: [{ f: 'level', l: 'level', v: 1 }, { f: 'pay', l: 'pay with Planning Points', t: 'bool', v: false }] },
     'survivor|Auto behaviour': { cmd: 'TriggerAutoBehavior', opts: [['Eat', { BehaviorType: 1 }], ['Sleep', { BehaviorType: 2 }], ['Nap', { BehaviorType: 2, Variant: 1 }], ['Play games', { BehaviorType: 3 }], ['Leisure (random)', { BehaviorType: 4 }], ['Wellness (random)', { BehaviorType: 5 }], ['Use the toilet', { BehaviorType: 6 }]] },
-    'survivor|Run an action by id': { cmd: 'PlayerAction', main: 'ActionId', in: [{ f: 'TargetId', l: 'target id', v: '' }, { f: 'SkipMoving', l: 'skip walking', t: 'bool', v: false }] },
+    'survivor|Run an action by id': { cmd: 'PlayerAction', main: 'ActionId', ml: 'action', live: 'actions', in: [{ f: 'TargetId', l: 'target', live: 'furniture', blank: '(none)' }, { f: 'SkipMoving', l: 'skip walking', t: 'bool', v: false }], d: 'Queues any of the game\'s player actions on the survivor.' },
     'survivor|Break the current action': { cmd: 'BreakAgentAction' },
     'survivor|Clear the action queue': { cmd: 'ClearAgentAction' },
     'survivor|Real death': { cmd: 'GmForceGameOver', fix: { Result: 0, UseRealDeathChain: true }, risky: true },
-    'survivor|Force game over': { cmd: 'GmForceGameOver', main: 'Result', opts: RESULT, in: [{ f: 'ConfigId', l: 'ending event id', v: '' }], risky: true },
-    'survivor|Set any attribute': { cmd: 'ChangeAttr', fix: { type: 0 }, main: 'attrKey', k: 'text', v: 'MoveSpeed_Ratio', in: [{ f: 'attrValue', l: 'value', v: 0.5 }] },
+    'survivor|Force game over': { cmd: 'GmForceGameOver', main: 'Result', ml: 'result', opts: RESULT, in: [{ f: 'ConfigId', l: 'ending event', opts: ENDINGS, blank: '(the game picks)' }], risky: true },
+    'survivor|Set any attribute': { cmd: 'ChangeAttr', fix: { type: 0 }, main: 'attrKey', ml: 'attribute', k: 'sel', opts: ATTRS, free: true, in: [{ f: 'attrValue', l: 'value', v: 0.5 }], d: 'Sets any of the game\'s attributes to any value, not just the five bars.' },
     'survivor|Max satiety': { attr: 'MaxSatiety' },
     'survivor|Max morale': { attr: 'MaxMorale' },
     'survivor|Max stamina': { attr: 'MaxStamina' },
@@ -72,20 +121,20 @@
 
     // ---------- money ----------
     'money|Set money': Object.assign(ps('setmoney'), { main: 'Value' }),
-    'money|Buy everything in this shop': Object.assign(ps('buyshopall'), { in: [{ f: 'ShopId', l: 'shop id', v: '' }] }),
+    'money|Buy everything in this shop': Object.assign(ps('buyshopall'), { in: [shopIn()], d: 'Pick a shop on this map. Free; the ledger records it.' }),
     'money|Search every container here': ps('searchall'),
-    'money|Grab the ground loot': Object.assign(ps('groundloot'), { in: [{ f: 'Force', l: 'again', t: 'bool', v: false }] }),
-    'money|Run the rush sale': Object.assign(ps('rush'), { in: [{ f: 'Force', l: 'again', t: 'bool', v: false }] }),
-    'money|Buy a vehicle': Object.assign(ps('buyvehicle'), { in: [{ f: 'Id', l: 'grade', v: 1 }] }),
+    'money|Grab the ground loot': Object.assign(ps('groundloot'), { in: [force] }),
+    'money|Run the rush sale': Object.assign(ps('rush'), { in: [force] }),
+    'money|Buy a vehicle': Object.assign(ps('buyvehicle'), { in: [{ f: 'Id', l: 'vehicle', opts: VEHICLES }], d: 'Free; the ledger records it.' }),
     'money|Sell the vehicle': ps('sellvehicle'),
     'money|Pawn furniture': Object.assign(ps('pawn'), { in: [{ f: 'InstanceIds', l: 'furniture', live: 'furniture' }] }),
     'money|Reset the GM ledger': ps('resetledger'),
-    'money|Buy one item': Object.assign(ps('buyitem'), { main: 'Id', in: [{ f: 'ShopId', l: 'shop id', v: '' }, { f: 'Count', l: 'count', v: 1 }] }),
-    'money|Buy one piece of furniture': Object.assign(ps('buyfurniture'), { main: 'Id', in: [{ f: 'ShopId', l: 'shop id', v: '' }, { f: 'Count', l: 'count', v: 1 }] }),
-    'money|Grant an item': Object.assign(ps('grantitem'), { main: 'Id', in: [{ f: 'Count', l: 'count', v: 1 }] }),
-    'money|Search one container': Object.assign(ps('searchcontainer'), { in: [{ f: 'Id', l: 'container', live: 'furniture' }, { f: 'Force', l: 'again', t: 'bool', v: false }] }),
-    'money|Search this whole scene': Object.assign(ps('searchscene'), { in: [{ f: 'MapPointId', l: 'map point (blank = here)', v: '' }] }),
-    'money|Trade point relation (Casual)': { cmd: 'GmCasualDebug', fix: { Op: 'relation' }, main: 'B', in: [{ f: 'A', l: 'trade point id', v: 1 }] },
+    'money|Buy one item': Object.assign(ps('buyitem'), { in: [shopIn(false), wares, { f: 'Count', l: 'count', v: 1 }], d: 'From a shop on this map. Free; the ledger records it.' }),
+    'money|Buy one piece of furniture': Object.assign(ps('buyfurniture'), { in: [shopIn(true), wares, { f: 'Count', l: 'count', v: 1 }], d: 'From a furniture shop on this map. Free; the ledger records it.' }),
+    'money|Grant an item': Object.assign(ps('grantitem'), { main: 'Id', ml: 'item', live: 'items', in: [{ f: 'Count', l: 'count', v: 1 }] }),
+    'money|Search one container': Object.assign(ps('searchcontainer'), { in: [{ f: 'GroupId', l: 'container', live: 'containers', need: true }, force] }),
+    'money|Search this whole scene': Object.assign(ps('searchscene'), { in: [{ f: 'MapPointId', l: 'scene', live: 'scenes', blank: '(this scene)' }], d: 'Every container in the scene you pick.' }),
+    'money|Trade point relation (Casual)': { cmd: 'GmCasualDebug', fix: { Op: 'relation' }, main: 'B', ml: 'add', mainAt: 1, in: [{ f: 'A', l: 'trade point', opts: POINTS }], d: 'Adds to your standing with one trade point.' },
     'money|Clear daily deal limits': { cmd: 'GmClearDailyCd', d: 'The game clears deal limits together with every other daily limit; it has no deal-only clear.' },
     'money|Every trader comes back now': aid('returnnow'),
     'money|Clear loan shark debt': { act: 'loan-clear' },
@@ -102,15 +151,16 @@
     'items|Make all food fresh': { act: 'fresh' },
 
     // ---------- home ----------
-    'home|Install furniture in a slot': { cmd: 'QuickInstallFurniture', main: 'FurnitureConfigId', in: [{ f: 'SlotName', l: 'slot name', t: 'text', v: '' }, { f: 'Overwrite', l: 'replace what is there', t: 'bool', v: true }] },
+    'home|Install furniture in a slot': { cmd: 'QuickInstallFurniture', main: 'FurnitureConfigId', ml: 'furniture', opts: FURN, in: [{ f: 'SlotName', l: 'slot', need: true, free: true, opts: from(['homeslots'], (l, id) => FURN_SLOT.has(id) ? l.filter((o) => o[2] === FURN_SLOT.get(id)) : l, 'FurnitureConfigId') }, { f: 'Overwrite', l: 'replace what is there', t: 'bool', v: true }], d: 'Pick the furniture, then one of your home\'s slots that takes it.' },
     'home|Install a preset layout': { cmd: 'QuickInstallPreset', in: [{ f: 'Items', l: 'items (JSON list of {FurnitureConfigId, SlotName})', t: 'text', v: '' }] },
-    'home|Clear a slot': { cmd: 'GmClearSlotFurniture', main: 'SlotName', k: 'text', v: '' },
+    'home|Add furniture to the bag': { cmd: 'AddBagFurniture', main: 'FurnitureConfigId', opts: FURN },
+    'home|Clear a slot': { cmd: 'GmClearSlotFurniture', main: 'SlotName', ml: 'slot', k: 'sel', free: true, opts: from(['homeslots'], (l) => l.filter((o) => o[3])) },
     'home|Repair all doors and windows': { cmd: 'FillFurnitureDurability', in: [{ f: 'SlotTypeId', l: 'which', opts: SLOT }] },
     'home|Fill every reinforce layer': { cmd: 'GmFillReinforceLayer', in: [{ f: 'SlotTypeId', l: 'which', opts: SLOT }] },
     'home|Force-break shields': { cmd: 'GmBreakFurnitureShield', in: [{ f: 'SlotTypeId', l: 'which', opts: SLOT }] },
     'home|Play the home build timelapse': { cmd: 'PlayHomeBuildTimelapse' },
-    'home|Play the room timelapse': { cmd: 'PlayRoomTimelapse', in: [{ f: 'RoomId', l: 'room id', v: '' }] },
-    'home|Play the storage fill timelapse': { cmd: 'PlayRoomStorageFillTimelapse', in: [{ f: 'RoomId', l: 'room id', v: '' }] },
+    'home|Play the room timelapse': { cmd: 'PlayRoomTimelapse', in: [{ f: 'RoomId', l: 'room', opts: named(X.rooms), blank: '(game default)' }] },
+    'home|Play the storage fill timelapse': { cmd: 'PlayRoomStorageFillTimelapse', in: [{ f: 'RoomId', l: 'room', opts: named(X.rooms), blank: '(game default)' }] },
     'home|Free build': { act: 'freebuild', main: 'on' },
     'home|Clear every furniture cooldown': { cmd: 'GmClearDailyCd', d: 'The game clears furniture cooldowns together with every other daily limit.' },
     'home|Force a rat visit': { cmd: 'GmRatVisitMark', d: 'Puts one rat in every storage bag the survivor\'s home has.' },
@@ -122,26 +172,26 @@
     'farm|Scan': plant('scan'),
     'farm|Show claims': plant('claims'),
     'farm|Do an action': plant('do', { k: 'btn', in: [robot, pot], d: 'The robot does the job the pot needs now: plant, water, weed, fertilize or harvest.' }),
-    'farm|Preset': plant('preset', { main: 'Tier', opts: [['Small pot', 0], ['Medium pot', 1], ['Large pot', 2]], in: [robot, { f: 'SeedId', l: 'seed item id', v: '' }] }),
+    'farm|Preset': plant('preset', { main: 'Tier', ml: 'tier', mainAt: 1, opts: [['Small pot', 0], ['Medium pot', 1], ['Large pot', 2]], in: [robot, { f: 'SeedId', l: 'seed', opts: SEEDS, blank: '(not set)' }] }),
     'farm|Release claims': plant('release'),
     'farm|Mature one pot': { act: 'mature', main: 'pot', live: 'pots' },
     'farm|Force an anomaly': { act: 'anomaly', main: 'kind', opts: [['Pests', 1], ['Weeds', 2], ['Drought', 4]], in: [{ f: 'pot', l: 'pot', live: 'pots' }] },
     'farm|Mature every plant': { act: 'mature' },
     'farm|Water and fertilize all': { act: 'tend' },
-    'farm|Spawn a robot': { cmd: 'GmRobotSpawn', main: 'ConfigId', opts: [['Tidying robot', 2003], ['Planting robot', 2004], ['Planting robot (large)', 2005]], in: [{ f: 'DockId', l: 'dock id (blank = any)', v: '' }] },
-    'farm|Fill its bag': { cmd: 'GmRobotBagFill', main: 'ItemConfigId', in: [robot, { f: 'Count', l: 'count', v: 10 }] },
+    'farm|Spawn a robot': { cmd: 'GmRobotSpawn', main: 'ConfigId', ml: 'robot', opts: [['Tidying robot', 2003], ['Planting robot', 2004], ['Planting robot (large)', 2005]], in: [{ f: 'DockId', l: 'dock', live: 'furniture', blank: '(any)' }] },
+    'farm|Fill its bag': { cmd: 'GmRobotBagFill', main: 'ItemConfigId', ml: 'item', live: 'items', mainAt: 1, in: [robot, { f: 'Count', l: 'count', v: 10 }], d: 'Puts items in a robot\'s bag.' },
     'farm|Master switch': { cmd: 'GmRobotMaster', main: 'Value', opts: [['On', 1], ['Off', 0]] },
     'farm|Fake a state': { cmd: 'GmRobotFakeState', opts: [['Idle, full battery', { Battery: 100, BatteryMax: 100, MasterOn: 1, GroundOn: 1, IsCharging: 0 }], ['Low battery', { Battery: 5, BatteryMax: 100, MasterOn: 1, GroundOn: 1, IsCharging: 0 }], ['Charging', { Battery: 40, BatteryMax: 100, MasterOn: 1, GroundOn: 1, IsCharging: 1 }], ['Switched off', { Battery: 100, BatteryMax: 100, MasterOn: 0, GroundOn: 0, IsCharging: 0 }]], in: [robot] },
     'farm|Queue a trip': { cmd: 'GmRobotTrip', in: [{ f: 'SrcId', l: 'from', live: 'furniture' }, { f: 'DstId', l: 'to', live: 'furniture' }, { f: 'Items', l: 'items (blank = all)', t: 'text', v: '' }], d: 'From a container to a container. Turn on Trip stub first, or nothing reads the trip.' },
     'farm|Give a module': { cmd: 'GmRobotModule', fix: { Op: 'give' }, main: 'ItemId', opts: named(X.modules) },
-    'farm|Install': { cmd: 'GmRobotModule', fix: { Op: 'install' }, main: 'ItemId', opts: named(X.modules), in: [robot, { f: 'Slot', l: 'slot', v: '' }] },
+    'farm|Install': { cmd: 'GmRobotModule', fix: { Op: 'install' }, main: 'ItemId', ml: 'module', mainAt: 1, opts: named(X.modules), in: [robot, { f: 'Slot', l: 'slot', v: '' }] },
     'farm|Uninstall': module('uninstall'),
     'farm|Dump modules': module('dump'),
     'farm|Clear all slots': module('clear'),
     'farm|List robots and talk state': talk('list'),
-    'farm|Say a line': talk('say', { main: 'Text', k: 'text', v: 'Hello', in: [robot, { f: 'Duration', l: 'seconds', v: 4 }] }),
+    'farm|Say a line': talk('say', { main: 'Text', ml: 'line', mainAt: 1, k: 'text', v: 'Hello', in: [robot, { f: 'Duration', l: 'seconds', v: 4 }] }),
     'farm|Reset talk cooldowns': talk('reset'),
-    'farm|Force a robot meeting': talk('scene'),
+    'farm|Force a robot meeting': talk('scene', { d: 'Starts a robot meeting scene now.' }),
     'farm|Scan robot containers': { cmd: 'GmRobotContainerSwitch', fix: { Op: 'scan' } },
     'farm|Watch container changes': { cmd: 'GmRobotContainerSwitch', fix: { Op: 'watch' }, flip: true },
     'farm|Plan the robots\' jobs': plan('plan'),
@@ -153,13 +203,14 @@
     // ---------- danger ----------
     'danger|Start a wave': { cmd: 'GmTowerWaveStart', in: [{ f: 'WaveEventId', l: 'wave event', opts: (X.waves || []).filter((w) => w[0] > 0).map((w) => [`${w[1]} (${w[0]})`, w[0]]) }, { f: 'TotalBudget', l: 'budget', v: '' }, { f: 'SpawnIntervalSeconds', l: 'seconds per zombie', v: '' }], risky: true },
     'danger|Force the wave state': { cmd: 'GmTowerWaveSetState', main: 'State', opts: [['Idle', 0], ['Spawning', 1], ['Final charge', 2], ['Retreat', 3]] },
-    'danger|Spawn zombies': { cmd: 'GmTowerZombieSpawn', main: 'Count', in: [{ f: 'ZombieTypeId', l: 'type', opts: (X.ztype || []).map((z) => [`${z[3]} (${z[0]}, hp ${z[1]}, attack ${z[2]})`, z[0]]) }], risky: true },
-    'danger|Remove a defence device': { cmd: 'GmTowerDeviceRemove', main: 'SlotName', k: 'text', v: '', d: 'By slot name; blank removes any one.' },
+    'danger|Spawn zombies': { cmd: 'GmTowerZombieSpawn', main: 'Count', ml: 'count', mainAt: 1, in: [{ f: 'ZombieTypeId', l: 'type', opts: (X.ztype || []).map((z) => [`${z[3]} (${z[0]}, hp ${z[1]}, attack ${z[2]})`, z[0]]) }], risky: true },
+    'danger|Remove a defence device': { cmd: 'GmTowerDeviceRemove', main: 'SlotName', ml: 'tower slot', k: 'sel', opts: TOWER, blank: '(any one)', d: 'Takes the device out of one tower slot, or any one.' },
     'danger|Start a horde wave': { cmd: 'GmEndlessWaveStart', main: 'Tier', opts: [1, 2, 3, 4, 5].map((t) => ['Tier ' + t, t]), in: [{ f: 'DaySlot', l: 'day slot (0 = mid wave)', v: 0 }], risky: true },
     'danger|Start a crisis': { cmd: 'GmEndlessCrisis', main: 'PoolRowId', k: 'sel', opts: (X.crisis || []).map((c) => [`${c[3] || 'Event ' + c[1]} - ${c[2]} days`, c[0]]), fix: { Close: false } },
     'danger|End every crisis': { cmd: 'GmEndlessCrisis', fix: { Close: true } },
     'danger|Show an endless banner': { cmd: 'GmPlayEndlessBanner', main: 'BannerType', k: 'num', v: 1, in: [{ f: 'P1', l: 'p1', v: '' }, { f: 'P2', l: 'p2', v: '' }] },
     'danger|Close every zombie timeline': { cmd: 'GmToggleDateTimeline', fix: { ConfigId: 0, Active: false } },
+    'danger|Spawn a scene rat': { cmd: 'GmSpawnSceneRat', main: 'SceneRatConfigId', opts: [['Random (weighted)', 0]].concat(named(X.rats)), d: 'Random picks one the way the game would.' },
     'danger|Peaceful mode': { hold: 'peaceful' },
 
     // ---------- explore ----------
@@ -181,18 +232,21 @@
 
     // ---------- people ----------
     'people|Force a wish': { cmd: 'GenerateWish', main: 'WishId', k: 'sel', opts: [['Next wish', 0]].concat(named(X.wishes)) },
-    'people|Send an NPC somewhere': { cmd: 'GmNpcGoto', k: 'btn', in: [{ f: 'NpcId', l: 'npc instance id', v: '' }, { f: 'TargetId', l: 'to furniture', live: 'furniture' }, { f: 'TargetMapId', l: 'or floor map id', v: '' }] },
+    'people|Force a pool wish': { cmd: 'GenerateWish', main: 'WishId', k: 'sel', opts: named(X.wishes), d: 'Gives the survivor the wish you pick.' },
+    'people|Meet an NPC': { cmd: 'MarkMetNpc', main: 'NpcConfigId', opts: [['Everyone', 0]].concat(named(X.npcs)), d: 'Marks one person as met, or everyone.' },
+    'people|Send an NPC somewhere': { cmd: 'GmNpcGoto', k: 'btn', in: [{ f: 'NpcId', l: 'person', live: 'people', need: true }, { f: 'TargetId', l: 'to furniture', live: 'furniture', blank: '(none)' }, { f: 'TargetMapId', l: 'or a floor', opts: FLOORS, blank: '(none)' }], d: 'To a piece of furniture, or to a floor; it takes the stairs between floors.' },
     'people|Send a commission': { cmd: 'GmCommission', fix: { Op: 'send' }, in: [{ f: 'Contact', l: 'contact', opts: [['Least recent ally', 0]].concat(named(X.contacts)) }] },
     'people|Commission snapshot': { cmd: 'GmCommission', fix: { Op: 'query' } },
     'people|Open the platform': aid('open'),
     'people|Create a request': aid('create'),
-    'people|Accept': aid('accept', { in: [{ f: 'Value', l: 'request id', v: '' }] }),
-    'people|Complete': aid('complete', { in: [{ f: 'Value', l: 'request id', v: '' }] }),
+    'people|Accept': aid('accept', { in: [{ f: 'Value', l: 'request id', v: '' }], d: 'Create a request names the id of the request it made.' }),
+    'people|Complete': aid('complete', { in: [{ f: 'Value', l: 'request id', v: '' }], d: 'Create a request names the id of the request it made.' }),
     'people|Set done count': aid('setdone', { main: 'Value' }),
     'people|Settle': aid('settle'),
     'people|Platform snapshot': aid('query'),
     'people|Reply to a text': { cmd: 'TestPhoneReply', main: 'OptionId', opts: [['Option 1', 1], ['Option 2', 2], ['Option 3', 3]], in: [{ f: 'ContactId', l: 'contact', opts: named(X.contacts) }] },
-    'people|Push a group chat post': { cmd: 'GossipForcePush', main: 'SmsId', in: [{ f: 'ResetSpoke', l: 'forget replies', t: 'bool', v: false }] },
+    'people|Deliver a text': { cmd: 'DeliverSMS', main: 'SMSId', ml: 'text', live: 'sms', d: 'Sends any of the game\'s texts to the phone now.' },
+    'people|Push a group chat post': { cmd: 'GossipForcePush', main: 'SmsId', ml: 'post', live: 'posts', in: [{ f: 'ResetSpoke', l: 'forget replies', t: 'bool', v: false }] },
     'people|Shift the neglect clock': probe('shiftneglectanchor', { main: 'Value' }),
     'people|Shift the tier clock': probe('shifttieranchor', { main: 'Value' }),
     'people|Set survival tier': probe('settier', { main: 'Value', opts: [0, 1, 2, 3, 4].map((t) => [String(t), t]) }),
@@ -202,8 +256,9 @@
     // ---------- story ----------
     'story|Skip the opening': { cmd: 'SkipOpeningTimeline', also: ['SkipOpeningBlackScreen'] },
     'story|Play a timeline': { cmd: 'PlayTimeline', opts: [['Opening', { Kind: 'opening' }], ['Disaster', { Kind: 'zaibian' }], ['Scene', { Kind: 'scene' }], ['Wake-up', { Kind: 'awaken' }], ['Wake-up: dream layer', { Kind: 'awaken', Name: 'dream' }], ['Wake-up: camera layer', { Kind: 'awaken', Name: 'camera' }], ['Stop wake-up', { Kind: 'stop', Name: 'stop' }]], in: [{ f: 'Name', l: 'timeline name', t: 'text', v: '' }] },
-    'story|Toggle a date timeline': { cmd: 'GmToggleDateTimeline', main: 'ConfigId', k: 'sel', opts: (X.dtl || []).map((d) => [`${d[1]} (${d[0]}, day ${d[2]})`, d[0]]), in: [{ f: 'Active', l: 'on', t: 'bool', v: true }] },
-    'story|Force game over': { cmd: 'GmForceGameOver', main: 'Result', opts: RESULT, in: [{ f: 'ConfigId', l: 'ending event id', v: '' }, { f: 'UseRealDeathChain', l: 'real death', t: 'bool', v: false }], risky: true },
+    'story|Toggle a date timeline': { cmd: 'GmToggleDateTimeline', main: 'ConfigId', k: 'sel', opts: (X.dtl || []).map((d) => [`${d[1]} (${d[0]}, day ${d[2]})`, d[0]]), in: [{ f: 'Active', l: 'on', t: 'bool', v: true }], d: 'Turns one dated timeline on or off.' },
+    'story|Force an event': { cmd: 'TriggerEvent', main: 'EventConfigId', ml: 'event', live: 'allevents', d: 'Any event, even another survivor\'s.' },
+    'story|Force game over': { cmd: 'GmForceGameOver', main: 'Result', ml: 'result', opts: RESULT, in: [{ f: 'ConfigId', l: 'ending event', opts: ENDINGS, blank: '(the game picks)' }, { f: 'UseRealDeathChain', l: 'real death', t: 'bool', v: false }], risky: true },
     'story|Write a day snapshot now': { cmd: 'RebirthSnap', in: [{ f: 'Day', l: 'day (blank = today)', v: '' }] },
     'story|Set rebirth state': { cmd: 'RebirthSetState', main: 'ChancesUsed', opts: [['0 used', 0], ['1 used', 1], ['2 used', 2], ['3 used', 3]], in: [{ f: 'FaithPoint', l: 'Planning Points', v: '' }, { f: 'HpPenaltyStacks', l: 'life penalty stacks', v: '' }], risky: true },
     'story|Minor rebirth': { cmd: 'RebirthMinor', main: 'DaysBack', in: [{ f: 'Force', l: 'skip the checks', t: 'bool', v: false }], risky: true },
@@ -223,7 +278,7 @@
     'progress|Unlock every achievement': ach('unlockall', { risky: true }),
     'progress|Unlock one': ach('unlock', { main: 'Id', opts: named(X.ach) }),
     'progress|Clear unlocked list': ach('clear'),
-    'progress|Record an ending': ach('ending', { in: [{ f: 'Id', l: 'ending id', v: '' }, { f: 'PlayerSelectId', l: 'survivor', opts: PS }] }),
+    'progress|Record an ending': ach('ending', { in: [{ f: 'Id', l: 'ending', opts: ENDINGS, need: true }, { f: 'PlayerSelectId', l: 'survivor', opts: PS }] }),
     'progress|Taboo list': { cmd: 'GmAchievementTaboo', opts: [['List', { Op: 'list' }], ['Set one on', { Op: 'set', Value: true }], ['Set one off', { Op: 'set', Value: false }], ['Clear all', { Op: 'clearall' }]], k: 'sel', in: [{ f: 'Key', l: 'taboo key', t: 'text', v: '' }] },
     'progress|Achievement stats': ach('list'),
     'progress|Recheck counters': { cmd: 'GmSetGameCounter', fix: { Value: 0, IsDelta: true }, main: 'Name', k: 'text', v: '', d: 'Adds 0 to a counter by name, which makes the game recheck the achievements on it.' },
@@ -233,17 +288,17 @@
     'progress|Remove a tag': { cmd: 'RemoveTag', main: 'Tag', k: 'text', v: '' },
 
     // ---------- saves ----------
-    'saves|Back up the current save': { cmd: 'BackupSave', in: [{ f: 'FileName', l: 'save', live: 'saves' }, { f: 'BackupName', l: 'backup name', t: 'text', v: '' }] },
-    'saves|Delete a save': { cmd: 'DeleteGameSave', in: [{ f: 'FileName', l: 'save', live: 'saves' }], risky: true },
-    'saves|Convert a save to bytes': { cmd: 'ConvertSaveToBytes', in: [{ f: 'FileName', l: 'save', live: 'saves' }] },
-    'saves|Load a backup': { cmd: 'InjectSave', fix: { LoadAfterInject: true }, in: [{ f: 'BackupName', l: 'backup', live: 'backups' }], risky: true },
-    'saves|Delete a backup': { cmd: 'DeleteBackup', in: [{ f: 'FileNameOnDisk', l: 'backup', live: 'backups', pickFile: true }] },
+    'saves|Back up the current save': { cmd: 'BackupSave', in: [{ f: 'FileName', l: 'save', live: 'saves', need: true }, { f: 'BackupName', l: 'backup name', t: 'text', v: '' }] },
+    'saves|Delete a save': { cmd: 'DeleteGameSave', in: [{ f: 'FileName', l: 'save', live: 'saves', need: true }], risky: true },
+    'saves|Convert a save to bytes': { cmd: 'ConvertSaveToBytes', in: [{ f: 'FileName', l: 'save', live: 'saves', need: true }] },
+    'saves|Load a backup': { cmd: 'InjectSave', fix: { LoadAfterInject: true }, in: [{ f: 'BackupName', l: 'backup', live: 'backups', need: true }], risky: true },
+    'saves|Delete a backup': { cmd: 'DeleteBackup', in: [{ f: 'FileNameOnDisk', l: 'backup', live: 'backups', pickFile: true, need: true }] },
     'saves|Write a day snapshot': { cmd: 'RebirthSnap', in: [{ f: 'Day', l: 'day (blank = today)', v: '' }] },
     'saves|Back up before every risky cheat': { page: 'riskybackup' },
 
     // ---------- debug ----------
     'debug|Survivor attributes': { cmd: 'SelectCharacter', fix: { id: -1 }, d: 'Every attribute with its value and source, for the survivor.' },
-    'debug|NPC attributes': { cmd: 'SelectCharacter', main: 'id', k: 'num', v: '', d: 'By character instance id.' },
+    'debug|NPC attributes': { cmd: 'SelectCharacter', main: 'id', ml: 'character', k: 'sel', opts: from(['people', 'robots'], (a, b) => a.concat(b)), d: 'Every attribute with its value and source, for one person or robot.' },
     'debug|Furniture attributes': { cmd: 'SelectCharacter', main: 'id', live: 'furniture', k: 'sel' },
     'debug|Nearby furniture': { cmd: 'NearbyFurniture', in: [{ f: 'Radius', l: 'radius', v: 5 }] },
     'debug|Neighbour line probe': { cmd: 'GmNeighborLineProbe', fix: { Op: 'query' }, each: LINES },
@@ -252,16 +307,16 @@
     'debug|Click pipeline state': { cmd: 'GmProbeUiBlock', fix: { X: -2, Y: -2 } },
     'debug|Forward Debug.Log here': { cmd: 'GmSetDebugLogForward', main: 'Prefixes', k: 'text', v: '[', d: 'Copies Unity log lines that start with one of these comma-separated prefixes into the game log. Send it empty to stop.' },
     'debug|Loading profiler': { cmd: 'GmLoadingProfiler', main: 'Enabled' },
-    'debug|Simulate a cheat detection': { cmd: 'GmSimulateCheatEvidence', in: [{ f: 'Type', l: 'type', v: 1 }] },
-    'debug|Diagnose a condition set': { cmd: 'DiagnoseConditionSet', in: [{ f: 'ConditionSetId', l: 'condition set id', v: '' }, { f: 'ContextFurnitureId', l: 'furniture', live: 'furniture' }] },
+    'debug|Simulate a cheat detection': { cmd: 'GmSimulateCheatEvidence', in: [{ f: 'Type', l: 'type', opts: CHEAT }] },
+    'debug|Diagnose a condition set': { cmd: 'DiagnoseConditionSet', in: [{ f: 'ConditionSetId', l: 'condition set', live: 'csets', need: true }, { f: 'ContextFurnitureId', l: 'furniture', live: 'furniture', blank: '(none)' }] },
     'debug|List UI action types': { cmd: 'ListActionTypes', in: [{ f: 'Filter', l: 'filter', t: 'text', v: '' }] },
-    'debug|Dispatch a UI action': { cmd: 'DispatchAction', main: 'ActionTypeName', k: 'text', v: '', in: [{ f: 'Payload', l: 'payload JSON', t: 'text', v: '' }] },
+    'debug|Dispatch a UI action': { cmd: 'DispatchAction', main: 'ActionTypeName', ml: 'action', k: 'sel', live: 'uiactions', free: true, in: [{ f: 'Payload', l: 'payload JSON', t: 'text', v: '' }], d: 'Sends any action the game\'s UI knows, by name.' },
     'debug|UI permissions': { cmd: 'Permissions', in: [{ f: 'IsDynamicEventOpen', l: 'events', t: 'bool', v: true }, { f: 'IsThinkingOpen', l: 'thinking', t: 'bool', v: true }, { f: 'IsNoPower', l: 'no power', t: 'bool', v: false }] },
     'debug|Scene: switch the main menu scene': { cmd: 'GmSwitchMainMenuScene', main: 'PlayerSelectId', opts: PS },
     'debug|Scene: reload the 3D menu': { cmd: 'GmSwitchMainMenuScene', main: 'PlayerSelectId', k: 'sel', opts: PS, d: 'Loads the 3D menu again with one survivor\'s scene. Main menu only.' },
     'debug|Buff list': { act: 'list', fix: { of: 'buffs' } },
     'debug|Companion and rescue snapshot': { act: 'snapshot' },
-    'debug|Furniture tag probe': { cmd: 'GmRobotContainerSwitch', fix: { Op: 'probe' }, main: 'FurnitureId', k: 'sel', live: 'furniture', in: [{ f: 'ItemConfigId', l: 'item id', v: '' }] },
+    'debug|Furniture tag probe': { cmd: 'GmRobotContainerSwitch', fix: { Op: 'probe' }, main: 'FurnitureId', ml: 'container', k: 'sel', live: 'furniture', in: [{ f: 'ItemConfigId', l: 'item', live: 'items', need: true }] },
     'debug|Character behaviour': { readout: 'ReportAIStatus' },
     'debug|Sense test': { readout: 'TestSense' }
   };

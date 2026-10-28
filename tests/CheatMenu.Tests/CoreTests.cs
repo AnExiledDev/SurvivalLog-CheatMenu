@@ -303,6 +303,31 @@ public class ListLabelsTests
         Assert.Equal("Wooden Door", ListLabels.Furniture("Wooden Door", 7, false));
         Assert.Equal("Furniture kind 7", ListLabels.Furniture(null, 7, false));
     }
+
+    [Fact]
+    public void A_table_row_with_no_name_shows_what_it_is_and_its_id()
+    {
+        Assert.Equal("Bunk Bed", ListLabels.Named("Bunk Bed", "Item", "物品", 5001, false));
+        Assert.Equal("物品 5001", ListLabels.Named(null, "Item", "物品", 5001, true));
+    }
+
+    [Fact]
+    public void A_text_shows_its_sender_and_one_short_line_without_the_games_markup()
+    {
+        Assert.Equal("Mom: Are you safe? Call me", ListLabels.Text("Mom", "<color=red>Are you safe?</color>\nCall   me", 3, false));
+        Assert.Equal("Line one Line two", ListLabels.Text(null, "Line one\\nLine two {0}", 3, false));
+        Assert.Equal("Come to the roof...", ListLabels.Snippet("Come to the roof, now please", 20));
+        Assert.Equal("Text 12", ListLabels.Text(null, "  ", 12, false));
+        Assert.Equal("短信 12", ListLabels.Text(null, null, 12, true));
+    }
+
+    [Fact]
+    public void A_robot_says_which_job_it_does()
+    {
+        Assert.Equal("Robo - planting", ListLabels.Robot("Robo", 2, false));
+        Assert.Equal("机器人 - 整理", ListLabels.Robot(null, 1, true));
+        Assert.Equal("Robot", ListLabels.Robot(null, 9, false));
+    }
 }
 
 public class LoopRewardTests

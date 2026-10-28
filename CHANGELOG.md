@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.10
+
+- Fixed: rows with long names, like "Activate daily plan", were squeezed to one word per line, and some buttons were cut off. A row with several fields now puts them on their own line under the row's name.
+- Every field that asked for an id is now a list of names. Long lists are searchable: type part of a name, in English or Chinese, or an id.
+- The shop rows in Money & Trade list the shops on this map by name, then what the shop you picked sells. "Buy one item" lists only item shops and "Buy one piece of furniture" lists only furniture shops.
+- "Install furniture in a slot" lists furniture by name, then only the home slots that piece fits. "Clear a slot" lists only slots that have something in them.
+- Robots, people, trade points, containers, scenes, rooms, seeds, charging docks, vehicles, tower slots, endings, texts, group chat posts, events and attributes are picked by name now.
+- "Add furniture to the bag", "Spawn a scene rat", "Force a pool wish", "Meet an NPC", "Deliver a text" and "Force an event" now have a list to pick from.
+- "Send an NPC somewhere" can send them to a floor of the home or the Tech Company.
+- Lists read from your game have a reload button that reads the list again.
+- The menu responds faster: turning a switch on or off updates only that row, and long lists draw their first 60 entries and the rest as you scroll.
+
 ## 0.2.9
 
 - Fixed: "Set a loop reward level" to the level a reward already has said "already level" and did nothing, so a reward set with 0.2.5 stayed without its effect. It now puts the reward's effect on if it is missing, for free.

@@ -97,17 +97,37 @@
 .statusbox .bad { color: #ffb08f; }
 .wait { padding: 10px 14px; font-size: 12px; color: var(--steel-3); }
 .row.specrow { grid-template-columns: 1fr auto; }
-.row .fields { margin-top: 6px; }
-.row .fields .fl { display: flex; flex-wrap: wrap; gap: 6px 12px; }
-.row .fields label { display: flex; align-items: center; gap: 6px; font: 11.5px var(--mono); color: var(--steel-2); }
-.row .fields .num { width: 110px; }
-.row .fields .sel { max-width: 260px; }
-.row details.more { margin-top: 6px; }
+.row.stack { display: block; }
+.tier { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; margin-top: 8px; }
+.fld { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fld > .cap { font: 11px var(--mono); color: var(--steel-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fld > .fc { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 30px; }
+.fld .num { width: 96px; }
+.fld .sel { max-width: 100%; }
+.fld.grow { flex: 1 1 260px; }
+.fld.grow .num { width: 100%; }
+.tier .go { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.row details.more { margin-top: 8px; }
 .row details.more summary { cursor: pointer; font: 11px var(--mono); color: var(--steel-3); }
-.row details.more .fl { margin-top: 6px; }
-.pick { display: inline-flex; align-items: center; gap: 4px; }
-.pick .filt { width: 90px; }
-.ctl .pick .sel { max-width: 280px; }
+.row details.more .tier { margin-top: 4px; }
+.pick { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.pick .rl { width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.pick .rl svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+.combo { position: relative; display: flex; align-items: center; flex: 1; min-width: 0; }
+.cbin { width: 100%; min-width: 0; height: 30px; padding: 0 26px 0 8px; background: rgba(0,0,0,.45); border: 1px solid var(--line-2); font: 13px var(--ui); color: var(--steel); outline: 0; text-overflow: ellipsis; }
+.cbin:focus { border-color: var(--amber); }
+.cbin::placeholder { color: var(--steel-3); }
+.combo > svg { position: absolute; right: 8px; top: 8px; width: 14px; height: 14px; fill: none; stroke: var(--steel-3); stroke-width: 2; pointer-events: none; }
+.cbpop { position: absolute; left: 0; right: 0; top: calc(100% + 2px); max-height: 300px; overflow-y: auto; z-index: 20; background: #1d1a14; border: 1px solid var(--amber-d); box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+.cbpop.up { top: auto; bottom: calc(100% + 2px); }
+.cbo { padding: 6px 10px; font: 12.5px/1.35 var(--ui); color: var(--steel-2); cursor: pointer; }
+.cbo:hover { background: rgba(255,255,255,.05); }
+.cbo.on { background: rgba(255,200,58,.14); color: var(--steel); }
+.cbo.blank, .cbo.use { color: var(--amber); font: 12px var(--mono); }
+.cbo.none { color: var(--steel-3); cursor: default; }
+.cbmore { height: 1px; }
+.group.popping { contain: none; position: relative; z-index: 10; }
+.ctl .sel { max-width: 220px; }
 .row .lab p.info { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--line-2); color: var(--steel-2); white-space: pre-line; }
 `;
 
@@ -118,7 +138,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.9 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.10 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="lang" id="lang" title="Switch between English and Chinese"><b data-l="en">EN</b><b data-l="zh">中文</b></button>
@@ -380,7 +400,7 @@
         const m = L.rowMessage(r.bind, !!x);
 
         state.toggles[r.key] = !!x;
-        if (m.msg) post(m.msg, r.l, () => { state.toggles[r.key] = !x; refresh(); });
+        if (m.msg) post(m.msg, r.l, () => { state.toggles[r.key] = !x; repaint(); });
       },
       show: (x) => x ? 'on' : 'off'
     };
@@ -422,7 +442,7 @@
       set: (x) => {
         if (!!state.toggles[r.key] === !!x) return;
 
-        const back = () => { state.toggles[r.key] = !x; refresh(); };
+        const back = () => { state.toggles[r.key] = !x; repaint(); };
 
         state.toggles[r.key] = !!x;
         if (sp.act) return act(sp.act, L.actArgs(sp, !!x, specInputs(r)), r.l, (text, error) => error ? (log(`${r.l}: ${error}`, 'err'), back()) : text && log(`${r.l}: ${text}`, 'mod'));
@@ -456,7 +476,7 @@
 
         if (m.error) return log(`${r.l}: ${m.error}`, 'err');
         state.attrSet[key] = x;
-        post(m.msg, r.l, () => { delete state.attrSet[key]; refresh(); });
+        post(m.msg, r.l, () => { delete state.attrSet[key]; repaint(); });
       },
       show: (x) => x === null || x === undefined ? 'as the game had it' : sp.on !== undefined ? onOff(x) : sp.pct !== undefined ? x + '%' : String(x)
     };
@@ -556,6 +576,7 @@
     const t = TABS.find((x) => x.id === id);
 
     state.tab = id;
+    clearTimeout(searchTimer);
     $('#q').value = '';
     $$('.tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
     renderHead(t);
@@ -597,9 +618,24 @@
     $('#body').scrollTop = y;
   }
 
+  // After a switch, a lock or the weather changes, only what shows it is updated: the page is not drawn again, so
+  // what is typed and picked, and the scroll, stay as they are.
+  function repaint() {
+    if (!state.open) return;
+
+    $$('#body .sw[data-set]').forEach((sw) => { const x = setting(sw.dataset.set); if (x) sw.classList.toggle('on', !!x.get()); });
+    $$('#body .tile[data-w]').forEach((t) => t.classList.toggle('on', String(state.weather) === t.dataset.w));
+    renderStatus();
+    renderVitals();
+    paintRailCounts();
+  }
+
+  // Two columns, each group put in the shorter one by a rough height, so neither runs far past the other and a group
+  // never splits across them.
   function renderBody(t) {
     const body = $('#body');
 
+    watchers = {};
     body.innerHTML = '';
     body.classList.toggle('flat', t.custom === 'items' || !!t.page);
     body.scrollTop = 0;
@@ -609,17 +645,20 @@
     if (t.page === 'modtests') return modTestsPage(body);
     if (t.custom === 'items') { body.append(itemSpawner()); t.groups.forEach((g, i) => body.append(groupEl(g, i))); return; }
 
-    const cols = h('<div class="cols"></div>');
+    const cols = h('<div class="cols"><div class="col"></div><div class="col"></div></div>');
+    const col = $$('.col', cols);
+    const tall = [0, 0];
+    const put = (el, est) => { const i = tall[0] <= tall[1] ? 0 : 1; col[i].append(el); tall[i] += est; };
 
     body.append(cols);
     if (state.filter !== 'mod') {
-      if (t.custom === 'stats') cols.append(statGroup());
-      if (t.custom === 'weather') cols.append(weatherGroup());
-      if (t.custom === 'maps') cols.append(mapGroup());
-      if (t.custom === 'people') cols.append(peopleGroup());
+      if (t.custom === 'stats') put(statGroup(), 104 + Math.max(1, state.vitals.length) * 40);
+      if (t.custom === 'weather') put(weatherGroup(), 104 + GAME.weather.length * 30);
+      if (t.custom === 'maps') put(mapGroup(), 78 + GAME.maps.length * 30);
+      if (t.custom === 'people') put(peopleGroup(), 104);
     }
 
-    t.groups.forEach((g, i) => { if (g.rows.some(shown)) cols.append(groupEl(g, i)); });
+    t.groups.forEach((g, i) => { if (g.rows.some(shown)) put(groupEl(g, i), 48 + (g.note ? 30 : 0) + g.rows.filter(shown).reduce((n, r) => n + (isStacked(r) ? 120 : 56), 0)); });
   }
 
   function groupEl(g) {
@@ -630,16 +669,29 @@
     return el;
   }
 
+  // A row with fields of its own, or a list to search, puts them in a tier under its name, each with its caption on
+  // top, so the name keeps the row's full width. A row with one small control keeps it on the right.
+  function isStacked(r) {
+    if (r.bind.kind !== 'spec') return false;
+
+    const sp = r.bind.spec;
+    const kind = L.control(r, sp);
+
+    if (sp.page || sp.readout || sp.pulse || sp.hold) return false;
+
+    return (sp.in || []).length > 0 || moreFields(sp).length > 0 || kind === 'text' || (kind === 'sel' && isCombo(sp));
+  }
+
   function rowEl(r) {
     const b = r.bind;
     const d = L.shownDesc(r.d);
     const off = b.kind === 'none';
-    const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${off ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${b.kind === 'spec' ? ' specrow' : ''}`;
-    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${d ? `<p>${esc(d)}</p>` : ''}</div><div class="ctl"></div></div>`);
+    const stack = isStacked(r);
+    const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${off ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${b.kind === 'spec' ? ' specrow' : ''}${stack ? ' stack' : ''}`;
+    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${d ? `<p>${esc(d)}</p>` : ''}</div>${stack ? '' : '<div class="ctl"></div>'}</div>`);
 
     if (b.kind === 'spec') {
       const sp = b.spec;
-      const f = fieldsEl(r);
 
       // The game's own words on what the picked buff, talent or plan does, kept in step with the list.
       if (sp.info) {
@@ -648,11 +700,13 @@
 
         show();
         el.addEventListener('change', show);
-        el.addEventListener('input', show);
+        watch(sp.live || '*', p, show);
         $('.lab', el).append(p);
       }
-      if (f) $('.lab', el).append(f);
-      $('.ctl', el).append(...specControls(r));
+      // A pick can change what another list on the row offers (a shop's goods, the slots a furniture fits).
+      el.addEventListener('change', (e) => { $$('.combo', el).forEach((c) => { if (c.__paint && !c.contains(e.target)) c.__paint(); }); });
+      if (stack) el.append(...tierEl(r));
+      else $('.ctl', el).append(...specControls(r));
     } else if (b.kind === 'form') {
       $('.ctl', el).remove();
       b.cmds.forEach((name) => $('.lab', el).append(formEl(name, r)));
@@ -702,72 +756,281 @@
 
   // ---------- rows from rows.js ----------
   const listReq = {};
+  // The lists one game readout fills together, and which readouts the menu asked for itself (those stay out of the log).
+  const PRESUPPLY = ['shops', 'containers', 'scenes'];
+  const asked = {};
+  // Pickers waiting on a list, by the list's name; '*' is a picker whose list is worked out from other lists.
+  let watchers = {};
 
-  // Reads a live list (the pots, furniture, events or buffs in the save, or the saves and backups) once; Reload reads
-  // it again.
+  function watch(of, el, fn) {
+    (watchers[of] || (watchers[of] = new Set())).add({ el, fn });
+  }
+
+  function notify(of) {
+    [watchers[of], watchers['*']].forEach((set) => set && set.forEach((w) => { if (!w.el.isConnected) set.delete(w); else w.fn(); }));
+  }
+
+  // Reads a live list once; Reload reads it again. Most come from the plugin; the saves, backups, shops, slots and UI
+  // actions are the game's own readouts. A list the game never answers for shows as empty after a few seconds.
   function loadList(of) {
-    listReq[of] = true;
-    if (of === 'saves') return post({ msgHead: S.ListGameSaves.id }, 'Save list', () => { listReq[of] = false; state.lists[of] = []; refresh(); });
-    if (of === 'backups') return post({ msgHead: S.ListBackups.id }, 'Backup list', () => { listReq[of] = false; state.lists[of] = []; refresh(); });
+    const ofs = PRESUPPLY.indexOf(of) >= 0 ? PRESUPPLY : [of];
+    const failed = () => ofs.forEach((o) => { if (!listReq[o]) return; listReq[o] = false; state.lists[o] = []; notify(o); });
+    const gm = (msg, label) => { post(msg, label, failed); setTimeout(failed, 8000); };
+
+    ofs.forEach((o) => { listReq[o] = true; });
+    if (of === 'saves') return gm({ msgHead: S.ListGameSaves.id }, 'Save list');
+    if (of === 'backups') return gm({ msgHead: S.ListBackups.id }, 'Backup list');
+    if (ofs === PRESUPPLY) { asked.supply = true; return gm({ msgHead: S.GmPreSupplyQuery.id }, 'Shop list'); }
+    if (of === 'homeslots') { asked.slots = true; return gm({ msgHead: S.GmQueryHomeSlots.id }, 'Slot list'); }
+    if (of === 'uiactions') return gm({ msgHead: S.ListActionTypes.id, RequestId: 'cheatmenu-pick', Filter: '' }, 'UI action list');
 
     act('list', { of }, 'List', (text, error) => {
       listReq[of] = false;
       state.lists[of] = (!error && L.parseList(text)) || [];
       if (error) log(`List of ${of}: ${error}`, 'err');
-      refresh();
+      notify(of);
     });
+  }
+
+  function gotList(of, list) {
+    listReq[of] = false;
+    state.lists[of] = list;
+    notify(of);
   }
 
   const listOf = (of) => { if (!state.lists[of] && !listReq[of]) loadList(of); return state.lists[of] || null; };
   const ui = (r) => r.ui || (r.ui = {});
 
-  // The value picked in one of a row's lists, by the slot it is kept in.
+  // A pick is kept as {v, l, f} (value, label, file), so it survives the list being read again; '' is picked blank.
+  const SHORT = 12;
+  const entry = (o) => ({ v: o[1], l: o[0], f: o[2] });
+  const same = (a, b) => a === b || (!!a && !!b && typeof a === 'object' && typeof b === 'object' && JSON.stringify(a) === JSON.stringify(b));
+  const isCombo = (x) => !!(x.live || x.free || typeof x.opts === 'function' || (x.opts || []).length > SHORT);
+
+  // What a picker offers: a list read from the game, one worked out from the row's other fields (null until those
+  // are filled in), or a fixed one.
+  function listFor(r, x) {
+    if (x.live) return listOf(x.live);
+    if (typeof x.opts === 'function') return x.opts((f) => fieldValue(r, f), listOf);
+
+    return x.opts || [];
+  }
+
+  // The entry picked in one of a row's lists, or null. A short fixed list starts on its first entry; a long one or
+  // one read from the game starts empty. A pick no longer in the list is no pick, but one made while the list is
+  // being read again stays.
+  function pick(r, slot, x) {
+    const s = ui(r)[slot];
+
+    if (s === '') return null;
+
+    const list = listFor(r, x);
+
+    if (s === undefined) return !x.blank && !isCombo(x) && list && list.length ? entry(list[0]) : null;
+    if (s.typed) return s;
+    if (!list) return x.live ? s : null;
+
+    const o = list.find((e) => same(e[1], s.v));
+
+    return o ? entry(o) : null;
+  }
+
   function picked(r, slot, x) {
-    const list = x.live ? state.lists[x.live] : x.opts;
-    const i = ui(r)[slot];
+    const p = pick(r, slot, x);
 
-    if (i === undefined && !x.blank && !x.live && list && list.length) return list[0][1];
-    if (i === '' || i === undefined || !list || !list[+i]) return '';
-
-    return x.pickFile ? list[+i][2] : list[+i][1];
+    return !p ? '' : x.pickFile && !p.typed ? p.f : p.v;
   }
 
-  function pickedLabel(r, slot, x) {
-    const list = x.live ? state.lists[x.live] : x.opts;
-    const i = ui(r)[slot] === undefined ? (x.blank || x.live ? '' : 0) : ui(r)[slot];
+  const pickedLabel = (r, slot, x) => { const p = pick(r, slot, x); return p ? String(p.l) : ''; };
 
-    return list && list[+i] && i !== '' ? list[+i][0] : '';
+  // A field's value by name, for a list worked out from it.
+  function fieldValue(r, f) {
+    const sp = r.bind.spec;
+
+    if (f === sp.main) return mainValue(r);
+
+    const x = (sp.in || []).find((y) => y.f === f);
+
+    return x ? inValue(r, x, 'in:' + f) : '';
   }
 
-  // A list, with a filter box when it is long and Reload when it is read from the game.
-  function pickEl(r, slot, x) {
+  // A picker: a plain list when it is short, or a box that searches the list as you type.
+  function pickerEl(r, slot, x) {
+    if (isCombo(x)) return comboEl(r, slot, x);
+
+    const list = listFor(r, x) || [];
+    const p = pick(r, slot, x);
+    const sel = h(`<select class="sel">${x.blank ? `<option value="-1">${esc(x.blank)}</option>` : ''}${list.map((o, i) => `<option value="${i}"${p && same(o[1], p.v) ? ' selected' : ''}>${esc(o[0])}</option>`).join('')}</select>`);
+
+    if (!p && x.blank) sel.value = '-1';
+    sel.onchange = () => { const i = +sel.value; ui(r)[slot] = i < 0 ? '' : entry(list[i]); };
+
+    return sel;
+  }
+
+  const CARET = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+  const RELOAD = '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>';
+  const KEYS = new WeakMap();
+
+  // Each entry's words in lower case, in English and the menu's language, worked out once per list.
+  function keysOf(list) {
+    let k = KEYS.get(list);
+
+    if (!k || k.lang !== state.lang) {
+      k = { lang: state.lang, keys: list.map((o) => { const en = String(o[0]); const t = tr(en); return (t === en ? en : en + ' ' + t).toLowerCase(); }) };
+      KEYS.set(list, k);
+    }
+
+    return k.keys;
+  }
+
+  // The search box. Typing filters the list (every word has to match); the arrows and Enter pick; a number the list
+  // does not have can still be used as an id, and a list marked free takes any text. Only the first 60 matches are
+  // drawn; more are drawn as the list scrolls.
+  function comboEl(r, slot, x) {
     const u = ui(r);
-    const list = x.live ? listOf(x.live) : x.opts;
-    const wrap = h('<span class="pick"></span>');
-    const sel = h('<select class="sel"></select>');
-    const paint = () => {
-      const q = (u['q:' + slot] || '').toLowerCase();
-      const items = (list || []).map((o, i) => [o, i]).filter(([o]) => !q || String(o[0]).toLowerCase().indexOf(q) >= 0 || tr(String(o[0])).indexOf(q) >= 0).slice(0, 500);
+    const wrap = h(`<span class="pick"><span class="combo"><input class="cbin" autocomplete="off" spellcheck="false">${CARET}</span></span>`);
+    const box = $('.combo', wrap);
+    const inp = $('.cbin', wrap);
+    let pop = null;
+    let group = null;
+    let io = null;
+    let q = '';
+    let shown = [];
+    let at = 0;
+    let drawn = 0;
+    let typed = null;
 
-      sel.innerHTML = (x.blank ? `<option value="">${esc(x.blank)}</option>` : '')
-        + (!list ? '<option value="">(reading the game)</option>' : !list.length ? '<option value="">(none found)</option>' : items.map(([o, i]) => `<option value="${i}"${String(i) === u[slot] ? ' selected' : ''}>${esc(o[0])}</option>`).join(''));
-      localize(sel);
-      if (u[slot] !== undefined && sel.value !== u[slot]) u[slot] = sel.value;
+    const paintBox = () => {
+      const list = listFor(r, x);
+      const p = pick(r, slot, x);
+
+      inp.value = p ? tr(String(p.l)) : '';
+      inp.placeholder = tr(!list ? (x.live ? '(reading the game)' : x.wait || '(reading the game)') : !list.length && !x.free ? '(none found)' : x.blank || 'Type to search');
+      inp.title = inp.value;
+    };
+    const line = (k, list) => {
+      const n = shown[k];
+      const cls = `cbo${k === at ? ' on' : ''}${n === -1 ? ' blank' : n === -2 ? ' use' : ''}`;
+      const text = n === -1 ? tr(x.blank) : n === -2 ? typed.use : tr(String(list[n][0]));
+
+      return `<div class="${cls}" data-k="${k}">${esc(text)}</div>`;
+    };
+    const more = () => {
+      const list = listFor(r, x) || [];
+      const end = Math.min(shown.length, drawn + 60);
+      const old = $('.cbmore', pop);
+      let html = '';
+
+      for (let k = drawn; k < end; k++) html += line(k, list);
+      if (old) old.remove();
+      pop.insertAdjacentHTML('beforeend', html + (end < shown.length ? '<div class="cbmore"></div>' : ''));
+      drawn = end;
+
+      const marker = $('.cbmore', pop);
+
+      if (io) { io.disconnect(); if (marker) io.observe(marker); }
+    };
+    const filter = () => {
+      const list = listFor(r, x) || [];
+      const keys = keysOf(list);
+      const text = q.trim();
+      const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+      const id = /^-?\d+$/.test(text) && list.length && typeof list[0][1] === 'number' ? Number(text) : null;
+
+      shown = [];
+      typed = null;
+      if (id !== null && !list.some((o) => o[1] === id)) typed = { v: id, l: `id ${id}`, use: `${tr('Use id')} ${id}`, typed: true };
+      else if (x.free && text && !list.some((o) => String(o[1]) === text)) typed = { v: text, l: text, use: `${tr('Use')} "${text}"`, typed: true };
+      if (typed) shown.push(-2);
+      if (!words.length && x.blank) shown.push(-1);
+      for (let i = 0; i < list.length; i++) if (words.every((w) => keys[i].indexOf(w) >= 0)) shown.push(i);
+      at = Math.max(0, shown.findIndex((n) => n >= 0));
+      if (!shown.length || shown[at] < 0) at = 0;
+      drawn = 0;
+      pop.innerHTML = '';
+      pop.scrollTop = 0;
+      if (!shown.length) pop.insertAdjacentHTML('beforeend', `<div class="cbo none">${esc(tr(listFor(r, x) ? 'Nothing matches' : '(reading the game)'))}</div>`);
+      else more();
+    };
+    const mark = () => {
+      const was = $('.cbo.on', pop);
+      const now = $(`.cbo[data-k="${at}"]`, pop);
+
+      if (was) was.classList.remove('on');
+      if (now) { now.classList.add('on'); now.scrollIntoView({ block: 'nearest' }); }
+    };
+    const open = () => {
+      if (pop) return;
+
+      pop = h('<div class="cbpop" data-nolang></div>');
+      pop.onmousedown = (e) => e.preventDefault();
+      pop.onclick = (e) => { const o = e.target.closest && e.target.closest('.cbo[data-k]'); if (o) choose(+o.dataset.k); };
+      box.append(pop);
+      group = wrap.closest('.group');
+      if (group) group.classList.add('popping');
+
+      // Opens upward when the panel has more room above the box than below it.
+      const b = $('#body').getBoundingClientRect();
+      const w = box.getBoundingClientRect();
+
+      if (b.bottom - w.bottom < 260 && w.top - b.top > b.bottom - w.bottom) pop.classList.add('up');
+      if (window.IntersectionObserver) io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting) && drawn < shown.length) more(); }, { root: pop, rootMargin: '200px' });
+      else pop.onscroll = () => { if (drawn < shown.length && pop.scrollTop + pop.clientHeight > pop.scrollHeight - 200) more(); };
+      q = '';
+      filter();
+    };
+    const close = () => {
+      if (!pop) return;
+      if (io) io.disconnect();
+      io = null;
+      pop.remove();
+      pop = null;
+      if (group) group.classList.remove('popping');
+      group = null;
+    };
+    const choose = (k) => {
+      const n = shown[k];
+      const list = listFor(r, x) || [];
+
+      if (n === undefined) return;
+      u[slot] = n === -1 ? '' : n === -2 ? { v: typed.v, l: typed.l, typed: true } : entry(list[n]);
+      close();
+      paintBox();
+      wrap.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
-    if ((list || []).length > 30) {
-      const f = h(`<input class="num filt" placeholder="Filter" value="${esc(u['q:' + slot] || '')}">`);
+    inp.onfocus = () => { open(); inp.select(); };
+    inp.onclick = () => { if (!pop) open(); };
+    inp.oninput = () => { if (!pop) open(); q = inp.value; filter(); };
+    inp.onblur = () => { close(); paintBox(); };
+    inp.onkeydown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!pop) return open();
+        at = Math.max(0, Math.min(shown.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)));
+        while (at >= drawn && drawn < shown.length) more();
+        mark();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (pop && shown.length) choose(at);
+      } else if (e.key === 'Escape') {
+        if (pop) { e.stopPropagation(); close(); paintBox(); }
+      } else if (e.key === 'Tab') {
+        close();
+      }
+    };
+    wrap.__paint = box.__paint = () => { if (pop) filter(); else paintBox(); };
+    watch(x.live || '*', wrap, box.__paint);
+    paintBox();
 
-      f.oninput = () => { u['q:' + slot] = f.value; paint(); u[slot] = sel.value; };
-      wrap.append(f);
-    }
-    paint();
-    sel.onchange = () => { u[slot] = sel.value; };
-    wrap.append(sel);
-    if (x.live) {
-      const b = h('<button class="btn ghost" title="Read the list from the game again">Reload</button>');
+    // A list read from the game, or worked out from ones that are, can be read again.
+    const srcs = x.live ? [x.live] : (typeof x.opts === 'function' && x.opts.of) || [];
 
-      b.onclick = () => { delete state.lists[x.live]; loadList(x.live); };
+    if (srcs.length) {
+      const b = h(`<button class="btn ghost rl" title="Read the list from the game again">${RELOAD}</button>`);
+
+      b.onclick = () => srcs.forEach((of) => { delete state.lists[of]; loadList(of); notify(of); });
       wrap.append(b);
     }
 
@@ -783,56 +1046,102 @@
     return n;
   }
 
-  const BOOL = [['true', true], ['false', false]];
-  const inputOf = (x) => x.t === 'bool' ? Object.assign({ opts: x.v ? BOOL : BOOL.slice().reverse() }, x) : x.live && !x.blank ? Object.assign({ blank: '(none)' }, x) : x;
+  // An on/off field: a switch that starts as the row says.
+  function switchEl(r, slot, x) {
+    const u = ui(r);
+    const on = () => u[slot] !== undefined ? !!u[slot] : !!x.v;
+    const sw = h(`<button class="sw${on() ? ' on' : ''}" aria-label="${esc(x.l || x.f)}"></button>`);
 
-  // The fields of a game message a row leaves out of its own inputs; blank ones are not sent.
+    sw.onclick = () => { u[slot] = !on(); sw.classList.toggle('on', u[slot]); sw.dispatchEvent(new Event('change', { bubbles: true })); };
+
+    return sw;
+  }
+
+  // A switch in "More fields" also has the game's own default, which sends nothing.
+  const TRI = [['on', true], ['off', false]];
+
+  // The fields of a game message a row leaves out of its own inputs; blank ones are not sent. A row with a fixed Op
+  // runs one of the game's sub-commands, which reads only the fields the row shows.
   function moreFields(sp) {
-    if (!sp.cmd || sp.more === false || !S[sp.cmd]) return [];
+    if (!sp.cmd || sp.more === false || !S[sp.cmd] || (sp.fix && 'Op' in sp.fix)) return [];
 
-    const used = new Set([sp.main, ...Object.keys(sp.fix || {}), ...(sp.in || []).map((x) => x.f), ...(sp.opts || []).flatMap((o) => o[1] && typeof o[1] === 'object' ? Object.keys(o[1]) : []), ...(sp.each || []).flatMap((e) => Object.keys(e))]);
+    const used = new Set(['RequestId', sp.main, ...Object.keys(sp.fix || {}), ...(sp.in || []).flatMap((x) => [x.f].concat(x.covers || [])), ...(Array.isArray(sp.opts) ? sp.opts : []).flatMap((o) => o[1] && typeof o[1] === 'object' ? Object.keys(o[1]) : []), ...(sp.each || []).flatMap((e) => Object.keys(e))]);
 
-    return S[sp.cmd].f.filter(([, f]) => !used.has(f)).map(([type, f]) => type === 'bool' ? { f, l: f, opts: BOOL, blank: '(leave out)' } : { f, l: `${f} (${type})`, v: '' });
+    return S[sp.cmd].f.filter(([, f]) => !used.has(f)).map(([type, f]) => type === 'bool' ? { f, l: L.humanize(f), opts: TRI, blank: '(game default)' } : { f, l: L.humanize(f), v: '', ph: type });
+  }
+
+  // One of the row's other inputs: a switch, a pick or what is typed.
+  function inValue(r, x, slot) {
+    if (x.t === 'bool') return ui(r)[slot] !== undefined ? !!ui(r)[slot] : !!x.v;
+    if (x.opts || x.live) return picked(r, slot, x);
+
+    const u = ui(r)[slot];
+
+    return u !== undefined ? u : x.v == null ? '' : x.v;
   }
 
   // The row's other inputs by field name, from what is typed and picked.
   function specInputs(r) {
     const sp = r.bind.spec;
     const out = {};
-    const one = (x, slot) => {
-      const y = inputOf(x);
 
-      out[x.f] = y.opts || y.live ? picked(r, slot, y) : ui(r)[slot] !== undefined ? ui(r)[slot] : y.v == null ? '' : y.v;
-    };
-
-    (sp.in || []).forEach((x) => one(x, 'in:' + x.f));
-    moreFields(sp).forEach((x) => one(x, 'more:' + x.f));
+    (sp.in || []).forEach((x) => { out[x.f] = inValue(r, x, 'in:' + x.f); });
+    moreFields(sp).forEach((x) => { out[x.f] = inValue(r, x, 'more:' + x.f); });
 
     return out;
   }
 
-  function fieldsEl(r) {
-    const sp = r.bind.spec;
-    const box = h('<div class="fields"><div class="fl"></div></div>');
-    const add = (to, x, slot) => {
-      const y = inputOf(x);
-      const lab = h(`<label><span>${esc(y.l || y.f)}</span></label>`);
+  // One field in a row's tier: its caption on top, the control under it.
+  function fieldEl(cap, parts, grow) {
+    const f = h(`<div class="fld${grow ? ' grow' : ''}">${cap ? `<span class="cap">${esc(cap)}</span>` : ''}<span class="fc"></span></div>`);
 
-      lab.append(y.opts || y.live ? pickEl(r, slot, y) : boxEl(r, slot, y.v, y.t === 'text'));
-      to.append(lab);
-    };
+    $('.fc', f).append(...parts);
+
+    return f;
+  }
+
+  function inputEl(r, x, slot) {
+    if (x.t === 'bool') return fieldEl(x.l || x.f, [switchEl(r, slot, x)]);
+    if (x.opts || x.live) return fieldEl(x.l || x.f, [pickerEl(r, slot, x)], isCombo(x));
+
+    const n = boxEl(r, slot, x.v, x.t === 'text');
+
+    if (x.ph) n.placeholder = x.ph;
+
+    return fieldEl(x.l || x.f, [n], x.t === 'text');
+  }
+
+  // A stacked row's controls: the row's own field and its inputs side by side under its name, wrapping when they do
+  // not fit, then the button; the message's other fields fold away under "More fields".
+  function tierEl(r) {
+    const sp = r.bind.spec;
+    const kind = L.control(r, sp);
+    const tier = h('<div class="tier"></div>');
+    const ins = (sp.in || []).map((x) => inputEl(r, x, 'in:' + x.f));
+    const main = [];
+
+    if (kind === 'sel') main.push(fieldEl(sp.ml || '', [pickerEl(r, 'main', sp)], isCombo(sp)));
+    else if (kind === 'num' || kind === 'text') main.push(fieldEl(sp.ml || '', specControls(r).slice(0, -1), kind === 'text'));
+    ins.splice(Math.min(sp.mainAt || 0, ins.length), 0, ...main);
+    tier.append(...ins);
+
+    const go = h('<div class="go"></div>');
+
+    go.append(...(kind === 'tog' ? controlFor(r) : specControls(r).slice(-1)));
+    tier.append(go);
+
+    const out = [tier];
     const more = moreFields(sp);
 
-    (sp.in || []).forEach((x) => add($('.fl', box), x, 'in:' + x.f));
     if (more.length) {
-      const d = h(`<details class="more"${ui(r).more ? ' open' : ''}><summary>More fields (${more.length})</summary><div class="fl"></div></details>`);
+      const d = h(`<details class="more"${ui(r).more ? ' open' : ''}><summary>More fields (${more.length})</summary><div class="tier"></div></details>`);
 
       d.ontoggle = () => { ui(r).more = d.open; };
-      more.forEach((x) => add($('.fl', d), x, 'more:' + x.f));
-      box.append(d);
+      $('.tier', d).append(...more.map((x) => inputEl(r, x, 'more:' + x.f)));
+      out.push(d);
     }
 
-    return (sp.in || []).length || more.length ? box : null;
+    return out;
   }
 
   function specControls(r) {
@@ -842,7 +1151,7 @@
     if (sp.page === 'riskybackup') {
       const sw = h(`<button class="sw${state.riskyBackup ? ' on' : ''}" aria-label="${esc(r.l)}"></button>`);
 
-      sw.onclick = () => { state.riskyBackup = !state.riskyBackup; log(`${r.l}: ${onOff(state.riskyBackup)}`, 'mod'); refresh(); };
+      sw.onclick = () => { state.riskyBackup = !state.riskyBackup; log(`${r.l}: ${onOff(state.riskyBackup)}`, 'mod'); sw.classList.toggle('on', state.riskyBackup); };
 
       return [sw];
     }
@@ -853,8 +1162,8 @@
     const x = key && setting(key);
 
     if (kind === 'sel') {
-      if (x && ui(r).main === undefined) { const i = sp.opts.findIndex((o) => o[1] === x.get()); if (i >= 0) ui(r).main = String(i); }
-      parts.push(pickEl(r, 'main', sp));
+      if (x && ui(r).main === undefined) { const o = sp.opts.find((e) => e[1] === x.get()); if (o) ui(r).main = entry(o); }
+      parts.push(pickerEl(r, 'main', sp));
     } else if (kind === 'num' || kind === 'text') {
       parts.push(boxEl(r, 'main', x ? x.get() : sp.v !== undefined ? sp.v : r.v, kind === 'text'));
       if (r.u) parts.push(h(`<span class="unit">${esc(r.u)}</span>`));
@@ -892,17 +1201,43 @@
     log(JSON.stringify(m).slice(0, 2000));
   }
 
+  // How a run reads in the log and the changes list: picks by name, the other fields by their captions, in the order
+  // the row shows them.
+  function runText(r, main, kind) {
+    const sp = r.bind.spec;
+    const out = [];
+    const one = (x, slot) => {
+      const v = inValue(r, x, slot);
+      const l = tr(x.l || x.f);
+
+      if (x.t === 'bool') return out.push(`${l}: ${tr(onOff(v))}`);
+      if (x.opts || x.live) { const p = pickedLabel(r, slot, x); if (p) out.push(x.opts === TRI ? `${l}: ${tr(p)}` : tr(p)); return; }
+      if (v !== '' && v != null) out.push(`${l} ${v}`);
+    };
+
+    (sp.in || []).forEach((x) => one(x, 'in:' + x.f));
+
+    const own = kind === 'sel' ? tr(pickedLabel(r, 'main', sp)) : main === undefined || main === '' ? '' : (sp.ml ? tr(sp.ml) + ' ' : '') + main + (r.u ? ' ' + r.u : '');
+
+    if (own) out.splice(Math.min(sp.mainAt || 0, out.length), 0, own);
+    moreFields(sp).forEach((x) => one(x, 'more:' + x.f));
+
+    return out.join(', ') || 'done';
+  }
+
   function runSpec(r) {
     const sp = r.bind.spec;
     const kind = L.control(r, sp);
     const main = mainValue(r);
     const inputs = specInputs(r);
-    const label = kind === 'sel' ? pickedLabel(r, 'main', sp) : main === undefined || main === '' ? '' : main + (r.u ? ' ' + r.u : '');
-    const what = [label, ...Object.keys(inputs).filter((k) => inputs[k] !== '' && inputs[k] != null).map((k) => k + ' ' + inputs[k])].filter(Boolean).join(', ') || 'done';
+    const what = runText(r, main, kind);
     const isRisky = !!(sp.risky || r.red);
+    const missing = (sp.in || []).find((x) => x.need && inputs[x.f] === '');
 
     if (sp.readout) return showReadout(sp.readout);
-    if (kind === 'sel' && sp.main && main === '') return log(`${r.l}: pick one first`, 'err');
+    if (kind === 'sel' && main === '' && !sp.blank) return log(`${r.l}: pick one first`, 'err');
+    if (missing) return log(`${r.l}: pick ${tr(missing.l || missing.f)} first`, 'err');
+    if (sp.cmd === 'ListActionTypes') state.askedActions = true;
     if (sp.pulse) return guarded(() => { send('hold|' + sp.pulse + '|1'); log(`${r.l}`); once(r, 'stepped'); });
     if (sp.attr || sp.attrs) {
       const x = setting(rowSettingKey(r));
@@ -916,7 +1251,7 @@
         x.set(v);
         log(`${r.l}: ${x.show(v)}`);
         journal(x, x.show(was), x.show(v), was === null ? null : () => x.set(was), x.key);
-        refresh();
+        repaint();
       });
     }
     if (sp.act) {
@@ -946,7 +1281,7 @@
     if (r.k === 'tog') {
       const x = key && setting(key);
       const on = x ? x.get() : false;
-      const sw = h(`<button class="sw${on ? ' on' : ''}" aria-label="${esc(r.l)}"></button>`);
+      const sw = h(`<button class="sw${on ? ' on' : ''}" aria-label="${esc(r.l)}"${key ? ` data-set="${esc(key)}"` : ''}></button>`);
 
       sw.onclick = () => {
         if (!x) return;
@@ -957,7 +1292,7 @@
           x.set(!was);
           log(`${r.l}: ${!was ? 'on' : 'off'}`);
           journal(x, x.show(was), x.show(!was), () => x.set(was), x.key);
-          refresh();
+          repaint();
         });
       };
 
@@ -1005,13 +1340,13 @@
   // ---------- custom groups ----------
   function statGroup() {
     const lockOn = !!state.flags.LockCharacterAttr;
-    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw${lockOn ? ' on' : ''}"></button></div></div></section>`);
+    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw${lockOn ? ' on' : ''}" data-set="flag:LockCharacterAttr"></button></div></div></section>`);
 
     $('.sw', g).onclick = () => {
       const x = flagSetting('LockCharacterAttr');
       const was = x.get();
 
-      cheat(() => { x.set(!was); log(`Stat lock: ${!was ? 'on' : 'off'}`); journal(x, x.show(was), x.show(!was), () => x.set(was), x.key); refresh(); });
+      cheat(() => { x.set(!was); log(`Stat lock: ${!was ? 'on' : 'off'}`); journal(x, x.show(was), x.show(!was), () => x.set(was), x.key); repaint(); });
     };
     if (!state.vitals.length) g.append(h(`<div class="wait">${state.inGame ? 'Waiting for the game to send the survivor\'s stats.' : 'Load a save to see and set the stats.'}</div>`));
     state.vitals.forEach((v) => g.append(statRow(v)));
@@ -1059,13 +1394,13 @@
         weatherSetting.set(id);
         log(id === null ? 'Weather back to the forecast' : `Weather set: ${weatherSetting.show(id)} (id ${id})`);
         journal(weatherSetting, weatherSetting.show(was), weatherSetting.show(id), () => weatherSetting.set(was), 'weather');
-        refresh();
+        repaint();
       });
     };
 
     $('.btn', g).onclick = () => setW(null);
     GAME.weather.forEach((w) => {
-      const t = h(`<button class="tile${state.weather === w.id ? ' on' : ''}"><img src="${w.i}" alt=""><span>${esc(nameOf(w))}</span></button>`);
+      const t = h(`<button class="tile${state.weather === w.id ? ' on' : ''}" data-w="${w.id}"><img src="${w.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(w))}</span></button>`);
 
       t.onclick = () => setW(w.id);
       tiles.append(t);
@@ -1398,14 +1733,24 @@
   }
 
   // ---------- search ----------
+  let searchTimer = null;
+
+  // Each row's searchable words, worked out once per language.
+  function hayOf(r, g) {
+    if (!r.__hay || r.__hay.lang !== state.lang) r.__hay = { lang: state.lang, text: (r.l + ' ' + (r.d || '') + ' ' + g.t + ' ' + g.zh + ' ' + r.ref.join(' ') + (state.lang === 'zh' ? ' ' + tr(r.l) + ' ' + tr(r.d || '') : '')).toLowerCase() };
+
+    return r.__hay.text;
+  }
+
   function search(q) {
     if (!q) return openTab(state.tab);
 
     const needle = q.toLowerCase();
     const hits = [];
 
+    watchers = {};
     TABS.forEach((tab) => tab.groups.forEach((g) => g.rows.forEach((r) => {
-      if ((r.l + ' ' + (r.d || '') + ' ' + g.t + ' ' + g.zh + ' ' + r.ref.join(' ') + (state.lang === 'zh' ? ' ' + tr(r.l) + ' ' + tr(r.d || '') : '')).toLowerCase().includes(needle)) hits.push({ tab, g, r });
+      if (hayOf(r, g).includes(needle)) hits.push({ tab, g, r });
     })));
 
     $('#tabhead').innerHTML = `<h1>Search</h1><p>Every tab, every tool. Run it from here or jump to its tab.</p><div class="counts"><span><b>${hits.length}</b> found</span></div>`;
@@ -1506,7 +1851,7 @@
     const q = $('#q');
 
     addEventListener('resize', fitStage);
-    q.oninput = () => search(q.value.trim());
+    q.oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => search(q.value.trim()), 150); };
     cmd.onkeydown = (e) => {
       if (e.key === 'Enter') { runCommand(cmd.value); cmd.value = ''; }
       if (e.key === 'ArrowUp' && state.history.length) { state.hpos = Math.min(state.hpos + 1, state.history.length - 1); cmd.value = state.history[state.hpos]; e.preventDefault(); }
@@ -1575,7 +1920,7 @@
   window.__slcheatmenu = {
     // st: { inGame, chinese, key, flags, holds, presets }
     open(st) {
-      if (state.inGame !== !!st.inGame) { state.lists = {}; state.saveFile = null; }
+      if (state.inGame !== !!st.inGame) { state.lists = {}; state.saveFile = null; Object.keys(listReq).forEach((k) => { listReq[k] = false; }); }
       state.inGame = !!st.inGame;
       state.key = st.key || '';
       state.flags = st.flags || {};
@@ -1584,7 +1929,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.2.8. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu 0.2.10. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       const game = st.chinese ? 'zh' : 'en';
 
@@ -1622,7 +1967,7 @@
 
       state.flags = f || {};
       if (holds) state.holds = holds;
-      if (state.open && state.tab !== 'changes') refresh();
+      repaint();
     },
     // What the game's GM handler sent back while the menu is open.
     readouts(list) {
@@ -1635,10 +1980,31 @@
         const saves = L.saveList(msg);
 
         if (saves) {
-          state.lists[saves.of] = saves.list;
-          listReq[saves.of] = false;
           if (saves.of === 'saves') state.saveFile = L.currentSave(msg) || state.saveFile;
-          if (state.tab === 'saves') refresh();
+          gotList(saves.of, saves.list);
+        }
+
+        const name = L.readName(msg);
+
+        // The shops, containers and scenes of the save, and the home's slots: read for the pickers. A readout the
+        // menu asked for stays out of the log; one asked for at the console is shown as usual.
+        if (name === 'GmPreSupplyList') {
+          const p = L.preSupply(msg);
+
+          PRESUPPLY.forEach((o) => gotList(o, p[o]));
+          if (asked.supply) { asked.supply = false; if (p.error) log(`Shop list: ${p.error}`, 'err'); return; }
+        }
+        if (name === 'GmHomeSlotsList') {
+          const s = L.homeSlots(msg);
+
+          gotList('homeslots', s || []);
+          if (asked.slots) { asked.slots = false; return; }
+        }
+        if (name === 'ActionTypeList') {
+          if (msg.RequestId === 'cheatmenu-pick') return gotList('uiactions', (msg.TypeNames || []).map((n) => [n, n]));
+          if (state.askedActions) { state.askedActions = false; log(`UI actions (${msg.TotalCount}${msg.IsTruncated ? ', list cut short' : ''}): ${(msg.TypeNames || []).join(', ')}`); }
+
+          return;
         }
         if (Array.isArray(msg.attrs)) {
           msg.attrs.forEach((a) => { if (a && a.key != null) state.attrs[a.key] = typeof a.baseValue === 'number' ? a.baseValue : a.baseTotal; });

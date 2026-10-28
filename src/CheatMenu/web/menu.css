@@ -90,7 +90,8 @@ kbd { font: 11px var(--mono); color: var(--steel-3); border: 1px solid var(--lin
 #tabhead .counts span { padding: 3px 8px; border: 1px solid var(--line-2); color: var(--steel-2); }
 #tabhead .counts b { color: var(--steel); }
 #body { flex: 1; overflow-y: auto; padding: 18px 26px 26px; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--amber-d) transparent; }
-#body .cols { columns: 2 400px; column-gap: 16px; }
+#body .cols { display: flex; gap: 16px; align-items: flex-start; }
+#body .cols > .col { flex: 1; min-width: 0; }
 
 .group { break-inside: avoid; margin: 0 0 16px; background: var(--glass-2); border: 1px solid var(--line-2); border-top: 2px solid var(--amber-d); }
 .group.warn { border-top-color: var(--rust); }

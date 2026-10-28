@@ -24,7 +24,7 @@ public static class ModCheats
     public static readonly string[] Holds = { "god", "power", "peaceful", "clock", "nofuel", "instant", "eventstep", "nospoil", "hover" };
 
     /// <summary>What a live picker can list.</summary>
-    public static readonly string[] Lists = { "pots", "furniture", "events", "buffs", "talents" };
+    public static readonly string[] Lists = { "pots", "furniture", "events", "buffs", "talents", "items", "allevents", "actions", "csets", "sms", "posts", "robots", "people" };
 
     public static bool IsAction(string name) => Actions.Contains(name, StringComparer.Ordinal);
 

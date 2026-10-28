@@ -1,8 +1,11 @@
+using System;
+
 namespace CheatMenu.Core;
 
 /// <summary>
-/// The words in the menu's live lists (the survivor's buffs, the pots, furniture and events), in the game's language, as
-/// the names they carry are. The page puts each entry's id in brackets after its label.
+/// The words in the menu's live lists (the survivor's buffs, the pots, furniture, events, robots and people, and the
+/// game's item, event, text and condition set tables), in the game's language, as the names they carry are. The page
+/// puts each entry's id in brackets after its label.
 /// </summary>
 public static class ListLabels
 {
@@ -44,6 +47,48 @@ public static class ListLabels
 
         return isWaiting ? label + Say(isChinese, " - waiting on a choice", " - 等待选择") : label;
     }
+
+    /// <summary>A table row's name, or what it is and its id when the row has no name.</summary>
+    public static string Named(string? name, string what, string whatChinese, long id, bool isChinese) => name ?? Say(isChinese, what, whatChinese) + " " + id;
+
+    /// <summary>A game text on one line: its markup and line breaks gone, cut to at most <paramref name="max"/> characters.</summary>
+    public static string Snippet(string? text, int max)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+
+        var plain = Markup.Replace(text, "").Replace("\\n", " ");
+
+        plain = string.Join(" ", plain.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+        return plain.Length <= max ? plain : plain.Substring(0, max - 3).TrimEnd(' ', ',', '.', ';', ':') + "...";
+    }
+
+    /// <param name="sender">Who sends the text, or null when its contact has no name.</param>
+    public static string Text(string? sender, string? content, int smsId, bool isChinese)
+    {
+        var body = Snippet(content, 64);
+
+        if (body.Length == 0) body = Say(isChinese, "Text", "短信") + " " + smsId;
+
+        return sender == null ? body : sender + ": " + body;
+    }
+
+    /// <param name="kind">The game's RobotKind: 1 tidying, 2 planting, 3 repair.</param>
+    public static string Robot(string? name, int kind, bool isChinese)
+    {
+        var job = kind switch
+        {
+            1 => Say(isChinese, "tidying", "整理"),
+            2 => Say(isChinese, "planting", "种植"),
+            3 => Say(isChinese, "repair", "维修"),
+            _ => null,
+        };
+        var label = name ?? Say(isChinese, "Robot", "机器人");
+
+        return job == null ? label : label + " - " + job;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex Markup = new(@"<[^>]*>|\{[^}]*\}");
 
     private static string State(Plant state, bool isChinese) => state switch
     {

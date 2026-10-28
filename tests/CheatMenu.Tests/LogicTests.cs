@@ -14,7 +14,7 @@ public class LogicTests
     public LogicTests()
     {
         js.Execute("var window = this;");
-        foreach (var name in new[] { "schema.js", "catalog.js", "gamedata.js", "tabs.js", "refs.js", "rows.js", "zh.js", "logic.js" }) js.Execute(Web(name));
+        foreach (var name in new[] { "schema.js", "catalog.js", "gamedata.js", "pickers.js", "tabs.js", "refs.js", "rows.js", "zh.js", "logic.js" }) js.Execute(Web(name));
 
         // Each row with its game tools, as the panel merges them.
         js.Execute(@"var L = window.__slcheatmenuLogic;
@@ -74,7 +74,8 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
     {
         var acts = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { return ROWSPEC[k].act; }).filter(Boolean)"))!;
         var holds = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { return ROWSPEC[k].hold || ROWSPEC[k].pulse; }).filter(Boolean)"))!;
-        var lists = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { var s = ROWSPEC[k]; return [s.live].concat((s.in || []).map(function (x) { return x.live; })).concat(s.act === 'list' ? [s.fix.of] : []); }).reduce(function (a, b) { return a.concat(b); }, []).filter(function (x) { return x && x !== 'saves' && x !== 'backups'; })"))!;
+        // Saves, backups, the shop readout's lists and the UI's action names come from game messages, not the plugin.
+        var lists = JsonSerializer.Deserialize<string[]>(Json("Object.keys(ROWSPEC).map(function (k) { var s = ROWSPEC[k]; return [s.live].concat((s.in || []).map(function (x) { return x.live; })).concat(s.act === 'list' ? [s.fix.of] : []); }).reduce(function (a, b) { return a.concat(b); }, []).filter(function (x) { return x && ['saves', 'backups', 'containers', 'scenes', 'uiactions'].indexOf(x) < 0; })"))!;
 
         Assert.All(acts, a => Assert.True(ModCheats.IsAction(a), a));
         Assert.All(holds, h => Assert.True(ModCheats.IsHold(h), h));
@@ -88,7 +89,7 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
         var broken = Json(@"Object.keys(ROWSPEC).filter(function (k) {
   var sp = ROWSPEC[k];
   if (!sp.cmd) return false;
-  var main = sp.opts ? sp.opts[0][1] : sp.v !== undefined ? sp.v : sp.main ? '1' : undefined;
+  var main = Array.isArray(sp.opts) ? sp.opts[0][1] : sp.v !== undefined ? sp.v : sp.main ? '1' : undefined;
   var m = L.specMessages(sp, main, {});
   return !m.msgs || !m.msgs.length || m.msgs[0].msgHead !== SCHEMA[sp.cmd].id;
 })");
@@ -128,7 +129,8 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
         Assert.Equal("Satiety - bad (1)", Option("survivor|Add buff", 1)[0].GetString());
         Assert.Equal("Early Riser - max Lv 5 (1001)", Option("survivor|Add talent", 1001)[0].GetString());
         Assert.Equal("Cold Wave Strikes - 2 days", Option("danger|Start a crisis", 1)[0].GetString());
-        Assert.Equal("13 Ending: Supply Hub", Option("survivor|Force game over", 13)[0].GetString());
+        Assert.Equal("Ending: Supply Hub (13)", Option("survivor|Force game over", 13)[0].GetString());
+        Assert.Equal("Door broken (1)", Option("survivor|Force game over", 1)[0].GetString());
         Assert.Equal("[[\"Crafting\",1],[\"Planting\",2],[\"Cooking\",3],[\"Traps\",4],[\"Exploration\",5],[\"Defense\",6]]", Json("ROWSPEC['survivor|Proficiency'].opts"));
     }
 
@@ -145,7 +147,9 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
     [InlineData("Cold Wave Strikes - 2 days", "寒潮来袭 - 2 天")]
     [InlineData("Energy Drink - Excited - good (20011)", "功能饮料-兴奋 - 增益 (20011)")]
     [InlineData("Creative Cook (Medium) (31351)", "创意托底·中档 (31351)")]
-    [InlineData("6 Ending: Side By Side (girl)", "6 结局：共同生活（女孩）")]
+    [InlineData("Ending: Side By Side (girl) (6)", "结局：共同生活（女孩） (6)")]
+    [InlineData("Home - 2nd floor (102)", "家 - 二楼 (102)")]
+    [InlineData("Bicycle - price 150 (1)", "自行车 - 价格 150 (1)")]
     public void Chinese_translates_each_piece_of_a_picker_choice(string english, string chinese)
     {
         Assert.Equal(chinese, Tr(english, "zh"));
@@ -173,7 +177,7 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
 
         // Each row with the line names a kind the game data has text for.
         Assert.Equal("[]", Json("Object.keys(ROWSPEC).filter(function (k) { var i = ROWSPEC[k].info; return i && !Object.keys((GAMEX.des || {})[i] || {}).length; })"));
-        Assert.Equal(6, js.Evaluate("Object.keys(ROWSPEC).filter(function (k) { return ROWSPEC[k].info; }).length").AsNumber());
+        Assert.Equal(7, js.Evaluate("Object.keys(ROWSPEC).filter(function (k) { return ROWSPEC[k].info; }).length").AsNumber());
     }
 
     [Fact]
@@ -359,6 +363,89 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
 
         Assert.Equal("\"b.sav\"", file);
         Assert.Equal("null", Json("L.currentSave({ Items: [{ FileName: 'a.sav', IsCurrent: false }] })"));
+    }
+
+    // The game's shop readout for one map with a grocery, a bed shop and a shelf, and the pawn shop.
+    private const string Supply = @"{ Scenes: [{ MapPointId: 2, Name: 'Discount Mart',
+  ItemShops: [{ Kind: 'Item', GroupId: 11, ShopId: 3, Name: 'Groceries', Entries: [{ Id: 1203, Name: 'Canned Beans', Price: 8 }] }],
+  FurnitureShops: [{ Kind: 'Furniture', GroupId: 12, ShopId: 4, Name: 'Beds', Entries: [{ Id: 5001, Name: 'Bunk Bed', Price: 120 }] }],
+  Containers: [{ GroupId: 31, Name: 'Shelf' }] }],
+  Pawn: { NpcName: 'Pawnbroker', Groups: [{ Kind: 'Pawn', GroupId: 90, ShopId: 9, Name: 'Counter', Entries: [] }] } }";
+
+    private string Labels(string list) => Json("(" + list + ").map(function (o) { return o[0]; })");
+
+    [Fact]
+    public void The_shop_readout_becomes_shop_container_and_scene_pickers()
+    {
+        js.Execute("var P = L.preSupply(" + Supply + ");");
+
+        Assert.Equal("[\"Discount Mart - Groceries\",\"Discount Mart - Beds\",\"Pawnbroker - Counter\"]", Labels("P.shops"));
+        Assert.Equal("[[\"Discount Mart - Shelf (31)\",31]]", Json("P.containers"));
+        Assert.Equal("[[\"Discount Mart (2)\",2]]", Json("P.scenes"));
+        Assert.Equal("\"No shop list\"", Json("L.preSupply({}).error"));
+    }
+
+    [Fact]
+    public void Buying_from_a_picked_shop_sends_the_three_fields_the_game_finds_the_shop_by()
+    {
+        js.Execute("var P = L.preSupply(" + Supply + "); var groceries = P.shops[0][1];");
+
+        Assert.Equal("[[\"Canned Beans - price 8 (1203)\",1203]]", Json("groceries.entries"));
+        Assert.Equal("{\"msgHead\":200,\"Op\":\"buyitem\",\"GroupKind\":\"Item\",\"GroupId\":11,\"ShopId\":3,\"Id\":1203,\"Count\":2}",
+            Json("L.specMessages(ROWSPEC['money|Buy one item'], undefined, { shop: groceries, Id: 1203, Count: '2' }).msgs[0]"));
+        Assert.Equal("{\"msgHead\":200,\"Op\":\"searchcontainer\",\"GroupId\":31}",
+            Json("L.specMessages(ROWSPEC['money|Search one container'], undefined, { GroupId: 31 }).msgs[0]"));
+    }
+
+    [Fact]
+    public void Item_and_furniture_purchases_offer_only_shops_that_sell_that_kind_and_only_that_shops_stock()
+    {
+        js.Execute(@"var P = L.preSupply(" + Supply + @");
+var lists = function (of) { return P[of]; }, none = function () { return null; };
+function shops(key) { return ROWSPEC[key].in[0].opts(none, lists); }");
+
+        Assert.Equal("[\"Discount Mart - Groceries\",\"Pawnbroker - Counter\"]", Labels("shops('money|Buy one item')"));
+        Assert.Equal("[\"Discount Mart - Beds\"]", Labels("shops('money|Buy one piece of furniture')"));
+        Assert.Equal("[\"Discount Mart - Groceries\",\"Discount Mart - Beds\",\"Pawnbroker - Counter\"]", Labels("shops('money|Buy everything in this shop')"));
+        Assert.Equal("null", Json("ROWSPEC['money|Buy one item'].in[0].opts(none, none)"));
+        Assert.Equal("[\"Bunk Bed - price 120 (5001)\"]", Labels("ROWSPEC['money|Buy one piece of furniture'].in[1].opts(function (f) { return f === 'shop' ? P.shops[1][1] : null; })"));
+        Assert.Equal("null", Json("ROWSPEC['money|Buy one piece of furniture'].in[1].opts(none)"));
+    }
+
+    [Fact]
+    public void Installing_furniture_offers_only_the_home_slots_that_take_it_and_clearing_offers_only_filled_ones()
+    {
+        js.Execute(@"var bed = GAMEX.furn.find(function (f) { return f[2] === 7; });
+var slots = L.homeSlots({ Slots: [
+  { SlotName: 'HomeBuildingPos07', RoomName: '1st Floor', SlotTypeId: 7, OccupantConfigId: 0 },
+  { SlotName: 'HomeBuildingPos02', RoomName: '1st Floor', SlotTypeId: 3, OccupantConfigId: 7001, OccupantName: 'Sofa' },
+  { SlotName: 'HomeBuildingPos08', RoomName: '1st Floor', SlotTypeId: 9, OccupantConfigId: 0 },
+  { SlotName: 'HomeBuildingPos30', RoomName: 'Basement', SlotTypeId: 7, OccupantConfigId: 0, IsOpen: false }] });
+var lists = function () { return slots; };");
+
+        Assert.Equal("[\"HomeBuildingPos07 - 1st Floor - empty\",\"HomeBuildingPos30 - Basement - locked\"]",
+            Labels("ROWSPEC['home|Install furniture in a slot'].in[0].opts(function (f) { return f === 'FurnitureConfigId' ? bed[0] : null; }, lists)"));
+        Assert.Equal("[[\"HomeBuildingPos02 - 1st Floor - Sofa\",\"HomeBuildingPos02\",3,7001]]", Json("ROWSPEC['home|Clear a slot'].opts(function () { return null; }, lists)"));
+        Assert.Equal("null", Json("L.homeSlots({ msgHead: 1 })"));
+    }
+
+    [Fact]
+    public void Fixed_pickers_send_the_games_own_values()
+    {
+        Assert.Equal("[\"Bicycle - price 150 (1)\",1]", Json("ROWSPEC['money|Buy a vehicle'].in[0].opts[0]"));
+        Assert.Equal("[1,2,4,8,16]", Json("ROWSPEC['debug|Simulate a cheat detection'].in[0].opts.map(function (o) { return o[1]; })"));
+        Assert.Equal(102, js.Evaluate("L.specMessages(ROWSPEC['people|Send an NPC somewhere'], undefined, { NpcId: 5, TargetMapId: 102 }).msgs[0].TargetMapId").AsNumber());
+        Assert.Equal(0, js.Evaluate("L.specMessages(ROWSPEC['people|Meet an NPC'], 0, {}).msgs[0].NpcConfigId").AsNumber());
+    }
+
+    [Theory]
+    [InlineData("SkipMoving", "Skip moving")]
+    [InlineData("TargetPosX", "Target pos x")]
+    [InlineData("UseRealDeathChain", "Use real death chain")]
+    [InlineData("NPCId", "Npc id")]
+    public void Field_names_under_more_fields_read_as_plain_words(string field, string shown)
+    {
+        Assert.Equal(shown, js.Evaluate("L.humanize(" + JsonSerializer.Serialize(field) + ")").AsString());
     }
 }
 

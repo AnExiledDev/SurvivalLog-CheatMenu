@@ -870,6 +870,96 @@ internal sealed class ModActions
 
                 break;
             }
+            // The game's whole tables, for the pickers that take any id: names in the game's language, so the page carries none.
+            case "items":
+                if (config?._Config_Item_Dict is { } items)
+                    foreach (var pair in items)
+                        Add(pair.Key, ListLabels.Named(GameName(config, pair.Value?._ItemName_k__BackingField, pair.Value?._ItemName_Local_k__BackingField), "Item", "物品", pair.Key, isChinese));
+
+                break;
+            case "allevents":
+                if (config?._Config_Event_Dict is { } allEvents)
+                    foreach (var pair in allEvents)
+                        Add(pair.Key, ListLabels.Named(GameName(config, pair.Value?._Name_k__BackingField, pair.Value?._Name_Local_k__BackingField), "Event", "事件", pair.Key, isChinese));
+
+                break;
+            case "actions":
+                // Only the actions with a name: the rest are steps inside other actions.
+                if (config?._Config_Action_Dict is { } actions)
+                    foreach (var pair in actions)
+                        if (GameName(config, pair.Value?._Name_k__BackingField, pair.Value?._Name_Local_k__BackingField) is { } action)
+                            Add(pair.Key, action);
+
+                break;
+            case "csets":
+                if (config?._Config_ConditionSet_Dict is { } sets)
+                    foreach (var pair in sets)
+                    {
+                        var source = pair.Value?._Source_k__BackingField;
+
+                        Add(pair.Key, ListLabels.Named(string.IsNullOrWhiteSpace(source) ? null : source, "Condition set", "条件组", pair.Key, isChinese));
+                    }
+
+                break;
+            case "sms":
+            {
+                var senders = Senders(config);
+                var seen = new HashSet<int>();
+
+                if (config?._Config_SMS_Dict is { } texts)
+                    foreach (var pair in texts)
+                    {
+                        var row = pair.Value;
+
+                        if (row == null || !seen.Add(row._SMSId_k__BackingField)) continue;
+
+                        Add(row._SMSId_k__BackingField, ListLabels.Text(senders.TryGetValue(row._ContactId_k__BackingField, out var who) ? who : null, GameName(config, row._Content_k__BackingField, row._Content_Local_k__BackingField), row._SMSId_k__BackingField, isChinese));
+                    }
+
+                break;
+            }
+            case "posts":
+            {
+                // Group chat main posts only (1 small talk, 2 a task): the game will not push a reply row (3).
+                var senders = Senders(config);
+
+                if (config?._Config_SMSGroup_Dict is { } posts)
+                    foreach (var pair in posts)
+                    {
+                        var row = pair.Value;
+                        var type = row == null ? 0 : (int)row._SMSType_k__BackingField;
+
+                        if (type is 1 or 2)
+                            Add(row!._SMSId_k__BackingField, ListLabels.Text(senders.TryGetValue(row._ContactId_k__BackingField, out var who) ? who : null, GameName(config, row._Content_k__BackingField, row._Content_Local_k__BackingField), row._SMSId_k__BackingField, isChinese));
+                    }
+
+                break;
+            }
+            // The robots and people walking around now, by instance id.
+            case "robots":
+            case "people":
+            {
+                var npcs = world._AgentManager?.GetDynamicNpcs();
+                var robots = of == "robots";
+
+                for (var i = 0; npcs != null && i < npcs.Count; i++)
+                {
+                    var npc = npcs[i];
+
+                    if (npc == null || npc.IsDead) continue;
+
+                    var kind = (int)npc.RobotKind;
+
+                    if ((kind != 0) != robots) continue;
+
+                    var row = config?._Config_Player_Dict is { } players && players.TryGetValue(npc.AgentConfigId, out var found) ? found : null;
+                    var name = GameName(config, row?._Name_k__BackingField, row?._Name_Local_k__BackingField);
+
+                    Add(npc.InstanceId, robots ? ListLabels.Robot(name, kind, isChinese) : ListLabels.Named(name, "Character", "角色", npc.AgentConfigId, isChinese));
+                }
+
+                break;
+            }
             default:
                 text = "";
 
@@ -879,6 +969,19 @@ internal sealed class ModActions
         text = json.Append(']').ToString();
 
         return null;
+    }
+
+    /// <summary>The phone's contacts by contact id: the name each text and group post shows as its sender.</summary>
+    private static Dictionary<int, string> Senders(ConfigManager? config)
+    {
+        var senders = new Dictionary<int, string>();
+
+        if (config?._Config_SMSSender_Dict is { } table)
+            foreach (var pair in table)
+                if (pair.Value != null && GameName(config, pair.Value._DisplayName_k__BackingField, pair.Value._DisplayName_Local_k__BackingField) is { } name)
+                    senders.TryAdd(pair.Value._ContactId_k__BackingField, name);
+
+        return senders;
     }
 
     /// <summary>A table row's name in the game's language: its text key looked up, else the Chinese name the row carries.</summary>

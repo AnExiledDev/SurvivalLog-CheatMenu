@@ -113,11 +113,17 @@
   }
 
   // The field sets a spec row sends. main is the row control's value: a field value, an option's object (merged in),
-  // or '*' for every option. inputs are the row's other fields by name; blank ones are left out.
+  // or '*' for every option. inputs are the row's other fields by name; blank ones are left out, and an input whose
+  // value is an object (a picked shop is its kind, group and shop id) puts all its fields in.
   function specValues(sp, main, inputs) {
     const base = Object.assign({}, sp.fix || {});
 
-    Object.keys(inputs || {}).forEach((f) => { const v = inputs[f]; if (v !== '' && v != null) base[f] = v; });
+    Object.keys(inputs || {}).forEach((f) => {
+      const v = inputs[f];
+
+      if (v && typeof v === 'object' && !Array.isArray(v)) Object.assign(base, v);
+      else if (v !== '' && v != null) base[f] = v;
+    });
 
     const withMain = (v) => {
       const set = Object.assign({}, base);
@@ -201,6 +207,55 @@
     if (msg.Items.some((i) => i && 'FileName' in i)) return { of: 'saves', list: msg.Items.filter(Boolean).map((i) => [i.FileName + (i.IsCurrent ? ' (playing)' : ''), i.FileName]) };
 
     return null;
+  }
+
+  // The shops, containers and scenes in the game's pre-supply readout (GmPreSupplyList), as picker lists. A shop's
+  // value is the three fields the game matches a shop by; its entries, and whether it sells furniture, ride along
+  // for the pickers that follow it.
+  function preSupply(msg) {
+    const out = { shops: [], containers: [], scenes: [] };
+
+    if (!msg || !Array.isArray(msg.Scenes)) return Object.assign(out, { error: (msg && msg.Error) || 'No shop list' });
+    if (msg.Error) out.error = msg.Error;
+
+    const shop = (scene, g, furniture) => {
+      const v = { GroupKind: g.Kind, GroupId: g.GroupId, ShopId: g.ShopId };
+
+      Object.defineProperty(v, 'entries', { value: (g.Entries || []).filter(Boolean).map((e) => [`${e.Name} - price ${e.Price} (${e.Id})`, e.Id]) });
+      Object.defineProperty(v, 'furniture', { value: furniture });
+      out.shops.push([`${scene} - ${g.Name}`, v]);
+    };
+
+    msg.Scenes.filter(Boolean).forEach((s) => {
+      const scene = s.Name || ('Scene ' + s.MapPointId);
+
+      out.scenes.push([`${scene} (${s.MapPointId})`, s.MapPointId]);
+      (s.ItemShops || []).filter(Boolean).forEach((g) => shop(scene, g, false));
+      (s.FurnitureShops || []).filter(Boolean).forEach((g) => shop(scene, g, true));
+      (s.Containers || []).filter(Boolean).forEach((g) => out.containers.push([`${scene} - ${g.Name} (${g.GroupId})`, g.GroupId]));
+    });
+    if (msg.Pawn && Array.isArray(msg.Pawn.Groups)) msg.Pawn.Groups.filter(Boolean).forEach((g) => shop(msg.Pawn.SceneName || msg.Pawn.NpcName || 'Pawn shop', g, false));
+
+    return out;
+  }
+
+  // The home's slots in the game's slot readout (GmHomeSlotsList), as [label, slot name, slot type, occupant's kind],
+  // or null when the message is not one.
+  function homeSlots(msg) {
+    if (!msg || !Array.isArray(msg.Slots)) return null;
+
+    return msg.Slots.filter(Boolean).map((s) => {
+      const what = s.OccupantConfigId ? (s.OccupantName || 'furniture ' + s.OccupantConfigId) : s.IsOpen === false ? 'locked' : 'empty';
+
+      return [`${s.SlotName} - ${s.RoomName || s.Room} - ${what}`, s.SlotName, s.SlotTypeId, s.OccupantConfigId || 0];
+    });
+  }
+
+  // A field name in plain words: SkipMoving is "Skip moving", TargetPosX is "Target pos x".
+  function humanize(field) {
+    const s = String(field).replace(/([a-z\d])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/_/g, ' ').toLowerCase().trim();
+
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
   // ---------- what the game sends back ----------
@@ -341,5 +396,5 @@
     return s && s.game === game && (s.lang === 'zh' || s.lang === 'en') ? s.lang : game;
   }
 
-  window.__slcheatmenuLogic = { tr, detail, startLang, shownDesc,FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, readName, vitals, currentSave, describe };
+  window.__slcheatmenuLogic = { tr, detail, startLang, shownDesc,FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, preSupply, homeSlots, humanize, readName, vitals, currentSave, describe };
 })();
