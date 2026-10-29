@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using CheatMenu.Core;
 using UnityEngine;
 
@@ -14,8 +15,12 @@ internal sealed class CheatSession
     private readonly PresetStore _presets;
     private readonly WebPage _page;
     private readonly Action<string> _log;
+    private const double SlowPartMs = 20;
+
     private readonly WebKeyboard _keyboard = new();
+    private readonly Stopwatch _part = new();
     private bool _isOpen;
+    private double _slowPartMs;
 
     public CheatSession(GmBridge gm, GmFlags flags, ModActions actions, Holds holds, PresetStore presets, WebPage page, Action<string> log)
     {
@@ -30,16 +35,28 @@ internal sealed class CheatSession
 
     public KeyCode Key { get; set; } = KeyCode.F3;
 
+    /// <summary>The slowest part of the last frame when one took a while, so a slow frame in the log says what it was.</summary>
+    public string? SlowPart { get; private set; }
+
     public void Update()
     {
+        SlowPart = null;
+        _slowPartMs = 0;
         _page.KeepInstalled(Time.unscaledTime);
 
         // While a text box has the keyboard, the panel key is typing, not a toggle.
         if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key)) Toggle();
 
-        while (PageMessages.TryTake(out var command)) Handle(command);
+        while (PageMessages.TryTake(out var command))
+        {
+            _part.Restart();
+            Handle(command);
+            if (IsSlowest(out var ms)) SlowPart = $"{command.Describe()} took {ms:0} ms";
+        }
 
+        _part.Restart();
         _gm.Tick(Time.deltaTime, Time.unscaledDeltaTime);
+        if (IsSlowest(out var tickMs)) SlowPart = $"the game's GM handler and its readouts took {tickMs:0} ms";
 
         if (_holds.Tick(Time.unscaledTime) && _isOpen) Switches();
 
@@ -47,7 +64,22 @@ internal sealed class CheatSession
 
         var sent = _gm.TakeSent();
 
-        if (sent.Count > 0 && _isOpen) _page.Readouts(sent);
+        if (sent.Count == 0 || !_isOpen) return;
+
+        _part.Restart();
+        _page.Readouts(sent);
+        if (IsSlowest(out var readMs)) SlowPart = $"handing {sent.Count} readouts to the panel took {readMs:0} ms";
+    }
+
+    private bool IsSlowest(out double ms)
+    {
+        ms = _part.Elapsed.TotalMilliseconds;
+
+        if (ms < SlowPartMs || ms <= _slowPartMs) return false;
+
+        _slowPartMs = ms;
+
+        return true;
     }
 
     private void Toggle()
@@ -119,6 +151,8 @@ internal sealed class CheatSession
                 break;
             case PageCommand.NoScript:
                 _page.Install();
+                // Done here, while the game loads, rather than on the first visit to the Mod tests tab.
+                ModTestCheats.Warm(_log);
                 break;
             case PageCommand.Unknown unknown:
                 _log("panel: " + unknown.Text);

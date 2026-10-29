@@ -21,6 +21,7 @@ public sealed class CheatTicker : MonoBehaviour
     private static readonly HashSet<string> ReportedFailures = new();
     private static readonly Stopwatch Frame = new();
     private static double _worstMs;
+    private static string? _worstPart;
     private static float _nextSlowReportAt;
 
     public CheatTicker(IntPtr pointer) : base(pointer)
@@ -40,19 +41,24 @@ public sealed class CheatTicker : MonoBehaviour
             if (ReportedFailures.Count < MaxReportedFailures && ReportedFailures.Add(ex.GetType().FullName + ": " + ex.Message)) Log("update failed (each distinct failure reported once): " + ex);
         }
 
-        NoteSlowFrame(Frame.Elapsed.TotalMilliseconds);
+        NoteSlowFrame(Frame.Elapsed.TotalMilliseconds, Session?.SlowPart);
     }
 
-    private static void NoteSlowFrame(double ms)
+    private static void NoteSlowFrame(double ms, string? part)
     {
         if (ms < SlowFrameMs) return;
 
-        _worstMs = Math.Max(_worstMs, ms);
+        if (ms > _worstMs)
+        {
+            _worstMs = ms;
+            _worstPart = part;
+        }
 
         if (Time.unscaledTime < _nextSlowReportAt) return;
 
-        Log($"the menu's own work took {_worstMs:0} ms in one frame (slowest in the last minute)");
+        Log($"the menu's own work took {_worstMs:0} ms in one frame (slowest in the last minute){(_worstPart == null ? "" : ": " + _worstPart)}");
         _worstMs = 0;
+        _worstPart = null;
         _nextSlowReportAt = Time.unscaledTime + SlowReportEverySeconds;
     }
 }

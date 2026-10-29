@@ -49,7 +49,7 @@ internal sealed class WebPage
 
     public void Flags(string flagsJson, string holdsJson) => Call($"flags({flagsJson},{holdsJson})");
 
-    public void Readouts(List<string> jsonMessages) => Call($"readouts([{string.Join(",", jsonMessages)}])");
+    public void Readouts(IReadOnlyList<string> jsonMessages) => Call($"readouts([{string.Join(",", jsonMessages)}])");
 
     private bool Call(string expression) => Run($"window.__slcheatmenu?window.__slcheatmenu.{expression}:{NoScriptReply}");
 

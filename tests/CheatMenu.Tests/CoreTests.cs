@@ -16,6 +16,14 @@ public class PageCommandTests
     }
 
     [Fact]
+    public void A_slow_command_is_named_in_the_log_by_what_it_ran()
+    {
+        Assert.Equal("GM message 198", PageCommand.Parse(P + "gm|4|{\"msgHead\":198}").Describe());
+        Assert.Equal("action modtests", PageCommand.Parse(P + "act|5|modtests|{}").Describe());
+        Assert.Equal("noscript", PageCommand.Parse(P + "noscript").Describe());
+    }
+
+    [Fact]
     public void A_gm_message_without_an_id_or_json_is_not_sent()
     {
         Assert.IsType<PageCommand.Unknown>(PageCommand.Parse(P + "gm||{}"));

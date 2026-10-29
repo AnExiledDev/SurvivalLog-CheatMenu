@@ -396,5 +396,30 @@
     return s && s.game === game && (s.lang === 'zh' || s.lang === 'en') ? s.lang : game;
   }
 
-  window.__slcheatmenuLogic = { tr, detail, startLang, shownDesc,FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, preSupply, homeSlots, humanize, readName, vitals, currentSave, describe };
+  // Which of two columns each group goes in: the shorter one so far, by a rough height. A group with no height (none
+  // of its rows shown) gets -1 and goes in neither.
+  function balance(heights) {
+    const tall = [0, 0];
+
+    return heights.map((h) => {
+      if (!h) return -1;
+
+      const i = tall[0] <= tall[1] ? 0 : 1;
+
+      tall[i] += h;
+
+      return i;
+    });
+  }
+
+  // What an empty search box says. A list not read yet only says it is being read while it is; until the box is opened
+  // it reads nothing from the game.
+  function pickHint(list, reading, x) {
+    if (!list) return reading ? '(reading the game)' : x.wait || x.blank || 'Type to search';
+    if (!list.length && !x.free) return '(none found)';
+
+    return x.blank || 'Type to search';
+  }
+
+  window.__slcheatmenuLogic = { tr, detail, startLang, shownDesc, balance, pickHint, FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, preSupply, homeSlots, humanize, readName, vitals, currentSave, describe };
 })();

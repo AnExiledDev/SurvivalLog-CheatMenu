@@ -16,6 +16,13 @@ internal static class ModTestCheats
 {
     private sealed record Found(ModTests.Mod Mod, Dictionary<string, MethodInfo> Methods);
 
+    // Reading every plugin's types takes tens of ms, so it is done once and again only if the loaded plugins change.
+    private static List<Found>? _found;
+    private static int _foundFromPlugins = -1;
+
+    /// <summary>Reads the test cheats now, while the game loads, so the first visit to the tab does not stall a frame.</summary>
+    public static void Warm(Action<string> log) => Discover(log);
+
     public static string? List(Action<string> log, out string text)
     {
         text = ModTests.Json(Discover(log).Select(f => f.Mod));
@@ -50,15 +57,17 @@ internal static class ModTestCheats
 
     private static List<Found> Discover(Action<string> log)
     {
+        var plugins = IL2CPPChainloader.Instance.Plugins.Values.Where(p => p.Instance != null).ToList();
+
+        if (_found != null && plugins.Count == _foundFromPlugins) return _found;
+
         var found = new List<Found>();
 
-        foreach (var plugin in IL2CPPChainloader.Instance.Plugins.Values)
+        foreach (var plugin in plugins)
         {
-            if (plugin.Instance == null) continue;
-
             try
             {
-                var type = plugin.Instance.GetType().Assembly.GetTypes().FirstOrDefault(t => t.Name == ModTests.TypeName && t.IsAbstract && t.IsSealed);
+                var type = plugin.Instance!.GetType().Assembly.GetTypes().FirstOrDefault(t => t.Name == ModTests.TypeName && t.IsAbstract && t.IsSealed);
 
                 if (type == null) continue;
 
@@ -74,6 +83,9 @@ internal static class ModTestCheats
                 log($"could not read the test cheats of {plugin.Metadata.Name}: {ex.Message}");
             }
         }
+
+        _found = found;
+        _foundFromPlugins = plugins.Count;
 
         return found;
     }

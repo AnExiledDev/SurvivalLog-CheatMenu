@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.11
+
+- The menu is much faster. A tab you have opened before shows at once, the All, Game's own and Added by mod buttons no longer redraw the tab, and long tabs only draw the part you can see.
+- Fixed: on rows with several fields, the button showed as an empty amber bar across the row.
+- Fixed: a dropdown showed its old choice for a moment before it changed. Dropdowns open and change at once now, and work with the arrow keys and Enter.
+- Opening a tab no longer reads lists from your game. A list is read the first time you open its box, so tabs open without a pause.
+- The Mod tests tab opens without a pause. The menu reads which mods add test cheats while the game loads.
+- Fixed: the action list in "Dispatch a UI action" stayed empty.
+
 ## 0.2.10
 
 - Fixed: rows with long names, like "Activate daily plan", were squeezed to one word per line, and some buttons were cut off. A row with several fields now puts them on their own line under the row's name.

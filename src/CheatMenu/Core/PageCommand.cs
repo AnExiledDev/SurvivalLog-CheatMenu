@@ -40,6 +40,14 @@ public abstract record PageCommand
 
     public sealed record Unknown(string Text) : PageCommand;
 
+    /// <summary>A few words naming the command for the log, without its arguments.</summary>
+    public string Describe() => this switch
+    {
+        Gm gm => "GM message " + (GmRequest.Head(gm.Json, out _)?.ToString() ?? "?"),
+        Act act => "action " + act.Name,
+        _ => GetType().Name.ToLowerInvariant(),
+    };
+
     public static bool IsOurs(string? message) => message is not null && message.StartsWith(Prefix, StringComparison.Ordinal);
 
     /// <summary>Parses a whole message, prefix included. JSON goes last, so it may hold the separator itself.</summary>

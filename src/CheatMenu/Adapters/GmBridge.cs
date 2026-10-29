@@ -19,7 +19,10 @@ internal sealed class GmBridge
     private static Action<string> _log = _ => { };
     private static bool _hasReportedSendFailure;
 
+    private static readonly List<string> NoneSent = new();
+
     private readonly List<string> _sent = new();
+    private readonly RepeatedReadouts _repeats = new();
     private WebGm? _gm;
     private bool _hasReportedTickFailure;
 
@@ -62,6 +65,7 @@ internal sealed class GmBridge
     /// </summary>
     public void Live(bool isOn)
     {
+        if (isOn) _repeats.Clear();
         if (_gm == null && !isOn) return;
         if (!IsInGame) return;
 
@@ -86,8 +90,11 @@ internal sealed class GmBridge
     }
 
     /// <summary>What the handler sent since the last call, each one JSON as its page would have read it.</summary>
-    public List<string> TakeSent()
+    public IReadOnlyList<string> TakeSent()
     {
+        // Most frames send nothing; those cost no list.
+        if (_sent.Count == 0) return NoneSent;
+
         var sent = new List<string>(_sent);
         _sent.Clear();
 
@@ -132,7 +139,9 @@ internal sealed class GmBridge
 
             if (GmReadouts.IsUnused(msg.msgHead)) return true;
 
-            bridge._sent.Add(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(msg);
+
+            if (bridge._repeats.IsNew(msg.msgHead, json)) bridge._sent.Add(json);
 
             return true;
         }

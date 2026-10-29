@@ -447,6 +447,25 @@ var lists = function () { return slots; };");
     {
         Assert.Equal(shown, js.Evaluate("L.humanize(" + JsonSerializer.Serialize(field) + ")").AsString());
     }
+
+    [Fact]
+    public void Each_group_goes_in_the_shorter_column_so_far_and_an_empty_group_in_neither()
+    {
+        Assert.Equal("[0,1,1,-1,0]", Json("L.balance([100, 50, 50, 0, 30])"));
+        Assert.Equal("[0,1,0,0]", Json("L.balance([10, 300, 20, 20])"));
+    }
+
+    [Fact]
+    public void A_list_box_only_says_it_is_reading_the_game_while_it_is()
+    {
+        // Showing a tab reads nothing, so a box whose list was never asked for must not claim to be waiting on the game.
+        Assert.Equal("Type to search", js.Evaluate("L.pickHint(undefined, false, {})").AsString());
+        Assert.Equal("Pick a shop first", js.Evaluate("L.pickHint(undefined, false, { wait: 'Pick a shop first' })").AsString());
+        Assert.Equal("(reading the game)", js.Evaluate("L.pickHint(undefined, true, { wait: 'Pick a shop first' })").AsString());
+        Assert.Equal("(none found)", js.Evaluate("L.pickHint([], false, {})").AsString());
+        Assert.Equal("Any name", js.Evaluate("L.pickHint([], false, { free: true, blank: 'Any name' })").AsString());
+        Assert.Equal("Type to search", js.Evaluate("L.pickHint([[1, 'A']], false, {})").AsString());
+    }
 }
 
 public class PageBundleTests
@@ -463,5 +482,17 @@ public class PageBundleTests
 
         Assert.DoesNotContain(-1, at);
         Assert.Equal(at.OrderBy(x => x), at);
+    }
+
+    [Fact]
+    public void Only_the_spawn_button_wears_the_full_width_amber_bar()
+    {
+        // .go is the big SPAWN bar; a row's button wrapped in it showed as an empty amber bar across the row.
+        var page = LogicTests.Web("page.js");
+        var bars = System.Text.RegularExpressions.Regex.Matches(page, "class=\"go\"").Count;
+
+        Assert.Equal(1, bars);
+        Assert.Contains("<button class=\"go\">SPAWN</button>", page);
+        Assert.Contains("<div class=\"tgo\">", page);
     }
 }

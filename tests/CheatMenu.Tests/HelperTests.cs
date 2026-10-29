@@ -121,11 +121,44 @@ public class GmReadoutsTests
 
     [Theory]
     [InlineData(5)] // ReportAttrInfo: the stat bars
+    [InlineData(37)] // ActionTypeList: the UI action picker
     [InlineData(48)] // GameSavesList: saves and the backup before cheating
     [InlineData(50)] // BackupResult
     [InlineData(78)] // TestSense: the Sense test row
     [InlineData(80)] // ReportAIStatus: the Character behaviour row
     public void Readouts_the_panel_reads_are_kept(int msgHead) => Assert.False(GmReadouts.IsUnused(msgHead));
+
+    [Fact]
+    public void A_repeated_readout_the_same_as_the_last_one_is_not_handed_over_again()
+    {
+        var repeats = new RepeatedReadouts();
+
+        Assert.True(repeats.IsNew(5, "{\"msgHead\":5,\"hp\":10}"));
+        Assert.False(repeats.IsNew(5, "{\"msgHead\":5,\"hp\":10}"));
+        Assert.True(repeats.IsNew(5, "{\"msgHead\":5,\"hp\":9}"));
+        Assert.True(repeats.IsNew(80, "{\"msgHead\":80}"));
+        Assert.False(repeats.IsNew(80, "{\"msgHead\":80}"));
+    }
+
+    [Fact]
+    public void A_reply_the_panel_asked_for_always_goes_through_even_when_the_same()
+    {
+        var repeats = new RepeatedReadouts();
+
+        Assert.True(repeats.IsNew(48, "{\"msgHead\":48}"));
+        Assert.True(repeats.IsNew(48, "{\"msgHead\":48}"));
+    }
+
+    [Fact]
+    public void After_the_panel_opens_the_first_of_each_readout_goes_through()
+    {
+        var repeats = new RepeatedReadouts();
+
+        repeats.IsNew(5, "{\"msgHead\":5}");
+        repeats.Clear();
+
+        Assert.True(repeats.IsNew(5, "{\"msgHead\":5}"));
+    }
 }
 
 public class NewCheatNameTests

@@ -80,7 +80,7 @@
 :host { all: initial; color: var(--steel); font-family: var(--ui); }
 .c.nb { color: var(--steel-3); border: 1px dashed var(--steel-3); }
 .c.nr { color: #ffb08f; border: 1px dashed rgba(255,176,143,.6); }
-.row.off .btn, .row.off .sw, .row.off .num, .row.off .sel { opacity: .35; pointer-events: none; }
+.row.off .btn, .row.off .sw, .row.off .num, .row.off .drop { opacity: .35; pointer-events: none; }
 .row.formrow { grid-template-columns: 1fr; }
 .gmform { margin-top: 6px; padding: 8px 10px; border: 1px solid var(--line-2); background: rgba(0,0,0,.22); }
 .gmform header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font: 11px var(--mono); color: var(--amber-d); }
@@ -103,10 +103,10 @@
 .fld > .cap { font: 11px var(--mono); color: var(--steel-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fld > .fc { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 30px; }
 .fld .num { width: 96px; }
-.fld .sel { max-width: 100%; }
+.fld .dropw, .fld .drop { max-width: 100%; }
 .fld.grow { flex: 1 1 260px; }
 .fld.grow .num { width: 100%; }
-.tier .go { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.tier .tgo { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .row details.more { margin-top: 8px; }
 .row details.more summary { cursor: pointer; font: 11px var(--mono); color: var(--steel-3); }
 .row details.more .tier { margin-top: 4px; }
@@ -126,8 +126,17 @@
 .cbo.blank, .cbo.use { color: var(--amber); font: 12px var(--mono); }
 .cbo.none { color: var(--steel-3); cursor: default; }
 .cbmore { height: 1px; }
-.group.popping { contain: none; position: relative; z-index: 10; }
-.ctl .sel { max-width: 220px; }
+.group.popping { contain: none; content-visibility: visible; position: relative; z-index: 10; }
+.dropw { position: relative; display: inline-flex; min-width: 0; }
+.drop { position: relative; display: flex; align-items: center; height: 30px; min-width: 110px; max-width: 190px; padding: 0 26px 0 8px; background: rgba(0,0,0,.45); border: 1px solid var(--line-2); font: 13px var(--ui); color: var(--steel); text-align: left; cursor: pointer; outline: 0; }
+.drop .dl { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.drop > svg { position: absolute; right: 8px; top: 8px; width: 14px; height: 14px; fill: none; stroke: var(--steel-3); stroke-width: 2; pointer-events: none; }
+.drop:hover, .drop:focus, .drop.open { border-color: var(--amber); }
+.ctl .drop { max-width: 220px; }
+.dropw .cbpop { right: auto; min-width: 100%; width: max-content; max-width: 420px; }
+.ctl .dropw .cbpop { left: auto; right: 0; }
+.view[data-f="mod"] .row:not(.added), .view[data-f="game"] .row.added, .view[data-f="mod"] .group.nomod, .view[data-f="game"] .group.nogame { display: none; }
+.stbody { display: contents; }
 .row .lab p.info { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--line-2); color: var(--steel-2); white-space: pre-line; }
 `;
 
@@ -138,7 +147,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.10 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.11 - game 1.1.19611</div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="lang" id="lang" title="Switch between English and Chinese"><b data-l="en">EN</b><b data-l="zh">中文</b></button>
@@ -225,6 +234,8 @@
   const ALLROWS = TABS.flatMap((t) => t.groups.flatMap((g) => g.rows));
   const ROW = new Map(ALLROWS.map((r) => [r.key, r]));
   const FLAG_LABEL = {};
+  const ctlOf = (r) => r.__ctl || (r.__ctl = L.control(r, r.bind.spec));
+  let HOLDS = null;
 
   ALLROWS.forEach((r) => { if (r.bind.kind === 'flag' && !FLAG_LABEL[r.bind.flag]) FLAG_LABEL[r.bind.flag] = r; });
 
@@ -233,8 +244,12 @@
     const t = new Date().toTimeString().slice(0, 8);
     const tag = kind === 'mod' ? '[MOD]' : kind === 'err' ? '[ERR]' : '[GM]';
     const list = $('#log');
+    const li = document.createElement('li');
 
-    list.prepend(h(`<li class="${kind || ''}"><time>${t}</time><span class="tg">${tag}</span> ${esc(msg)}</li>`));
+    li.className = kind || '';
+    li.innerHTML = `<time>${t}</time><span class="tg">${tag}</span> ${esc(msg)}`;
+    if (state.lang === 'zh' || HAN.test(msg)) localize(li);
+    list.prepend(li);
     while (list.children.length > 120) list.lastChild.remove();
   }
 
@@ -505,7 +520,9 @@
     if (key === 'weather') return weatherSetting;
     if (key.indexOf('flag:') === 0) return L.FLAGS.indexOf(key.slice(5)) >= 0 ? flagSetting(key.slice(5)) : null;
     if (key.indexOf('hold:') === 0) {
-      const r = ALLROWS.find((x) => rowSettingKey(x) === key);
+      if (!HOLDS) { HOLDS = new Map(); ALLROWS.forEach((x) => { const k = rowSettingKey(x); if (k && k.indexOf('hold:') === 0 && !HOLDS.has(k)) HOLDS.set(k, x); }); }
+
+      const r = HOLDS.get(key);
 
       return r ? holdSetting(r) : null;
     }
@@ -520,6 +537,12 @@
   }
 
   function rowSettingKey(r) {
+    if (!('__sk' in r)) r.__sk = settingKeyOf(r);
+
+    return r.__sk;
+  }
+
+  function settingKeyOf(r) {
     const b = r.bind;
 
     if (b.kind === 'flag') return 'flag:' + b.flag;
@@ -531,7 +554,7 @@
       if (sp.attrs) return 'attrs:' + r.key;
       if (sp.page || sp.pulse || sp.readout) return null;
 
-      return L.control(r, sp) === 'tog' ? 'row:' + r.key : null;
+      return ctlOf(r) === 'tog' ? 'row:' + r.key : null;
     }
 
     return r.k === 'tog' && b.kind === 'cmd' ? 'row:' + r.key : null;
@@ -547,20 +570,12 @@
 
     if (rail.children.length) return paintRailCounts();
 
-    TABS.forEach((t, i) => {
-      if (t.id === 'saves' || t.id === 'changes') rail.append(h('<div class="railsep"></div>'));
-
-      const key = i < 10 ? (i + 1) % 10 : '';
-      const count = countTools(t);
-      const b = h(`<button class="tab${t.danger ? ' danger' : ''}${t.id === state.tab ? ' on' : ''}" data-tab="${t.id}"><span class="k">${key}</span><svg viewBox="0 0 24 24">${window.TAB_ICONS[t.id]}</svg><span class="t">${t.name}</span><span class="n">${count || ''}</span></button>`);
-
-      b.onclick = () => openTab(t.id);
-      rail.append(b);
-    });
+    rail.innerHTML = TABS.map((t, i) => `${t.id === 'saves' || t.id === 'changes' ? '<div class="railsep"></div>' : ''}<button class="tab${t.danger ? ' danger' : ''}${t.id === state.tab ? ' on' : ''}" data-tab="${t.id}"><span class="k">${i < 10 ? (i + 1) % 10 : ''}</span><svg viewBox="0 0 24 24">${window.TAB_ICONS[t.id]}</svg><span class="t">${t.name}</span><span class="n">${countTools(t) || ''}</span></button>`).join('');
+    if (state.lang === 'zh') localize(rail);
   }
 
   function paintRailCounts() {
-    $$('.tab').forEach((b) => { $('.n', b).textContent = countTools(TABS.find((t) => t.id === b.dataset.tab)) || ''; });
+    $$('.tab', $('#rail')).forEach((b) => setProp($('.n', b), 'textContent', String(countTools(TABS.find((t) => t.id === b.dataset.tab)) || '')));
   }
 
   function countTools(t) {
@@ -572,40 +587,61 @@
   }
 
   // ---------- tabs ----------
+  // Each tab's page is built once and kept. Opening it again only paints what changed since (switches, picks, typed
+  // values), so a tab opens at once and keeps what was typed in it. A language switch, or a save loaded or left,
+  // builds them again. Changes and Mod tests are built each time they open.
+  const views = {};
+  let showing = null;
+  let kindCounts = null;
+
   function openTab(id) {
     const t = TABS.find((x) => x.id === id);
 
     state.tab = id;
     clearTimeout(searchTimer);
     $('#q').value = '';
-    $$('.tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
+    $$('.tab', $('#rail')).forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
     renderHead(t);
-    renderBody(t);
+    showTab(t);
+    $('#body').scrollTop = 0;
+  }
+
+  function headCounts(t) {
+    if (!t.__counts) {
+      const rows = t.groups.flatMap((g) => g.rows);
+
+      t.__counts = { all: rows.length, mod: rows.filter((r) => r.s === 'M').length, ed: rows.filter((r) => r.s === 'E' || r.s === 'X').length };
+    }
+
+    return t.__counts;
   }
 
   function renderHead(t) {
-    const rows = t.groups.flatMap((g) => g.rows);
-    const mod = rows.filter((r) => r.s === 'M').length;
-    const ed = rows.filter((r) => r.s === 'E' || r.s === 'X').length;
-    const counts = t.page === 'index'
-      ? Object.keys(KIND).map((k) => `<span><b>${CATALOG.filter((c) => c.kind === k).length}</b> ${KIND[k].toLowerCase()}s</span>`).join('')
-      : t.page === 'changes' ? `<span><b>${state.journal.length}</b> changes</span><span><b>${state.presets.length + 1}</b> presets</span>`
-      : t.custom === 'items' ? `<span><b>${GAME.itemTotal}</b> items in the game</span><span><b>${GAME.items.length}</b> with pictures here; any id works</span>`
-      : '';
+    const head = $('#tabhead');
+    let counts = '';
 
-    $('#tabhead').innerHTML = `<h1>${t.title || t.name}</h1><p>${t.blurb}</p><div class="counts">${counts}</div>`;
-    localize($('#tabhead'));
-    if (t.custom === 'items' || t.page) return;
+    if (t.page === 'index') counts = kindCounts || (kindCounts = Object.keys(KIND).map((k) => `<span><b>${CATALOG.filter((c) => c.kind === k).length}</b> ${KIND[k].toLowerCase()}s</span>`).join(''));
+    else if (t.page === 'changes') counts = `<span><b>${state.journal.length}</b> changes</span><span><b>${state.presets.length + 1}</b> presets</span>`;
+    else if (t.custom === 'items') counts = `<span><b>${GAME.itemTotal}</b> items in the game</span><span><b>${GAME.items.length}</b> with pictures here; any id works</span>`;
+    else if (!t.page) {
+      const c = headCounts(t);
 
-    const f = $('#tabhead .counts');
+      counts = [['all', 'All', c.all], ['game', "Game's own", c.all - c.mod], ['mod', 'Added by mod', c.mod]].map(([k, l, n]) => `<button data-f="${k}" class="${state.filter === k ? 'on' : ''}"><b>${n}</b> ${l}</button>`).join('') + (c.ed ? `<span title="Editor-only or not wired: shown greyed, they do nothing in the release game"><b>${c.ed}</b> inactive</span>` : '');
+    }
 
-    f.classList.add('filter');
-    f.innerHTML = [['all', 'All', rows.length], ['game', "Game's own", rows.length - mod], ['mod', 'Added by mod', mod]].map(([k, l, n]) => `<button data-f="${k}" class="${state.filter === k ? 'on' : ''}"><b>${n}</b> ${l}</button>`).join('') + (ed ? `<span title="Editor-only or not wired: shown greyed, they do nothing in the release game"><b>${ed}</b> inactive</span>` : '');
-    localize(f);
-    $$('button', f).forEach((b) => { b.onclick = () => { state.filter = b.dataset.f; openTab(t.id); }; });
+    head.innerHTML = `<h1>${t.title || t.name}</h1><p>${t.blurb}</p><div class="counts${t.page || t.custom === 'items' ? '' : ' filter'}">${counts}</div>`;
+    localize(head);
   }
 
   const shown = (r) => state.filter === 'all' || (state.filter === 'mod' ? r.s === 'M' : r.s !== 'M');
+
+  // The filter only hides rows and moves groups between the columns; nothing is built again.
+  function setFilter(f) {
+    state.filter = f;
+    $$('#tabhead button[data-f]').forEach((b) => b.classList.toggle('on', b.dataset.f === f));
+    if (showing && showing.cols) applyFilter(showing);
+    $('#body').scrollTop = 0;
+  }
 
   function refresh() {
     if (!state.open) return;
@@ -623,120 +659,212 @@
   function repaint() {
     if (!state.open) return;
 
-    $$('#body .sw[data-set]').forEach((sw) => { const x = setting(sw.dataset.set); if (x) sw.classList.toggle('on', !!x.get()); });
-    $$('#body .tile[data-w]').forEach((t) => t.classList.toggle('on', String(state.weather) === t.dataset.w));
+    if (showing) syncSwitches(showing.el);
     renderStatus();
     renderVitals();
     paintRailCounts();
   }
 
-  // Two columns, each group put in the shorter one by a rough height, so neither runs far past the other and a group
-  // never splits across them.
-  function renderBody(t) {
-    const body = $('#body');
-
-    watchers = {};
-    body.innerHTML = '';
-    body.classList.toggle('flat', t.custom === 'items' || !!t.page);
-    body.scrollTop = 0;
-
-    if (t.page === 'changes') return changesPage(body);
-    if (t.page === 'index') return indexPage(body);
-    if (t.page === 'modtests') return modTestsPage(body);
-    if (t.custom === 'items') { body.append(itemSpawner()); t.groups.forEach((g, i) => body.append(groupEl(g, i))); return; }
-
-    const cols = h('<div class="cols"><div class="col"></div><div class="col"></div></div>');
-    const col = $$('.col', cols);
-    const tall = [0, 0];
-    const put = (el, est) => { const i = tall[0] <= tall[1] ? 0 : 1; col[i].append(el); tall[i] += est; };
-
-    body.append(cols);
-    if (state.filter !== 'mod') {
-      if (t.custom === 'stats') put(statGroup(), 104 + Math.max(1, state.vitals.length) * 40);
-      if (t.custom === 'weather') put(weatherGroup(), 104 + GAME.weather.length * 30);
-      if (t.custom === 'maps') put(mapGroup(), 78 + GAME.maps.length * 30);
-      if (t.custom === 'people') put(peopleGroup(), 104);
-    }
-
-    t.groups.forEach((g, i) => { if (g.rows.some(shown)) put(groupEl(g, i), 48 + (g.note ? 30 : 0) + g.rows.filter(shown).reduce((n, r) => n + (isStacked(r) ? 120 : 56), 0)); });
+  function syncSwitches(el) {
+    $$('.sw[data-set]', el).forEach((sw) => { const x = setting(sw.dataset.set); if (x) sw.classList.toggle('on', !!x.get()); });
+    $$('.sw[data-do="risky"]', el).forEach((sw) => sw.classList.toggle('on', state.riskyBackup));
+    $$('.tile[data-w]', el).forEach((t) => t.classList.toggle('on', String(state.weather) === t.dataset.w));
   }
 
-  function groupEl(g) {
-    const el = h(`<section class="group${g.warn ? ' warn' : ''}"><h2>${g.t}<em>${g.rows.length}</em></h2>${g.note ? `<div class="gnote">${g.note}</div>` : ''}</section>`);
+  // Everything on a page that shows a setting, a pick or a typed value, painted from them. Lists are only looked at
+  // here, never read from the game.
+  function syncView(el) {
+    $$('.num[data-slot]', el).forEach((n) => { const r = rowOf(n); if (r) setProp(n, 'value', String(boxValue(r, n.dataset.slot))); });
+    $$('.sw[data-slot]', el).forEach((sw) => { const r = rowOf(sw); if (r) sw.classList.toggle('on', swOn(r, sw.dataset.slot)); });
+    $$('details.more', el).forEach((d) => { const r = rowOf(d); if (r && d.open !== !!ui(r).more) d.open = !!ui(r).more; });
+    syncSwitches(el);
+    peek(() => {
+      $$('.cbin', el).forEach((i) => { if (i.__combo) i.__combo.paint(); });
+      $$('.drop', el).forEach(paintDrop);
+      $$('p.info', el).forEach(paintInfo);
+    });
+  }
 
-    g.rows.filter(shown).forEach((r) => el.append(rowEl(r)));
+  function dropViews() {
+    closeDrop();
+    if (showing && showing.search) showing.el.remove();
+    Object.keys(views).forEach((k) => { views[k].el.remove(); delete views[k]; });
+    showing = null;
+  }
 
-    return el;
+  function showView(v) {
+    closeDrop();
+    if (showing && showing !== v) {
+      if (showing.search) showing.el.remove();
+      else showing.el.hidden = true;
+    }
+    v.el.hidden = false;
+    showing = v;
+  }
+
+  function showTab(t) {
+    let v = views[t.id];
+
+    $('#body').classList.toggle('flat', t.custom === 'items' || !!t.page);
+    if (!v || t.page === 'changes' || t.page === 'modtests') {
+      if (v) v.el.remove();
+      v = views[t.id] = makeView(t);
+    }
+    showView(v);
+    if (v.cols) applyFilter(v);
+    if (v.stats) paintStats(v);
+    syncView(v.el);
+  }
+
+  // A tab's own group (stats, weather, maps, neighbour) and its rough height.
+  const CUSTOM = {
+    stats: { make: (v) => statGroup(v), est: () => 104 + Math.max(1, state.vitals.length) * 40 },
+    weather: { make: () => weatherGroup(), est: () => 104 + GAME.weather.length * 30 },
+    maps: { make: () => mapGroup(), est: () => 78 + GAME.maps.length * 30 },
+    people: { make: () => peopleGroup(), est: () => 104 }
+  };
+
+  function makeView(t) {
+    const el = document.createElement('div');
+    const v = { el, t };
+
+    el.className = 'view';
+    if (t.page === 'changes') changesPage(el);
+    else if (t.page === 'index') indexPage(el);
+    else if (t.page === 'modtests') modTestsPage(el);
+    else if (t.custom === 'items') el.append(itemSpawner(), hydrate(build(t.groups.map(groupHtml).join(''))));
+    else {
+      const gs = t.groups.filter((g) => g.rows.length);
+      const custom = CUSTOM[t.custom];
+
+      el.innerHTML = '<div class="cols"><div class="col"></div><div class="col"></div></div>';
+      v.cols = $$('.col', el);
+      v.groups = [];
+      if (custom) {
+        const g = custom.make(v);
+
+        g.classList.add('nomod');
+        v.groups.push({ el: g, est: (f) => f === 'mod' ? 0 : custom.est() });
+      }
+
+      const els = Array.from(hydrate(build(gs.map(groupHtml).join(''))).children);
+
+      gs.forEach((g, i) => v.groups.push({ el: els[i], est: groupEst(g) }));
+    }
+    $('#body').append(el);
+
+    return v;
+  }
+
+  // A group's rough height under each filter; 0 when none of its rows show.
+  function groupEst(g) {
+    const sum = (keep) => {
+      const rows = g.rows.filter(keep);
+
+      return rows.length ? 48 + (g.note ? 30 : 0) + rows.reduce((n, r) => n + (isStacked(r) ? 120 : 56), 0) : 0;
+    };
+    const e = { all: sum(() => true), game: sum((r) => r.s !== 'M'), mod: sum((r) => r.s === 'M') };
+
+    return (f) => e[f];
+  }
+
+  // Two columns, each group put in the shorter one by a rough height, so neither runs far past the other and a group
+  // never splits across them. A group with nothing to show goes to the second column, hidden.
+  function applyFilter(v) {
+    const f = state.filter;
+
+    if (v.f === f) return;
+    v.f = f;
+    v.el.dataset.f = f;
+    L.balance(v.groups.map((g) => g.est(f))).forEach((i, k) => v.cols[i < 0 ? 1 : i].append(v.groups[k].el));
+  }
+
+  // ---------- building rows ----------
+  // A page is one HTML string parsed once, put in the menu's language once. Its buttons and boxes have no handlers of
+  // their own: the page body handles every click, key and edit and finds the row by its key.
+  function build(html) {
+    const t = document.createElement('template');
+
+    t.innerHTML = html;
+    if (state.lang === 'zh' || HAN.test(html)) localize(t.content);
+
+    return t.content;
+  }
+
+  function hydrate(fr) {
+    $$('.cbin', fr).forEach(bindCombo);
+    $$('.row.formrow', fr).forEach((el) => {
+      const r = ROW.get(el.dataset.key);
+      const lab = $('.lab', el);
+
+      r.bind.cmds.forEach((name) => lab.append(formEl(name, r)));
+    });
+
+    return fr;
+  }
+
+  const rowOf = (el) => { const row = el.closest('.row[data-key]'); return row ? ROW.get(row.dataset.key) : null; };
+
+  // The field a control stands for: the row's own (main), one of its inputs (in:F) or one under More fields (more:F).
+  function slotX(r, slot) {
+    const sp = r.bind.spec;
+
+    if (slot === 'main') return sp;
+
+    const f = slot.slice(slot.indexOf(':') + 1);
+
+    return (slot.indexOf('in:') === 0 ? sp.in || [] : moreFields(sp)).find((x) => x.f === f);
+  }
+
+  function groupHtml(g) {
+    const mod = g.rows.some((r) => r.s === 'M');
+    const game = g.rows.some((r) => r.s !== 'M');
+
+    return `<section class="group${g.warn ? ' warn' : ''}${mod ? '' : ' nomod'}${game ? '' : ' nogame'}"><h2>${g.t}<em>${g.rows.length}</em></h2>${g.note ? `<div class="gnote">${g.note}</div>` : ''}${g.rows.map((r) => rowHtml(r)).join('')}</section>`;
   }
 
   // A row with fields of its own, or a list to search, puts them in a tier under its name, each with its caption on
   // top, so the name keeps the row's full width. A row with one small control keeps it on the right.
   function isStacked(r) {
-    if (r.bind.kind !== 'spec') return false;
+    if (r.__stack !== undefined) return r.__stack;
+    if (r.bind.kind !== 'spec') return (r.__stack = false);
 
     const sp = r.bind.spec;
-    const kind = L.control(r, sp);
+    const kind = ctlOf(r);
 
-    if (sp.page || sp.readout || sp.pulse || sp.hold) return false;
+    if (sp.page || sp.readout || sp.pulse || sp.hold) return (r.__stack = false);
 
-    return (sp.in || []).length > 0 || moreFields(sp).length > 0 || kind === 'text' || (kind === 'sel' && isCombo(sp));
+    return (r.__stack = (sp.in || []).length > 0 || moreFields(sp).length > 0 || kind === 'text' || (kind === 'sel' && isCombo(sp)));
   }
 
-  function rowEl(r) {
+  function rowHtml(r, extra) {
     const b = r.bind;
     const d = L.shownDesc(r.d);
-    const off = b.kind === 'none';
+    const sp = b.kind === 'spec' ? b.spec : null;
     const stack = isStacked(r);
-    const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${off ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${b.kind === 'spec' ? ' specrow' : ''}${stack ? ' stack' : ''}`;
-    const el = h(`<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${d ? `<p>${esc(d)}</p>` : ''}</div>${stack ? '' : '<div class="ctl"></div>'}</div>`);
+    const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${b.kind === 'none' ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${sp ? ' specrow' : ''}${stack ? ' stack' : ''}`;
+    // The game's own words on what the picked buff, talent or plan does, kept in step with the list.
+    const info = sp && sp.info ? `<p class="info" data-nolang data-of="${esc(sp.live || '*')}" hidden></p>` : '';
+    const ctl = b.kind === 'form' ? '' : stack ? tierHtml(r) : `<div class="ctl">${sp ? specControlsHtml(r) : controlHtml(r)}</div>`;
 
-    if (b.kind === 'spec') {
-      const sp = b.spec;
-
-      // The game's own words on what the picked buff, talent or plan does, kept in step with the list.
-      if (sp.info) {
-        const p = h('<p class="info" data-nolang></p>');
-        const show = () => { p.textContent = L.detail(sp.info, picked(r, 'main', sp), state.lang); p.hidden = !p.textContent; };
-
-        show();
-        el.addEventListener('change', show);
-        watch(sp.live || '*', p, show);
-        $('.lab', el).append(p);
-      }
-      // A pick can change what another list on the row offers (a shop's goods, the slots a furniture fits).
-      el.addEventListener('change', (e) => { $$('.combo', el).forEach((c) => { if (c.__paint && !c.contains(e.target)) c.__paint(); }); });
-      if (stack) el.append(...tierEl(r));
-      else $('.ctl', el).append(...specControls(r));
-    } else if (b.kind === 'form') {
-      $('.ctl', el).remove();
-      b.cmds.forEach((name) => $('.lab', el).append(formEl(name, r)));
-    } else {
-      $('.ctl', el).append(...controlFor(r));
-    }
-
-    return el;
+    return `<div class="${cls}" data-key="${esc(r.key)}"><div class="lab"><b>${esc(r.l)}</b>${CHIP[r.s] || ''}${d ? `<p>${esc(d)}</p>` : ''}${info}${extra || ''}</div>${ctl}</div>`;
   }
 
   // The fields of one of the game's messages, typed in by hand, with a button that sends it.
   function formEl(name, r) {
     const sc = S[name];
-    const el = h(`<div class="gmform"><header><code>${esc(name)}</code><span>msgHead ${sc.id}</span><button class="btn">Run</button></header><div class="fl"></div></div>`);
-    const fl = $('.fl', el);
+    const fields = sc.f.map(([type, field]) => `<label><span>${esc(field)} <i>${esc(type)}</i></span>${type === 'bool'
+      ? `<span class="dropw"><button class="drop" data-slot="form" data-f="${esc(field)}" data-v="false"><span class="dl" data-nolang>false</span>${CARET}</button></span>`
+      : `<input class="num" data-f="${esc(field)}" placeholder="${esc(type)}">`}</label>`).join('');
+    const el = h(`<div class="gmform"><header><code>${esc(name)}</code><span>msgHead ${sc.id}</span><button class="btn">Run</button></header><div class="fl">${fields || '<span class="none">No fields: it runs as it is.</span>'}</div></div>`);
 
-    if (!sc.f.length) fl.append(h('<span class="none">No fields: it runs as it is.</span>'));
-    sc.f.forEach(([type, field]) => {
-      const input = type === 'bool'
-        ? h(`<select class="sel" data-f="${esc(field)}"><option>false</option><option>true</option></select>`)
-        : h(`<input class="num" data-f="${esc(field)}" placeholder="${esc(type)}">`);
-      const lab = h(`<label><span>${esc(field)} <i>${esc(type)}</i></span></label>`);
-
-      lab.append(input);
-      fl.append(lab);
-    });
     $('header .btn', el).onclick = () => {
       const values = {};
 
-      $$('[data-f]', el).forEach((i) => { if (i.tagName === 'SELECT' || i.value.trim() !== '') values[i.dataset.f] = i.value; });
+      $$('[data-f]', el).forEach((i) => {
+        if (i.classList.contains('drop')) values[i.dataset.f] = i.dataset.v;
+        else if (i.value.trim() !== '') values[i.dataset.f] = i.value;
+      });
 
       const m = L.message(name, values);
 
@@ -759,15 +887,14 @@
   // The lists one game readout fills together, and which readouts the menu asked for itself (those stay out of the log).
   const PRESUPPLY = ['shops', 'containers', 'scenes'];
   const asked = {};
-  // Pickers waiting on a list, by the list's name; '*' is a picker whose list is worked out from other lists.
-  let watchers = {};
 
-  function watch(of, el, fn) {
-    (watchers[of] || (watchers[of] = new Set())).add({ el, fn });
-  }
-
+  // A list that came in, or was read again, is painted where the page shows it now; other pages paint it when shown.
   function notify(of) {
-    [watchers[of], watchers['*']].forEach((set) => set && set.forEach((w) => { if (!w.el.isConnected) set.delete(w); else w.fn(); }));
+    if (!showing) return;
+
+    peek(() => $$(`[data-of="${of}"], [data-of="*"]`, showing.el).forEach((el) => {
+      if (el.classList.contains('cbin')) { if (el.__combo) el.__combo.paint(); } else paintInfo(el);
+    }));
   }
 
   // Reads a live list once; Reload reads it again. Most come from the plugin; the saves, backups, shops, slots and UI
@@ -798,14 +925,21 @@
     notify(of);
   }
 
-  const listOf = (of) => { if (!state.lists[of] && !listReq[of]) loadList(of); return state.lists[of] || null; };
+  // Painting a page only looks at the lists it has; a list is read from the game when a picker is opened or a row is
+  // run. Reading every list a page shows as it was drawn is what made opening a tab slow.
+  let lazy = false;
+  const peek = (fn) => { const was = lazy; lazy = true; try { return fn(); } finally { lazy = was; } };
+  const listOf = (of) => { if (!lazy && !state.lists[of] && !listReq[of]) loadList(of); return state.lists[of] || null; };
   const ui = (r) => r.ui || (r.ui = {});
+  const setProp = (el, k, v) => { if (el[k] !== v) el[k] = v; };
 
   // A pick is kept as {v, l, f} (value, label, file), so it survives the list being read again; '' is picked blank.
   const SHORT = 12;
   const entry = (o) => ({ v: o[1], l: o[0], f: o[2] });
   const same = (a, b) => a === b || (!!a && !!b && typeof a === 'object' && typeof b === 'object' && JSON.stringify(a) === JSON.stringify(b));
   const isCombo = (x) => !!(x.live || x.free || typeof x.opts === 'function' || (x.opts || []).length > SHORT);
+  // The lists a picker's list comes from, which Reload reads again.
+  const srcsOf = (x) => x.live ? [x.live] : (typeof x.opts === 'function' && x.opts.of) || [];
 
   // What a picker offers: a list read from the game, one worked out from the row's other fields (null until those
   // are filled in), or a fixed one.
@@ -854,23 +988,18 @@
     return x ? inValue(r, x, 'in:' + f) : '';
   }
 
-  // A picker: a plain list when it is short, or a box that searches the list as you type.
-  function pickerEl(r, slot, x) {
-    if (isCombo(x)) return comboEl(r, slot, x);
-
-    const list = listFor(r, x) || [];
-    const p = pick(r, slot, x);
-    const sel = h(`<select class="sel">${x.blank ? `<option value="-1">${esc(x.blank)}</option>` : ''}${list.map((o, i) => `<option value="${i}"${p && same(o[1], p.v) ? ' selected' : ''}>${esc(o[0])}</option>`).join('')}</select>`);
-
-    if (!p && x.blank) sel.value = '-1';
-    sel.onchange = () => { const i = +sel.value; ui(r)[slot] = i < 0 ? '' : entry(list[i]); };
-
-    return sel;
-  }
-
   const CARET = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
   const RELOAD = '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>';
   const KEYS = new WeakMap();
+
+  // A picker: a dropdown when the list is short and fixed, or a box that searches the list as you type.
+  function pickerHtml(slot, x) {
+    if (!isCombo(x)) return `<span class="dropw"><button class="drop" data-slot="${esc(slot)}"><span class="dl" data-nolang></span>${CARET}</button></span>`;
+
+    const reload = srcsOf(x).length ? `<button class="btn ghost rl" data-do="rl" data-slot="${esc(slot)}" title="Read the list from the game again">${RELOAD}</button>` : '';
+
+    return `<span class="pick"><span class="combo"><input class="cbin" autocomplete="off" spellcheck="false" data-slot="${esc(slot)}" data-of="${esc(x.live || '*')}">${CARET}</span>${reload}</span>`;
+  }
 
   // Each entry's words in lower case, in English and the menu's language, worked out once per list.
   function keysOf(list) {
@@ -884,33 +1013,52 @@
     return k.keys;
   }
 
+  // Keeps an entry of an open list in view by scrolling the list only, never the page under it.
+  function scrollInPop(pop, el) {
+    if (el.offsetTop < pop.scrollTop) pop.scrollTop = el.offsetTop;
+    else if (el.offsetTop + el.offsetHeight > pop.scrollTop + pop.clientHeight) pop.scrollTop = el.offsetTop + el.offsetHeight - pop.clientHeight;
+  }
+
+  // Opens a list upward when the panel has more room above the box than below it.
+  function flip(pop, box) {
+    const b = $('#body').getBoundingClientRect();
+    const w = box.getBoundingClientRect();
+
+    if (b.bottom - w.bottom < 260 && w.top - b.top > b.bottom - w.bottom) pop.classList.add('up');
+  }
+
   // The search box. Typing filters the list (every word has to match); the arrows and Enter pick; a number the list
   // does not have can still be used as an id, and a list marked free takes any text. Only the first 60 matches are
   // drawn; more are drawn as the list scrolls.
-  function comboEl(r, slot, x) {
+  function bindCombo(inp) {
+    const r = rowOf(inp);
+
+    if (!r) return;
+
+    const slot = inp.dataset.slot;
+    const x = slotX(r, slot);
+    const box = inp.parentNode;
     const u = ui(r);
-    const wrap = h(`<span class="pick"><span class="combo"><input class="cbin" autocomplete="off" spellcheck="false">${CARET}</span></span>`);
-    const box = $('.combo', wrap);
-    const inp = $('.cbin', wrap);
     let pop = null;
     let group = null;
     let io = null;
     let q = '';
-    let shown = [];
+    let hits = [];
     let at = 0;
     let drawn = 0;
     let typed = null;
 
-    const paintBox = () => {
+    const paintBox = () => peek(() => {
       const list = listFor(r, x);
       const p = pick(r, slot, x);
+      const v = p ? tr(String(p.l)) : '';
 
-      inp.value = p ? tr(String(p.l)) : '';
-      inp.placeholder = tr(!list ? (x.live ? '(reading the game)' : x.wait || '(reading the game)') : !list.length && !x.free ? '(none found)' : x.blank || 'Type to search');
-      inp.title = inp.value;
-    };
+      setProp(inp, 'value', v);
+      setProp(inp, 'placeholder', tr(L.pickHint(list, srcsOf(x).some((o) => listReq[o]), x)));
+      setProp(inp, 'title', v);
+    });
     const line = (k, list) => {
-      const n = shown[k];
+      const n = hits[k];
       const cls = `cbo${k === at ? ' on' : ''}${n === -1 ? ' blank' : n === -2 ? ' use' : ''}`;
       const text = n === -1 ? tr(x.blank) : n === -2 ? typed.use : tr(String(list[n][0]));
 
@@ -918,13 +1066,13 @@
     };
     const more = () => {
       const list = listFor(r, x) || [];
-      const end = Math.min(shown.length, drawn + 60);
+      const end = Math.min(hits.length, drawn + 60);
       const old = $('.cbmore', pop);
       let html = '';
 
       for (let k = drawn; k < end; k++) html += line(k, list);
       if (old) old.remove();
-      pop.insertAdjacentHTML('beforeend', html + (end < shown.length ? '<div class="cbmore"></div>' : ''));
+      pop.insertAdjacentHTML('beforeend', html + (end < hits.length ? '<div class="cbmore"></div>' : ''));
       drawn = end;
 
       const marker = $('.cbmore', pop);
@@ -932,25 +1080,26 @@
       if (io) { io.disconnect(); if (marker) io.observe(marker); }
     };
     const filter = () => {
-      const list = listFor(r, x) || [];
-      const keys = keysOf(list);
+      const list = listFor(r, x);
+      const all = list || [];
+      const keys = keysOf(all);
       const text = q.trim();
       const words = text.toLowerCase().split(/\s+/).filter(Boolean);
-      const id = /^-?\d+$/.test(text) && list.length && typeof list[0][1] === 'number' ? Number(text) : null;
+      const id = /^-?\d+$/.test(text) && all.length && typeof all[0][1] === 'number' ? Number(text) : null;
 
-      shown = [];
+      hits = [];
       typed = null;
-      if (id !== null && !list.some((o) => o[1] === id)) typed = { v: id, l: `id ${id}`, use: `${tr('Use id')} ${id}`, typed: true };
-      else if (x.free && text && !list.some((o) => String(o[1]) === text)) typed = { v: text, l: text, use: `${tr('Use')} "${text}"`, typed: true };
-      if (typed) shown.push(-2);
-      if (!words.length && x.blank) shown.push(-1);
-      for (let i = 0; i < list.length; i++) if (words.every((w) => keys[i].indexOf(w) >= 0)) shown.push(i);
-      at = Math.max(0, shown.findIndex((n) => n >= 0));
-      if (!shown.length || shown[at] < 0) at = 0;
+      if (id !== null && !all.some((o) => o[1] === id)) typed = { v: id, l: `id ${id}`, use: `${tr('Use id')} ${id}`, typed: true };
+      else if (x.free && text && !all.some((o) => String(o[1]) === text)) typed = { v: text, l: text, use: `${tr('Use')} "${text}"`, typed: true };
+      if (typed) hits.push(-2);
+      if (!words.length && x.blank) hits.push(-1);
+      for (let i = 0; i < all.length; i++) if (words.every((w) => keys[i].indexOf(w) >= 0)) hits.push(i);
+      at = Math.max(0, hits.findIndex((n) => n >= 0));
+      if (!hits.length || hits[at] < 0) at = 0;
       drawn = 0;
       pop.innerHTML = '';
       pop.scrollTop = 0;
-      if (!shown.length) pop.insertAdjacentHTML('beforeend', `<div class="cbo none">${esc(tr(listFor(r, x) ? 'Nothing matches' : '(reading the game)'))}</div>`);
+      if (!hits.length) pop.innerHTML = `<div class="cbo none">${esc(tr(list ? 'Nothing matches' : !x.wait || srcsOf(x).some((o) => listReq[o]) ? '(reading the game)' : x.wait))}</div>`;
       else more();
     };
     const mark = () => {
@@ -958,25 +1107,21 @@
       const now = $(`.cbo[data-k="${at}"]`, pop);
 
       if (was) was.classList.remove('on');
-      if (now) { now.classList.add('on'); now.scrollIntoView({ block: 'nearest' }); }
+      if (now) { now.classList.add('on'); scrollInPop(pop, now); }
     };
     const open = () => {
       if (pop) return;
 
+      closeDrop();
       pop = h('<div class="cbpop" data-nolang></div>');
       pop.onmousedown = (e) => e.preventDefault();
       pop.onclick = (e) => { const o = e.target.closest && e.target.closest('.cbo[data-k]'); if (o) choose(+o.dataset.k); };
       box.append(pop);
-      group = wrap.closest('.group');
+      group = box.closest('.group');
       if (group) group.classList.add('popping');
-
-      // Opens upward when the panel has more room above the box than below it.
-      const b = $('#body').getBoundingClientRect();
-      const w = box.getBoundingClientRect();
-
-      if (b.bottom - w.bottom < 260 && w.top - b.top > b.bottom - w.bottom) pop.classList.add('up');
-      if (window.IntersectionObserver) io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting) && drawn < shown.length) more(); }, { root: pop, rootMargin: '200px' });
-      else pop.onscroll = () => { if (drawn < shown.length && pop.scrollTop + pop.clientHeight > pop.scrollHeight - 200) more(); };
+      flip(pop, box);
+      if (window.IntersectionObserver) io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting) && drawn < hits.length) more(); }, { root: pop, rootMargin: '200px' });
+      else pop.onscroll = () => { if (drawn < hits.length && pop.scrollTop + pop.clientHeight > pop.scrollHeight - 200) more(); };
       q = '';
       filter();
     };
@@ -990,14 +1135,14 @@
       group = null;
     };
     const choose = (k) => {
-      const n = shown[k];
+      const n = hits[k];
       const list = listFor(r, x) || [];
 
       if (n === undefined) return;
       u[slot] = n === -1 ? '' : n === -2 ? { v: typed.v, l: typed.l, typed: true } : entry(list[n]);
       close();
       paintBox();
-      wrap.dispatchEvent(new Event('change', { bubbles: true }));
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
     inp.onfocus = () => { open(); inp.select(); };
@@ -1008,66 +1153,142 @@
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
         if (!pop) return open();
-        at = Math.max(0, Math.min(shown.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)));
-        while (at >= drawn && drawn < shown.length) more();
+        at = Math.max(0, Math.min(hits.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)));
+        while (at >= drawn && drawn < hits.length) more();
         mark();
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (pop && shown.length) choose(at);
+        if (pop && hits.length) choose(at);
       } else if (e.key === 'Escape') {
         if (pop) { e.stopPropagation(); close(); paintBox(); }
       } else if (e.key === 'Tab') {
         close();
       }
     };
-    wrap.__paint = box.__paint = () => { if (pop) filter(); else paintBox(); };
-    watch(x.live || '*', wrap, box.__paint);
-    paintBox();
+    inp.__combo = { paint: () => { if (pop) filter(); else paintBox(); } };
+  }
 
-    // A list read from the game, or worked out from ones that are, can be read again.
-    const srcs = x.live ? [x.live] : (typeof x.opts === 'function' && x.opts.of) || [];
+  // ---------- the dropdown ----------
+  // A short fixed list is drawn by the page itself. The browser's own dropdown is slow to open in the game and shows
+  // what it held the last time for a moment before it updates.
+  let drop = null;
 
-    if (srcs.length) {
-      const b = h(`<button class="btn ghost rl" title="Read the list from the game again">${RELOAD}</button>`);
+  // What a dropdown offers and how a choice is kept: a true/false field of a hand-typed message, a row's own list
+  // (cur), or one of a row's fields.
+  function dropModel(el) {
+    const slot = el.dataset.slot;
 
-      b.onclick = () => srcs.forEach((of) => { delete state.lists[of]; loadList(of); notify(of); });
-      wrap.append(b);
+    if (slot === 'form') return { labels: ['false', 'true'], lead: 0, at: el.dataset.v === 'true' ? 1 : 0, set: (k) => { el.dataset.v = k ? 'true' : 'false'; } };
+
+    const r = rowOf(el);
+
+    if (slot === 'cur') return { labels: r.o.map((o) => tr(o)), lead: 0, at: Math.max(0, r.o.indexOf(r.cur)), set: (k) => { r.cur = r.o[k]; } };
+
+    const x = slotX(r, slot);
+    const list = listFor(r, x) || [];
+    const p = pick(r, slot, x);
+    const lead = x.blank ? 1 : 0;
+    const i = p ? list.findIndex((o) => same(o[1], p.v)) : -1;
+
+    return { labels: (x.blank ? [tr(x.blank)] : []).concat(list.map((o) => tr(String(o[0])))), lead, at: i >= 0 ? i + lead : 0, set: (k) => { ui(r)[slot] = k < lead ? '' : entry(list[k - lead]); } };
+  }
+
+  function paintDrop(el) {
+    const slot = el.dataset.slot;
+    let text = '';
+
+    if (slot === 'form') text = el.dataset.v;
+    else {
+      const r = rowOf(el);
+
+      if (!r) return;
+      if (slot === 'cur') text = tr(r.cur);
+      else {
+        const x = slotX(r, slot);
+        const p = peek(() => pick(r, slot, x));
+
+        text = p ? tr(String(p.l)) : x.blank ? tr(x.blank) : '';
+      }
     }
-
-    return wrap;
+    setProp($('.dl', el), 'textContent', text);
+    setProp(el, 'title', text);
   }
 
-  function boxEl(r, slot, value, wide) {
-    const u = ui(r);
-    const n = h(`<input class="num${wide ? ' wide' : ''}" value="${esc(u[slot] !== undefined ? u[slot] : value == null ? '' : value)}">`);
+  function openDrop(el) {
+    closeDrop();
 
-    n.oninput = () => { u[slot] = n.value; };
+    const m = dropModel(el);
+    const wrap = el.parentNode;
+    const pop = document.createElement('div');
 
-    return n;
+    pop.className = 'cbpop';
+    pop.setAttribute('data-nolang', '');
+    pop.innerHTML = m.labels.map((l, k) => `<div class="cbo${k === m.at ? ' on' : ''}${k < m.lead ? ' blank' : ''}" data-k="${k}">${esc(l)}</div>`).join('') || `<div class="cbo none">${esc(tr('(none found)'))}</div>`;
+    pop.onmousedown = (e) => e.preventDefault();
+    pop.onclick = (e) => { const o = e.target.closest && e.target.closest('.cbo[data-k]'); if (o) chooseDrop(+o.dataset.k); };
+    wrap.append(pop);
+    drop = { el, pop, m, at: m.at, group: wrap.closest('.group') };
+    if (drop.group) drop.group.classList.add('popping');
+    flip(pop, wrap);
+    el.classList.add('open');
+
+    const on = pop.children[m.at];
+
+    if (on) pop.scrollTop = Math.max(0, on.offsetTop - (pop.clientHeight - on.offsetHeight) / 2);
   }
 
-  // An on/off field: a switch that starts as the row says.
-  function switchEl(r, slot, x) {
-    const u = ui(r);
-    const on = () => u[slot] !== undefined ? !!u[slot] : !!x.v;
-    const sw = h(`<button class="sw${on() ? ' on' : ''}" aria-label="${esc(x.l || x.f)}"></button>`);
+  function closeDrop() {
+    if (!drop) return;
 
-    sw.onclick = () => { u[slot] = !on(); sw.classList.toggle('on', u[slot]); sw.dispatchEvent(new Event('change', { bubbles: true })); };
-
-    return sw;
+    drop.pop.remove();
+    drop.el.classList.remove('open');
+    if (drop.group) drop.group.classList.remove('popping');
+    drop = null;
   }
 
+  function chooseDrop(k) {
+    const d = drop;
+
+    if (!d || !(k >= 0 && k < d.m.labels.length)) return;
+    d.m.set(k);
+    closeDrop();
+    paintDrop(d.el);
+    d.el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function markDrop(k) {
+    if (!drop || !drop.m.labels.length) return;
+
+    const was = drop.pop.children[drop.at];
+
+    drop.at = Math.max(0, Math.min(drop.m.labels.length - 1, k));
+
+    const now = drop.pop.children[drop.at];
+
+    if (was) was.classList.remove('on');
+    if (now) { now.classList.add('on'); scrollInPop(drop.pop, now); }
+  }
+
+  // ---------- fields ----------
   // A switch in "More fields" also has the game's own default, which sends nothing.
   const TRI = [['on', true], ['off', false]];
+  const MORE = new WeakMap();
 
   // The fields of a game message a row leaves out of its own inputs; blank ones are not sent. A row with a fixed Op
   // runs one of the game's sub-commands, which reads only the fields the row shows.
   function moreFields(sp) {
-    if (!sp.cmd || sp.more === false || !S[sp.cmd] || (sp.fix && 'Op' in sp.fix)) return [];
+    let more = MORE.get(sp);
 
-    const used = new Set(['RequestId', sp.main, ...Object.keys(sp.fix || {}), ...(sp.in || []).flatMap((x) => [x.f].concat(x.covers || [])), ...(Array.isArray(sp.opts) ? sp.opts : []).flatMap((o) => o[1] && typeof o[1] === 'object' ? Object.keys(o[1]) : []), ...(sp.each || []).flatMap((e) => Object.keys(e))]);
+    if (more) return more;
+    if (!sp.cmd || sp.more === false || !S[sp.cmd] || (sp.fix && 'Op' in sp.fix)) more = [];
+    else {
+      const used = new Set(['RequestId', sp.main, ...Object.keys(sp.fix || {}), ...(sp.in || []).flatMap((x) => [x.f].concat(x.covers || [])), ...(Array.isArray(sp.opts) ? sp.opts : []).flatMap((o) => o[1] && typeof o[1] === 'object' ? Object.keys(o[1]) : []), ...(sp.each || []).flatMap((e) => Object.keys(e))]);
 
-    return S[sp.cmd].f.filter(([, f]) => !used.has(f)).map(([type, f]) => type === 'bool' ? { f, l: L.humanize(f), opts: TRI, blank: '(game default)' } : { f, l: L.humanize(f), v: '', ph: type });
+      more = S[sp.cmd].f.filter(([, f]) => !used.has(f)).map(([type, f]) => type === 'bool' ? { f, l: L.humanize(f), opts: TRI, blank: '(game default)' } : { f, l: L.humanize(f), v: '', ph: type });
+    }
+    MORE.set(sp, more);
+
+    return more;
   }
 
   // One of the row's other inputs: a switch, a pick or what is typed.
@@ -1091,96 +1312,88 @@
     return out;
   }
 
+  // What a typed box shows: what was typed, else the setting it changes, else the row's starting value.
+  function boxValue(r, slot) {
+    const u = ui(r)[slot];
+
+    if (u !== undefined) return u;
+    if (slot === 'main') {
+      const sp = r.bind.spec;
+      const key = rowSettingKey(r);
+      const x = key && setting(key);
+      const v = x ? x.get() : sp.v !== undefined ? sp.v : r.v;
+
+      return v == null ? '' : v;
+    }
+
+    const x = slotX(r, slot);
+
+    return slot.indexOf('in:') === 0 && x && x.v != null ? x.v : '';
+  }
+
+  const swOn = (r, slot) => { const u = ui(r)[slot]; return u !== undefined ? !!u : !!(slotX(r, slot) || {}).v; };
+
   // One field in a row's tier: its caption on top, the control under it.
-  function fieldEl(cap, parts, grow) {
-    const f = h(`<div class="fld${grow ? ' grow' : ''}">${cap ? `<span class="cap">${esc(cap)}</span>` : ''}<span class="fc"></span></div>`);
+  const fieldHtml = (cap, inner, grow) => `<div class="fld${grow ? ' grow' : ''}">${cap ? `<span class="cap">${esc(cap)}</span>` : ''}<span class="fc">${inner}</span></div>`;
 
-    $('.fc', f).append(...parts);
+  function inputHtml(x, slot) {
+    const cap = x.l || x.f;
 
-    return f;
+    if (x.t === 'bool') return fieldHtml(cap, `<button class="sw" data-do="sw" data-slot="${esc(slot)}" aria-label="${esc(cap)}"></button>`);
+    if (x.opts || x.live) return fieldHtml(cap, pickerHtml(slot, x), isCombo(x));
+
+    return fieldHtml(cap, `<input class="num${x.t === 'text' ? ' wide' : ''}" data-slot="${esc(slot)}"${x.ph ? ` placeholder="${esc(x.ph)}"` : ''}>`, x.t === 'text');
   }
 
-  function inputEl(r, x, slot) {
-    if (x.t === 'bool') return fieldEl(x.l || x.f, [switchEl(r, slot, x)]);
-    if (x.opts || x.live) return fieldEl(x.l || x.f, [pickerEl(r, slot, x)], isCombo(x));
-
-    const n = boxEl(r, slot, x.v, x.t === 'text');
-
-    if (x.ph) n.placeholder = x.ph;
-
-    return fieldEl(x.l || x.f, [n], x.t === 'text');
-  }
-
-  // A stacked row's controls: the row's own field and its inputs side by side under its name, wrapping when they do
-  // not fit, then the button; the message's other fields fold away under "More fields".
-  function tierEl(r) {
+  // A list row starts on the setting it changes.
+  function seedMain(r) {
     const sp = r.bind.spec;
-    const kind = L.control(r, sp);
-    const tier = h('<div class="tier"></div>');
-    const ins = (sp.in || []).map((x) => inputEl(r, x, 'in:' + x.f));
-    const main = [];
-
-    if (kind === 'sel') main.push(fieldEl(sp.ml || '', [pickerEl(r, 'main', sp)], isCombo(sp)));
-    else if (kind === 'num' || kind === 'text') main.push(fieldEl(sp.ml || '', specControls(r).slice(0, -1), kind === 'text'));
-    ins.splice(Math.min(sp.mainAt || 0, ins.length), 0, ...main);
-    tier.append(...ins);
-
-    const go = h('<div class="go"></div>');
-
-    go.append(...(kind === 'tog' ? controlFor(r) : specControls(r).slice(-1)));
-    tier.append(go);
-
-    const out = [tier];
-    const more = moreFields(sp);
-
-    if (more.length) {
-      const d = h(`<details class="more"${ui(r).more ? ' open' : ''}><summary>More fields (${more.length})</summary><div class="tier"></div></details>`);
-
-      d.ontoggle = () => { ui(r).more = d.open; };
-      $('.tier', d).append(...more.map((x) => inputEl(r, x, 'more:' + x.f)));
-      out.push(d);
-    }
-
-    return out;
-  }
-
-  function specControls(r) {
-    const sp = r.bind.spec;
-    const kind = L.control(r, sp);
-
-    if (sp.page === 'riskybackup') {
-      const sw = h(`<button class="sw${state.riskyBackup ? ' on' : ''}" aria-label="${esc(r.l)}"></button>`);
-
-      sw.onclick = () => { state.riskyBackup = !state.riskyBackup; log(`${r.l}: ${onOff(state.riskyBackup)}`, 'mod'); sw.classList.toggle('on', state.riskyBackup); };
-
-      return [sw];
-    }
-    if (kind === 'tog') return controlFor(r);
-
-    const parts = [];
     const key = rowSettingKey(r);
     const x = key && setting(key);
 
-    if (kind === 'sel') {
-      if (x && ui(r).main === undefined) { const o = sp.opts.find((e) => e[1] === x.get()); if (o) ui(r).main = entry(o); }
-      parts.push(pickerEl(r, 'main', sp));
-    } else if (kind === 'num' || kind === 'text') {
-      parts.push(boxEl(r, 'main', x ? x.get() : sp.v !== undefined ? sp.v : r.v, kind === 'text'));
-      if (r.u) parts.push(h(`<span class="unit">${esc(r.u)}</span>`));
-    }
+    if (x && ui(r).main === undefined && Array.isArray(sp.opts)) { const o = sp.opts.find((e) => e[1] === x.get()); if (o) ui(r).main = entry(o); }
+  }
 
-    const btn = h(`<button class="btn${r.red || sp.risky ? ' red' : ''}">${esc(sp.readout ? 'Show' : r.b || 'Run')}</button>`);
+  // The row's own control: a list or a box. Its value is painted in when the page is shown.
+  function mainHtml(r, kind) {
+    const sp = r.bind.spec;
 
-    btn.onclick = () => runSpec(r);
-    parts.push(btn);
+    if (kind === 'sel') { seedMain(r); return pickerHtml('main', sp); }
+    if (kind === 'num' || kind === 'text') return `<input class="num${kind === 'text' ? ' wide' : ''}" data-slot="main">${r.u ? `<span class="unit">${esc(r.u)}</span>` : ''}`;
 
-    return parts;
+    return '';
+  }
+
+  const runBtn = (r) => { const sp = r.bind.spec; return `<button class="btn${r.red || sp.risky ? ' red' : ''}" data-do="spec">${esc(sp.readout ? 'Show' : r.b || 'Run')}</button>`; };
+
+  // A stacked row's controls: the row's own field and its inputs side by side under its name, wrapping when they do
+  // not fit, then the button; the message's other fields fold away under "More fields".
+  function tierHtml(r) {
+    const sp = r.bind.spec;
+    const kind = ctlOf(r);
+    const ins = (sp.in || []).map((x) => inputHtml(x, 'in:' + x.f));
+    const main = kind === 'sel' ? fieldHtml(sp.ml || '', pickerHtml('main', sp), isCombo(sp)) : kind === 'num' || kind === 'text' ? fieldHtml(sp.ml || '', mainHtml(r, kind), kind === 'text') : '';
+    const more = moreFields(sp);
+
+    if (main) ins.splice(Math.min(sp.mainAt || 0, ins.length), 0, main);
+
+    return `<div class="tier">${ins.join('')}<div class="tgo">${kind === 'tog' ? controlHtml(r) : runBtn(r)}</div></div>${more.length ? `<details class="more"${ui(r).more ? ' open' : ''}><summary>More fields (${more.length})</summary><div class="tier">${more.map((x) => inputHtml(x, 'more:' + x.f)).join('')}</div></details>` : ''}`;
+  }
+
+  function specControlsHtml(r) {
+    const sp = r.bind.spec;
+    const kind = ctlOf(r);
+
+    if (sp.page === 'riskybackup') return `<button class="sw" data-do="risky" aria-label="${esc(r.l)}"></button>`;
+    if (kind === 'tog') return controlHtml(r);
+
+    return mainHtml(r, kind) + runBtn(r);
   }
 
   // The value of a row's own control.
   function mainValue(r) {
     const sp = r.bind.spec;
-    const kind = L.control(r, sp);
+    const kind = ctlOf(r);
 
     if (kind === 'sel') return picked(r, 'main', sp);
     if (kind === 'num' || kind === 'text') {
@@ -1227,7 +1440,7 @@
 
   function runSpec(r) {
     const sp = r.bind.spec;
-    const kind = L.control(r, sp);
+    const kind = ctlOf(r);
     const main = mainValue(r);
     const inputs = specInputs(r);
     const what = runText(r, main, kind);
@@ -1274,73 +1487,144 @@
     guarded(() => { log(`${r.l}: ${what}`); once(r, what); m.msgs.forEach((msg) => post(msg, r.l)); }, isRisky);
   }
 
-  function controlFor(r) {
-    const b = r.bind;
-    const key = rowSettingKey(r);
-
+  // A row from tabs.js: a switch, a box or a list with a button, or a button.
+  function controlHtml(r) {
     if (r.k === 'tog') {
-      const x = key && setting(key);
-      const on = x ? x.get() : false;
-      const sw = h(`<button class="sw${on ? ' on' : ''}" aria-label="${esc(r.l)}"${key ? ` data-set="${esc(key)}"` : ''}></button>`);
+      const key = rowSettingKey(r);
 
-      sw.onclick = () => {
-        if (!x) return;
-
-        const was = x.get();
-
-        cheat(() => {
-          x.set(!was);
-          log(`${r.l}: ${!was ? 'on' : 'off'}`);
-          journal(x, x.show(was), x.show(!was), () => x.set(was), x.key);
-          repaint();
-        });
-      };
-
-      return [sw];
+      return `<button class="sw" data-do="tog" aria-label="${esc(r.l)}"${key ? ` data-set="${esc(key)}"` : ''}></button>`;
     }
 
-    const btn = h(`<button class="btn${r.red ? ' red' : ''}">${esc(r.b)}</button>`);
-    const fire = (value, shownValue) => {
-      if (b.kind !== 'cmd') return;
+    const fire = `<button class="btn${r.red ? ' red' : ''}" data-do="fire">${esc(r.b)}</button>`;
 
-      const m = L.rowMessage(b, value);
+    if (r.k === 'num') return `<input class="num" value="${esc(r.v)}">${r.u ? `<span class="unit">${esc(r.u)}</span>` : ''}${fire}`;
+    if (r.k === 'sel') return `<span class="dropw"><button class="drop" data-slot="cur"><span class="dl" data-nolang></span>${CARET}</button></span>${fire}`;
 
-      if (m.error) return log(`${r.l}: ${m.error}`, 'err');
+    return fire;
+  }
 
-      guarded(() => {
-        log(`${r.l}: ${shownValue}`);
-        once(r, shownValue);
-        post(m.msg, r.l);
-      }, !!r.red);
-    };
+  function togRow(r) {
+    const key = rowSettingKey(r);
+    const x = key && setting(key);
 
-    if (r.k === 'num') {
-      const n = h(`<input class="num" value="${esc(r.v)}">`);
-      const parts = [n];
+    if (!x) return;
 
-      if (r.u) parts.push(h(`<span class="unit">${esc(r.u)}</span>`));
-      btn.onclick = () => fire(n.value, n.value + (r.u ? ' ' + r.u : ''));
+    const was = x.get();
 
-      return [...parts, btn];
+    cheat(() => {
+      x.set(!was);
+      log(`${r.l}: ${!was ? 'on' : 'off'}`);
+      journal(x, x.show(was), x.show(!was), () => x.set(was), x.key);
+      repaint();
+    });
+  }
+
+  function fireRow(r, btn) {
+    const b = r.bind;
+
+    if (b.kind !== 'cmd') return;
+
+    let value = null;
+    let shownValue = 'done';
+
+    if (r.k === 'num') { const n = $('.num', btn.parentNode); value = n.value; shownValue = n.value + (r.u ? ' ' + r.u : ''); }
+    else if (r.k === 'sel') { value = r.cur; shownValue = r.cur; }
+
+    const m = L.rowMessage(b, value);
+
+    if (m.error) return log(`${r.l}: ${m.error}`, 'err');
+
+    guarded(() => {
+      log(`${r.l}: ${shownValue}`);
+      once(r, shownValue);
+      post(m.msg, r.l);
+    }, !!r.red);
+  }
+
+  // Every click on a row's controls, by what the control does.
+  function onBodyClick(e) {
+    const t = e.target.closest && e.target.closest('[data-do], .drop');
+
+    if (!t) return;
+    if (t.classList.contains('drop')) return drop && drop.el === t ? closeDrop() : openDrop(t);
+
+    const r = rowOf(t);
+
+    if (!r) return;
+
+    const slot = t.dataset.slot;
+
+    switch (t.dataset.do) {
+      case 'spec': return runSpec(r);
+      case 'fire': return fireRow(r, t);
+      case 'tog': return togRow(r);
+      case 'risky':
+        state.riskyBackup = !state.riskyBackup;
+        log(`${r.l}: ${onOff(state.riskyBackup)}`, 'mod');
+        t.classList.toggle('on', state.riskyBackup);
+        return;
+      case 'sw': {
+        const on = !swOn(r, slot);
+
+        ui(r)[slot] = on;
+        t.classList.toggle('on', on);
+        t.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+      case 'rl':
+        // A list read from the game, or worked out from ones that are, can be read again.
+        srcsOf(slotX(r, slot)).forEach((of) => { delete state.lists[of]; loadList(of); notify(of); });
     }
+  }
 
-    if (r.k === 'sel') {
-      const s = h(`<select class="sel">${r.o.map((o) => `<option${o === r.cur ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`);
+  function onBodyKey(e) {
+    const el = e.target.closest && e.target.closest('.drop');
 
-      btn.onclick = () => { r.cur = s.value; fire(s.value, s.value); };
+    if (!el) return;
 
-      return [s, btn];
+    const open = drop && drop.el === el;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) return openDrop(el);
+      markDrop(drop.at + (e.key === 'ArrowDown' ? 1 : -1));
+    } else if (e.key === 'Enter') {
+      if (open) { e.preventDefault(); chooseDrop(drop.at); }
+    } else if (e.key === 'Escape') {
+      if (open) { e.stopPropagation(); closeDrop(); }
+    } else if (e.key === 'Tab') {
+      closeDrop();
     }
+  }
 
-    btn.onclick = () => fire(null, 'done');
+  // A pick can change what another list on the row offers (a shop's goods, the slots a furniture fits), and what the
+  // row says about it.
+  function onBodyChange(e) {
+    const row = e.target.closest && e.target.closest('.row[data-key]');
 
-    return [btn];
+    if (!row) return;
+
+    peek(() => {
+      $$('.cbin', row).forEach((i) => { if (i !== e.target && i.__combo) i.__combo.paint(); });
+      $$('p.info', row).forEach(paintInfo);
+    });
+  }
+
+  function paintInfo(p) {
+    const r = rowOf(p);
+
+    if (!r) return;
+
+    const sp = r.bind.spec;
+    const text = peek(() => L.detail(sp.info, picked(r, 'main', sp), state.lang)) || '';
+
+    setProp(p, 'textContent', text);
+    setProp(p, 'hidden', !text);
   }
 
   // ---------- custom groups ----------
-  function statGroup() {
-    const lockOn = !!state.flags.LockCharacterAttr;
-    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw${lockOn ? ' on' : ''}" data-set="flag:LockCharacterAttr"></button></div></div></section>`);
+  function statGroup(v) {
+    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw" data-set="flag:LockCharacterAttr"></button></div></div><div class="stbody"></div></section>`);
 
     $('.sw', g).onclick = () => {
       const x = flagSetting('LockCharacterAttr');
@@ -1348,10 +1632,18 @@
 
       cheat(() => { x.set(!was); log(`Stat lock: ${!was ? 'on' : 'off'}`); journal(x, x.show(was), x.show(!was), () => x.set(was), x.key); repaint(); });
     };
-    if (!state.vitals.length) g.append(h(`<div class="wait">${state.inGame ? 'Waiting for the game to send the survivor\'s stats.' : 'Load a save to see and set the stats.'}</div>`));
-    state.vitals.forEach((v) => g.append(statRow(v)));
+    v.stats = $('.stbody', g);
 
     return g;
+  }
+
+  // The stat bars, drawn again each time the tab is shown.
+  function paintStats(v) {
+    const body = v.stats;
+
+    body.innerHTML = '';
+    if (!state.vitals.length) body.append(h(`<div class="wait">${state.inGame ? 'Waiting for the game to send the survivor\'s stats.' : 'Load a save to see and set the stats.'}</div>`));
+    state.vitals.forEach((x) => body.append(statRow(x)));
   }
 
   function statRow(v) {
@@ -1385,8 +1677,7 @@
   }
 
   function weatherGroup() {
-    const g = h(`<section class="group"><h2>Weather<em>${GAME.weather.length}</em></h2><div class="row"><div class="lab"><b>Back to the forecast</b>${CHIP.G}<p>Hands the weather back to the game's tables (ResetWeather).</p></div><div class="ctl"><button class="btn ghost">Reset</button></div></div><div class="tiles"></div></section>`);
-    const tiles = $('.tiles', g);
+    const g = h(`<section class="group"><h2>Weather<em>${GAME.weather.length}</em></h2><div class="row"><div class="lab"><b>Back to the forecast</b>${CHIP.G}<p>Hands the weather back to the game's tables (ResetWeather).</p></div><div class="ctl"><button class="btn ghost">Reset</button></div></div><div class="tiles">${GAME.weather.map((w, i) => `<button class="tile" data-w="${w.id}" data-i="${i}"><img src="${w.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(w))}</span></button>`).join('')}</div></section>`);
     const setW = (id) => {
       const was = weatherSetting.get();
 
@@ -1399,30 +1690,27 @@
     };
 
     $('.btn', g).onclick = () => setW(null);
-    GAME.weather.forEach((w) => {
-      const t = h(`<button class="tile${state.weather === w.id ? ' on' : ''}" data-w="${w.id}"><img src="${w.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(w))}</span></button>`);
-
-      t.onclick = () => setW(w.id);
-      tiles.append(t);
-    });
+    $('.tiles', g).onclick = (e) => { const t = e.target.closest && e.target.closest('.tile'); if (t) setW(GAME.weather[+t.dataset.i].id); };
 
     return g;
   }
 
   function mapGroup() {
-    const g = h(`<section class="group"><h2>Go there now<em>${GAME.maps.length}</em></h2><div class="gnote" style="color:var(--steel-3)">Skips the map, the day and time rules, and the trip (BypassEnterExplore).</div><div class="tiles maps"></div></section>`);
-    const tiles = $('.tiles', g);
+    const g = h(`<section class="group"><h2>Go there now<em>${GAME.maps.length}</em></h2><div class="gnote" style="color:var(--steel-3)">Skips the map, the day and time rules, and the trip (BypassEnterExplore).</div><div class="tiles maps">${GAME.maps.map((m, i) => `<button class="tile" data-i="${i}">${m.i ? `<img src="${m.i}" alt="" loading="lazy" decoding="async">` : ''}<span>${esc(nameOf(m))}</span><small>${m.id}</small></button>`).join('')}</div></section>`);
 
-    GAME.maps.forEach((m) => {
-      const t = h(`<button class="tile">${m.i ? `<img src="${m.i}" alt="">` : ''}<span>${esc(nameOf(m))}</span><small>${m.id}</small></button>`);
+    $('.tiles', g).onclick = (e) => {
+      const t = e.target.closest && e.target.closest('.tile');
 
-      t.onclick = () => cheat(() => {
+      if (!t) return;
+
+      const m = GAME.maps[+t.dataset.i];
+
+      cheat(() => {
         log(`Enter explore: ${m.n} (map point ${m.id})`);
         once({ l: 'Go there now', s: 'G', tab: 'explore', ref: ['BypassEnterExplore'] }, m.n);
         post({ msgHead: S.BypassEnterExplore.id, MapPointId: m.id }, 'Go there now');
       });
-      tiles.append(t);
-    });
+    };
 
     return g;
   }
@@ -1451,32 +1739,47 @@
   // ---------- items ----------
   function itemSpawner() {
     const cats = [...new Set(GAME.items.map((i) => i.c))].filter((c) => ITEM_CATS[c]);
-    const wrap = h(`<div class="spawner"><div><div class="chips"></div><label class="search" style="margin:0 0 12px;max-width:none"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="iq" placeholder="Search items by name, Chinese name or id"></label><div class="igrid"></div></div><div class="detail"></div></div>`);
+    const wrap = h(`<div class="spawner"><div><div class="chips">${cats.map((c) => `<button class="chip${c === state.cat ? ' on' : ''}" data-c="${c}">${ITEM_CATS[c]}</button>`).join('')}</div><label class="search" style="margin:0 0 12px;max-width:none"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="iq" placeholder="Search items by name, Chinese name or id"></label><div class="igrid"></div></div><div class="detail"></div></div>`);
     const chips = $('.chips', wrap);
     const grid = $('.igrid', wrap);
     const iq = $('#iq', wrap);
+    let list = [];
+    let timer = null;
     const paintGrid = () => {
       const q = iq.value.trim().toLowerCase();
-      const list = GAME.items.filter((i) => q ? (i.n.toLowerCase().includes(q) || i.zh.includes(q) || String(i.id) === q) : i.c === state.cat);
 
-      grid.innerHTML = '';
-      list.forEach((it) => {
-        const c = h(`<button class="cell${state.item === it ? ' on' : ''}" title="${esc(nameOf(it))} - ${it.id}"><img src="${it.i}" alt="" loading="lazy"><span>${esc(nameOf(it))}</span></button>`);
-
-        c.onclick = () => { state.item = it; paintGrid(); paintDetail(wrap); };
-        grid.append(c);
-      });
-      if (!list.length) grid.append(h(`<div class="empty">No pictured item matches.${/^\d+$/.test(q) ? ` Id ${esc(q)} can still be spawned: it is in the box on the right.` : ''}</div>`));
-      if (/^\d+$/.test(q) && !list.length) { state.item = { id: +q, n: 'Item ' + q, zh: '', st: '?', c: 0, i: '' }; paintDetail(wrap); }
+      list = GAME.items.filter((i) => q ? (i.n.toLowerCase().includes(q) || i.zh.includes(q) || String(i.id) === q) : i.c === state.cat);
+      if (list.length) {
+        grid.innerHTML = list.map((it, i) => `<button class="cell${state.item === it ? ' on' : ''}" data-i="${i}" title="${esc(nameOf(it))} - ${it.id}"><img src="${it.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(it))}</span></button>`).join('');
+        return;
+      }
+      grid.innerHTML = `<div class="empty">No pictured item matches.${/^\d+$/.test(q) ? ` Id ${esc(q)} can still be spawned: it is in the box on the right.` : ''}</div>`;
+      localize(grid);
+      if (/^\d+$/.test(q)) { state.item = { id: +q, n: 'Item ' + q, zh: '', st: '?', c: 0, i: '' }; paintDetail(wrap); }
     };
 
-    cats.forEach((c) => {
-      const b = h(`<button class="chip${c === state.cat ? ' on' : ''}">${ITEM_CATS[c]}</button>`);
+    chips.onclick = (e) => {
+      const b = e.target.closest && e.target.closest('.chip');
 
-      b.onclick = () => { state.cat = c; iq.value = ''; $$('.chip', chips).forEach((x) => x.classList.remove('on')); b.classList.add('on'); paintGrid(); };
-      chips.append(b);
-    });
-    iq.oninput = paintGrid;
+      if (!b) return;
+      state.cat = +b.dataset.c;
+      iq.value = '';
+      $$('.chip', chips).forEach((x) => x.classList.toggle('on', x === b));
+      paintGrid();
+    };
+    grid.onclick = (e) => {
+      const c = e.target.closest && e.target.closest('.cell');
+
+      if (!c) return;
+
+      const was = $('.cell.on', grid);
+
+      if (was) was.classList.remove('on');
+      c.classList.add('on');
+      state.item = list[+c.dataset.i];
+      paintDetail(wrap);
+    };
+    iq.oninput = () => { clearTimeout(timer); timer = setTimeout(paintGrid, 100); };
     state.item = state.item || GAME.items.find((i) => i.c === state.cat);
     paintGrid();
     paintDetail(wrap);
@@ -1614,58 +1917,65 @@
     };
     body.append(pg);
 
-    const jg = h('<section class="group journal"><h2>Journal<em>every change, newest first</em></h2></section>');
-
-    if (!state.journal.length) jg.append(h('<div class="empty">No changes yet. Everything you do in the menu shows up here, with what it was before.</div>'));
-    state.journal.forEach((j) => {
+    // The journal is one string; its Undo buttons are handled by the group and find their entry by number.
+    const rows = state.journal.slice();
+    const jrow = (j, i) => {
       const act = j.undone ? '<span class="st">undone</span>'
-        : j.key ? (latest(j) ? '<button class="btn ghost">Undo</button>' : '<span class="st">replaced later</span>')
-          : j.undo ? '<button class="btn ghost">Undo</button>' : '<span class="st" title="Load the before-cheating backup to undo this">one-time</span>';
-      const el = h(`<div class="jrow${j.undone ? ' gone' : ''}${j.s === 'M' ? ' added' : ''}"><span class="jn">${j.n}</span><time>${j.t}</time><span class="jw">${esc(tabName(j.tab))} > <b>${esc(j.l)}</b>${CHIP[j.s] || ''}${j.why ? `<small>${esc(j.why)}</small>` : ''}</span><span class="jv">${j.before === null ? '' : `<s>${esc(j.before)}</s> -> `}<b>${esc(j.after)}</b></span><span class="ja">${act}</span></div>`);
-      const b = $('.ja .btn', el);
+        : j.key ? (latest(j) ? `<button class="btn ghost" data-j="${i}">Undo</button>` : '<span class="st">replaced later</span>')
+          : j.undo ? `<button class="btn ghost" data-j="${i}">Undo</button>` : '<span class="st" title="Load the before-cheating backup to undo this">one-time</span>';
 
-      if (b) b.onclick = () => undo(j);
-      jg.append(el);
-    });
+      return `<div class="jrow${j.undone ? ' gone' : ''}${j.s === 'M' ? ' added' : ''}"><span class="jn">${j.n}</span><time>${j.t}</time><span class="jw">${esc(tabName(j.tab))} > <b>${esc(j.l)}</b>${CHIP[j.s] || ''}${j.why ? `<small>${esc(j.why)}</small>` : ''}</span><span class="jv">${j.before === null ? '' : `<s>${esc(j.before)}</s> -> `}<b>${esc(j.after)}</b></span><span class="ja">${act}</span></div>`;
+    };
+    const jg = build(`<section class="group journal"><h2>Journal<em>every change, newest first</em></h2>${rows.length ? rows.map(jrow).join('') : '<div class="empty">No changes yet. Everything you do in the menu shows up here, with what it was before.</div>'}</section>`).firstChild;
+
+    jg.onclick = (e) => { const b = e.target.closest && e.target.closest('[data-j]'); if (b) undo(rows[+b.dataset.j]); };
     body.append(jg);
   }
 
   // ---------- game index ----------
   // Other mods' test cheats (each mod's DevCheats class), read from the plugin every time the tab opens.
   function modTestsPage(body) {
-    const draw = (mods, error) => {
-      if (state.tab !== 'modtests' || $('#q').value.trim()) return;
+    let mods = [];
+    const draw = (list, error) => {
+      if (!body.isConnected) return;
 
+      mods = list;
       body.innerHTML = '';
       if (error) return body.append(h(`<section class="group"><div class="gnote">${esc(error)}</div></section>`));
       if (!mods.length) return body.append(h('<section class="group"><h2>No test cheats</h2><div class="gnote">None of the loaded mods adds test cheats.</div></section>'));
 
       const zh = state.lang === 'zh';
 
-      mods.forEach((m) => {
-        const el = h(`<section class="group"><h2>${esc(m.name)}<em>${m.cheats.length}</em></h2></section>`);
+      body.append(build(mods.map((m, mi) => `<section class="group"><h2>${esc(m.name)}<em>${m.cheats.length}</em></h2>${m.cheats.map((c, ci) => {
+        const label = zh ? c.zh : c.l;
+        const help = zh ? c.dzh : c.d;
 
-        m.cheats.forEach((c) => {
-          const label = zh ? c.zh : c.l;
-          const help = zh ? c.dzh : c.d;
-          const row = h(`<div class="row added"><div class="lab"><b>${esc(label)}</b>${CHIP.M}${help ? `<p>${esc(help)}</p>` : ''}</div><div class="ctl"><button class="btn">Run</button></div></div>`);
-          const x = { l: `${m.name}: ${c.l}`, s: 'M', tab: 'modtests', ref: [] };
-
-          $('button', row).onclick = () => cheat(() => {
-            once(x, 'ran');
-            act('modtest', { mod: m.mod, cheat: c.id }, label, (text, err) => err ? log(`${label}: ${err}`, 'err') : log(`${label}: ${text || 'done'}`, 'mod'));
-          });
-          el.append(row);
-        });
-        body.append(el);
-      });
+        return `<div class="row added"><div class="lab"><b>${esc(label)}</b>${CHIP.M}${help ? `<p>${esc(help)}</p>` : ''}</div><div class="ctl"><button class="btn" data-m="${mi}" data-c="${ci}">Run</button></div></div>`;
+      }).join('')}</section>`).join('')));
     };
 
+    body.onclick = (e) => {
+      const b = e.target.closest && e.target.closest('button[data-m]');
+
+      if (!b) return;
+
+      const m = mods[+b.dataset.m];
+      const c = m.cheats[+b.dataset.c];
+      const label = state.lang === 'zh' ? c.zh : c.l;
+
+      cheat(() => {
+        once({ l: `${m.name}: ${c.l}`, s: 'M', tab: 'modtests', ref: [] }, 'ran');
+        act('modtest', { mod: m.mod, cheat: c.id }, label, (text, err) => err ? log(`${label}: ${err}`, 'err') : log(`${label}: ${text || 'done'}`, 'mod'));
+      });
+    };
     body.append(h('<section class="group"><div class="gnote">Reading the loaded mods...</div></section>'));
     act('modtests', {}, 'Mod tests', (text, error) => {
       if (error) return draw([], error);
 
-      try { draw(JSON.parse(text || '[]')); } catch (e) { draw([], 'The test cheat list could not be read.'); }
+      let list;
+
+      try { list = JSON.parse(text || '[]'); } catch (e) { return draw([], 'The test cheat list could not be read.'); }
+      draw(list);
     });
   }
 
@@ -1679,56 +1989,83 @@
     });
 
     const box = h(`<div><div class="ibar"><label class="search" style="margin:0;max-width:none;flex:1"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="ixq" placeholder="Filter by game name, e.g. Weather, PsOp, Codex"></label><span class="cov">Every panel command can be run from here: click run</span></div><div class="ilist"></div></div>`);
+    const out = $('.ilist', box);
+    const ixq = $('#ixq', box);
+    let timer = null;
     const paint = () => {
-      const q = $('#ixq', box).value.trim().toLowerCase();
-      const out = $('.ilist', box);
+      const q = ixq.value.trim().toLowerCase();
+      let html = '';
 
-      out.innerHTML = '';
       Object.keys(KIND).forEach((kind) => {
         const list = CATALOG.filter((c) => c.kind === kind && (!q || (c.key + ' ' + c.src).toLowerCase().includes(q)));
 
         if (!list.length) return;
 
-        const g = h(`<section class="group"><h2>${KIND[kind]}s<em>${list.length}</em></h2></section>`);
-
-        list.forEach((c) => {
+        html += `<section class="group"><h2>${KIND[kind]}s<em>${list.length}</em></h2>${list.map((c) => {
           const w = where.get(c.key) || [];
-          const el = h(`<div class="irow"><code>${esc(c.key)}</code><span class="isrc">${esc(c.src)}${c.via ? ' - via ' + esc(c.via) : ''}${kind === 'cmd' && S[c.key] ? '<a class="run">run</a>' : ''}</span><span class="iw">${w.length ? w.map((x, i) => `<a data-i="${i}">${esc(x.tab.name)} > ${esc(x.l)}</a>`).join('') : '<em>not in the menu</em>'}</span></div>`);
 
-          $$('a[data-i]', el).forEach((a) => { a.onclick = () => jumpTo(w[+a.dataset.i]); });
-
-          const run = $('.run', el);
-
-          if (run) run.onclick = () => { const next = el.nextSibling; if (next && next.classList && next.classList.contains('gmform')) next.remove(); else el.after(formEl(c.key, null)); };
-          g.append(el);
-        });
-        out.append(g);
+          return `<div class="irow" data-key="${esc(c.key)}"><code>${esc(c.key)}</code><span class="isrc">${esc(c.src)}${c.via ? ' - via ' + esc(c.via) : ''}${kind === 'cmd' && S[c.key] ? '<a class="run">run</a>' : ''}</span><span class="iw">${w.length ? w.map((x, i) => `<a data-i="${i}">${esc(x.tab.name)} > ${esc(x.l)}</a>`).join('') : '<em>not in the menu</em>'}</span></div>`;
+        }).join('')}</section>`;
       });
+      out.innerHTML = html;
+      if (state.lang === 'zh' || HAN.test(html)) localize(out);
     };
 
-    $('#ixq', box).oninput = paint;
+    out.onclick = (e) => {
+      const a = e.target.closest && e.target.closest('a');
+      const row = a && a.closest('.irow');
+
+      if (!row) return;
+
+      const key = row.dataset.key;
+
+      if (a.classList.contains('run')) {
+        const next = row.nextSibling;
+
+        if (next && next.classList && next.classList.contains('gmform')) next.remove(); else row.after(formEl(key, null));
+      } else if (a.dataset.i !== undefined) jumpTo((where.get(key) || [])[+a.dataset.i]);
+    };
+    ixq.oninput = () => { clearTimeout(timer); timer = setTimeout(paint, 100); };
     body.append(box);
     paint();
   }
 
   function jumpTo(x) {
+    if (!x) return;
     state.filter = 'all';
     openTab(x.tab.id);
 
-    const el = x.r && root.querySelector(`.row[data-key="${CSS.escape(x.r.key)}"]`);
+    const el = x.r && showing && $$('.row[data-key]', showing.el).find((e) => e.dataset.key === x.r.key);
 
-    if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('hit'); setTimeout(() => el.classList.remove('hit'), 1600); }
+    if (!el) return;
+
+    el.scrollIntoView({ block: 'center' });
+    el.classList.add('hit');
+    // The groups below it may only now be laid out, which can move it.
+    setTimeout(() => el.scrollIntoView({ block: 'center' }), 50);
+    setTimeout(() => el.classList.remove('hit'), 1600);
   }
 
   // ---------- live column ----------
+  let statusWas = '';
+  let vitalsWas = '';
+
   function renderStatus() {
-    $('#keyname').textContent = state.key || tr('Close');
-    $('#status').innerHTML = `${state.inGame ? '<b>In a save</b>: cheats go to the game.' : '<span class="bad">No save loaded</span>: load one to use cheats.'}<br>${state.key ? `<b>${esc(state.key)}</b> opens and closes this menu.` : 'No key set; see the config.'}<br>Backup: ${state.backedUp ? esc(state.backedUp) : backup.step === 'failed' ? '<span class="bad">failed</span>' : 'made at your first cheat'}`;
+    const html = `${state.inGame ? '<b>In a save</b>: cheats go to the game.' : '<span class="bad">No save loaded</span>: load one to use cheats.'}<br>${state.key ? `<b>${esc(state.key)}</b> opens and closes this menu.` : 'No key set; see the config.'}<br>Backup: ${state.backedUp ? esc(state.backedUp) : backup.step === 'failed' ? '<span class="bad">failed</span>' : 'made at your first cheat'}`;
+
+    setProp($('#keyname'), 'textContent', state.key || tr('Close'));
+    if (statusWas === state.lang + html) return;
+    statusWas = state.lang + html;
+    $('#status').innerHTML = html;
     localize($('#status'));
   }
 
   function renderVitals() {
-    $('#vitals').innerHTML = state.vitals.map((v) => { const max = v.max || Math.max(100, v.v); return `<div class="vit${state.flags.LockCharacterAttr ? ' locked' : ''}"><span>${v.k}</span><div class="bar" style="--col:${COLORS[v.k] || '#ccc'}"><i style="width:${Math.min(100, v.v / max * 100)}%"></i></div><span class="v">${Math.round(v.v)}/${Math.round(max)}</span></div>`; }).join('');
+    const html = state.vitals.map((v) => { const max = v.max || Math.max(100, v.v); return `<div class="vit${state.flags.LockCharacterAttr ? ' locked' : ''}"><span>${v.k}</span><div class="bar" style="--col:${COLORS[v.k] || '#ccc'}"><i style="width:${Math.min(100, v.v / max * 100)}%"></i></div><span class="v">${Math.round(v.v)}/${Math.round(max)}</span></div>`; }).join('');
+
+    if (vitalsWas === state.lang + html) return;
+    vitalsWas = state.lang + html;
+    $('#vitals').innerHTML = html;
     if (state.lang === 'zh') localize($('#vitals'));
   }
 
@@ -1742,13 +2079,13 @@
     return r.__hay.text;
   }
 
+  // The results are a page of their own, made for each search and dropped when another page is shown.
   function search(q) {
     if (!q) return openTab(state.tab);
 
     const needle = q.toLowerCase();
     const hits = [];
 
-    watchers = {};
     TABS.forEach((tab) => tab.groups.forEach((g) => g.rows.forEach((r) => {
       if (hayOf(r, g).includes(needle)) hits.push({ tab, g, r });
     })));
@@ -1756,21 +2093,18 @@
     $('#tabhead').innerHTML = `<h1>Search</h1><p>Every tab, every tool. Run it from here or jump to its tab.</p><div class="counts"><span><b>${hits.length}</b> found</span></div>`;
     localize($('#tabhead'));
 
+    const el = document.createElement('div');
+    const v = { el, search: true };
     const body = $('#body');
 
-    body.innerHTML = '';
+    el.className = 'view';
     body.classList.add('flat');
-    if (!hits.length) return body.append(h('<div class="empty">Nothing matches. Try a Chinese word, or a game command in the Game index.</div>'));
-
-    const box = h('<section class="group results"><h2>Results</h2></section>');
-
-    hits.filter(({ r }) => shown(r)).slice(0, 60).forEach(({ tab, g, r }) => {
-      const row = rowEl(r);
-
-      $('.lab', row).append(h(`<p class="where">${tab.name} > ${g.t}</p>`));
-      box.append(row);
-    });
-    body.append(box);
+    if (!hits.length) el.append(h('<div class="empty">Nothing matches. Try a Chinese word, or a game command in the Game index.</div>'));
+    else el.append(hydrate(build(`<section class="group results"><h2>Results</h2>${hits.filter(({ r }) => shown(r)).slice(0, 60).map(({ tab, g, r }) => rowHtml(r, `<p class="where">${tab.name} > ${g.t}</p>`)).join('')}</section>`)));
+    body.append(el);
+    showView(v);
+    syncView(el);
+    body.scrollTop = 0;
   }
 
   // ---------- console ----------
@@ -1871,6 +2205,35 @@
     host.addEventListener('focusin', (e) => { if (isTextBox(e.composedPath()[0])) send('focus|1'); });
     host.addEventListener('focusout', (e) => { if (isTextBox(e.composedPath()[0])) send('focus|0'); });
     $('#clearlog').onclick = () => { $('#log').innerHTML = ''; };
+    // The rail, the filter and every row's controls are handled here, once, for whatever page is showing.
+    const body = $('#body');
+
+    $('#rail').addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.tab[data-tab]'); if (b) openTab(b.dataset.tab); });
+    $('#tabhead').addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button[data-f]'); if (b) setFilter(b.dataset.f); });
+    body.addEventListener('click', onBodyClick);
+    body.addEventListener('keydown', onBodyKey);
+    body.addEventListener('change', onBodyChange);
+    body.addEventListener('input', (e) => {
+      const n = e.target;
+
+      if (!n.matches || !n.matches('.num[data-slot]')) return;
+
+      const r = rowOf(n);
+
+      if (r) ui(r)[n.dataset.slot] = n.value;
+    });
+    // The toggle of a details element does not bubble, so it is caught on the way down.
+    body.addEventListener('toggle', (e) => {
+      const d = e.target;
+
+      if (!d.matches || !d.matches('details.more')) return;
+
+      const r = rowOf(d);
+
+      if (r) ui(r).more = d.open;
+    }, true);
+    // A click anywhere but on the open dropdown closes it.
+    root.addEventListener('mousedown', (e) => { if (drop && !drop.el.parentNode.contains(e.target)) closeDrop(); }, true);
     $('#close').onclick = () => send('close');
     $('#lang').onclick = () => setLang(state.lang === 'zh' ? 'en' : 'zh');
   }
@@ -1892,6 +2255,7 @@
     try { window.localStorage.setItem(LANG_KEY, JSON.stringify({ game: state.gameLang, lang })); } catch (e) { /* no storage: the switch lasts this session */ }
     $$('#lang b').forEach((b) => b.classList.toggle('on', b.dataset.l === lang));
     $('#rail').innerHTML = '';
+    dropViews();
     localize(root);
     if (state.open) { refresh(); renderVitals(); }
   }
@@ -1920,7 +2284,7 @@
   window.__slcheatmenu = {
     // st: { inGame, chinese, key, flags, holds, presets }
     open(st) {
-      if (state.inGame !== !!st.inGame) { state.lists = {}; state.saveFile = null; Object.keys(listReq).forEach((k) => { listReq[k] = false; }); }
+      if (state.inGame !== !!st.inGame) { state.lists = {}; state.saveFile = null; Object.keys(listReq).forEach((k) => { listReq[k] = false; }); dropViews(); }
       state.inGame = !!st.inGame;
       state.key = st.key || '';
       state.flags = st.flags || {};
@@ -1929,7 +2293,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.2.10. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu 0.2.11. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       const game = st.chinese ? 'zh' : 'en';
 
@@ -1941,6 +2305,7 @@
       renderVitals();
     },
     close() {
+      closeDrop();
       state.open = false;
       host.style.display = 'none';
     },
@@ -2019,7 +2384,8 @@
 
           state.vitals = v;
           renderVitals();
-          if (!was && state.tab === 'survivor') refresh();
+          // The stat bars come in after the tab may already be showing.
+          if (!was && showing && showing.stats) { paintStats(showing); showing.f = null; applyFilter(showing); }
 
           return;
         }

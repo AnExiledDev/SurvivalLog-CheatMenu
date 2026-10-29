@@ -295,4 +295,4 @@ kbd { font: 11px var(--mono); color: var(--steel-3); border: 1px solid var(--lin
 .irow .iw em { color: var(--rust); }
 
 #rail, #main, #live, #body, #log { contain: layout paint; }
-.group { contain: layout paint; }
+.group { contain: layout paint; content-visibility: auto; contain-intrinsic-size: 300px; contain-intrinsic-size: auto 300px; }
