@@ -2162,6 +2162,7 @@
   // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
   // waits in a list the Toolkit reads; without the Toolkit nothing happens.
   function uiSize(node, options) {
+    options = Object.assign({ mod: 'CheatMenu' }, options);
     const toolkit = window.ExiledUi;
 
     if (toolkit) {

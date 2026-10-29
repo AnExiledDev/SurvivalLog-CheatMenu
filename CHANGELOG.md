@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- New: `UiScale` under Interface sets the size of Cheat Menu's own windows on their own, from 75% to 200%, whatever Exiled's Toolkit's UI size is. At 0, the default, they follow the Toolkit's. Needs Exiled's Toolkit 0.11.0 or newer.
+- Made for Survival Log 1.1.19611.
+
 ## 0.2.11
 
 - The menu is much faster. A tab you have opened before shows at once, the All, Game's own and Added by mod buttons no longer redraw the tab, and long tabs only draw the part you can see.

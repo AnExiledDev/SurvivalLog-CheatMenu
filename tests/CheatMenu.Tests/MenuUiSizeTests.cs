@@ -19,6 +19,7 @@ public class MenuUiSizeTests
         var page = new Page();
 
         Assert.Equal(1, page.Number("handed.length"));
+        Assert.Equal(1, page.Number("handed.filter(function (h) { return h.options.mod === 'CheatMenu'; }).length"));
         Assert.True(page.Bool("handed[0].el === menuRoot().querySelector('#cm')"));
         Assert.True(page.Bool("!handed[0].options || handed[0].options.fit !== false"));
     }

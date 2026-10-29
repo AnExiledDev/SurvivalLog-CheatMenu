@@ -12,11 +12,13 @@ namespace CheatMenu;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.cheatmenu";
-    private const string Version = "0.2.11";
+    private const string Version = "0.3.0";
 
     public override void Load()
     {
         if (!OptionalLive.IsToolkitInstalled) Log.LogInfo(OptionalLive.MissingNote);
+
+        OptionalUiSize.Bind(Config);
 
         var panelKey = Config.Bind("Controls", "PanelKey", KeyCode.F3,
             "Key that opens and closes the Cheat Menu, F3 by default. None turns the key off.\n" +
