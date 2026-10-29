@@ -8,16 +8,14 @@ using UnityEngine;
 namespace CheatMenu;
 
 [BepInPlugin(Guid, "Cheat Menu", Version)]
-[BepInDependency(OptionalLive.ToolkitGuid, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(OptionalLive.ToolkitGuid, OptionalLive.ToolkitVersion)]
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.cheatmenu";
-    private const string Version = "0.3.0";
+    private const string Version = "0.3.1";
 
     public override void Load()
     {
-        if (!OptionalLive.IsToolkitInstalled) Log.LogInfo(OptionalLive.MissingNote);
-
         OptionalUiSize.Bind(Config);
 
         var panelKey = Config.Bind("Controls", "PanelKey", KeyCode.F3,

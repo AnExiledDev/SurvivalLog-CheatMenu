@@ -55,12 +55,13 @@ Works in English and Chinese. The menu starts in the game's language; the EN / �
 [list]
 [*]Survival Log 1.1.19611. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]. Install it first.[/*]
-[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 or newer. With it, a new menu key set on the Mod Manager's Mods screen works without restarting the game. With 0.10.0 or newer, its UI size setting also draws the menu bigger or smaller. With 0.11.0 or newer, Cheat Menu's own UiScale setting can set a size for this mod alone.[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.11.0 or newer. Cheat Menu does not load without it. With it, a new menu key set on the Mod Manager's Mods screen works without restarting the game, and its UI size setting draws the menu bigger or smaller. Cheat Menu's own UiScale setting can set a size for this mod alone.[/*]
 [/list]
 
 [size=5]Installation[/size]
 [list=1]
 [*]Install [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i](if no other mods were installed before, start the game once so BepInEx finishes setup, then quit)[/i].[/*]
+[*]Install Exiled's Toolkit the same way.[/*]
 [*]Download the zip from the Files tab.[/*]
 [*]Extract it into the game folder (the folder with [font=Courier New]SurvivalLog.exe[/font]). When asked, merge the folders. The result should be:
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\CheatMenu.dll[/code][/*]
@@ -134,12 +135,13 @@ F3 可以在配置中修改或停用。菜单打开时游戏自己的快捷键�
 [list]
 [*]《Survival Log》1.1.19611。游戏更新后，在模组更新前可能无法使用。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]。请先安装它。[/*]
-[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 或更新版本。装了它，在 Mod Manager 的「模组」界面设置的新按键不用重启游戏就能生效。0.10.0 或更新版本还能用它的界面大小设置调整菜单的大小。0.11.0 或更新版本还可以用 Cheat Menu 自己的 UiScale 设置单独调整本模组的大小。[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.11.0 或更新版本。没有它本模组不会加载。装了它，在 Mod Manager 的「模组」界面设置的新按键不用重启游戏就能生效，还能用它的界面大小设置调整菜单的大小。还可以用 Cheat Menu 自己的 UiScale 设置单独调整本模组的大小。[/*]
 [/list]
 
 [size=5]安装[/size]
 [list=1]
 [*]安装 [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url]（如果之前没装过其他模组，先启动一次游戏让 BepInEx 完成初始化，然后退出）。[/*]
+[*]用同样的方式安装 Exiled's Toolkit。[/*]
 [*]在「Files」标签页下载压缩包。[/*]
 [*]解压到游戏文件夹（有 [font=Courier New]SurvivalLog.exe[/font] 的文件夹）。提示时选择合并文件夹。结果应为：
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\CheatMenu.dll[/code][/*]

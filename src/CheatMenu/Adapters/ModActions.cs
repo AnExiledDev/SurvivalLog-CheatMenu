@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using BepInEx;
 using BepInEx.Unity.IL2CPP;
@@ -573,25 +572,14 @@ internal sealed class ModActions
             return null;
         }
 
-        if (!OptionalLive.IsToolkitInstalled) return "Exiled's Toolkit is not installed";
-
-        try
-        {
-            ToolkitToast(words, kind);
-        }
-        catch (Exception ex) when (ex is TypeLoadException or MissingMethodException or FileNotFoundException or FileLoadException)
-        {
-            return "this Toolkit has no toasts: " + ex.Message;
-        }
+        if (ToolkitToast(words, kind).IsNone) return "Exiled's Toolkit did not show it";
 
         text = "sent through Exiled's Toolkit";
 
         return null;
     }
 
-    // Kept in its own method so the Toolkit's types are only looked up when it is installed.
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ToolkitToast(string words, string? kind) =>
+    private static ExiledToolkit.ToastId ToolkitToast(string words, string? kind) =>
         ExiledToolkit.Toasts.Show(new ExiledToolkit.ToastRequest("Cheat Menu", words)
         {
             Kind = kind switch

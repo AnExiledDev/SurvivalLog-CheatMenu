@@ -22,7 +22,7 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 - **The game's own switches**: skip cutscenes and the daily summary, lock door and window durability, lock explore exposure, revive on door break, debug overlays and more.
 - **Every game command**: every row has its own lists and number boxes. Anything the game knows by id is a list of names: your pots, furniture, events, buffs, robots and people, this map's shops and what they sell, containers, trade points, home slots, saves and backups. Long lists are searchable as you type, and the reload button reads a list from your game again. Picking a buff, talent or daily plan shows the game's own description of it. The rest of a command's fields are under **More fields**. The **Game index** tab runs any of the game's 167 GM commands with its fields.
 - **Console**: type a command and its fields (`AddItem ItemConfigId=1203 Count=20`), a whole message (`{"msgHead":52,"Scale":4}`), `tab NAME`, `history` or `help`. The up and down arrows bring back what you typed before.
-- **Testing mods**: the Debug tab's Mod testing group shows the id of whatever the cursor is on, a Mod health page (every plugin with its version and the errors it logged this session), Fill every trap, Bring the basket back, and a Test toast (the game's short text, or a toast through Exiled's Toolkit when it is installed).
+- **Testing mods**: the Debug tab's Mod testing group shows the id of whatever the cursor is on, a Mod health page (every plugin with its version and the errors it logged this session), Fill every trap, Bring the basket back, and a Test toast (the game's short text, or a toast through Exiled's Toolkit).
 - **Mod tests**: test buttons other mods add, grouped by mod, to check their features quickly. Loot Restock, for one, adds a button that restocks the location you are in right away. A mod adds them with a static class named `DevCheats`: each public static method that takes nothing and returns a string is one button, labeled by its `DisplayName` and explained by its `Description` (each written as English, a line break, then Chinese). What the method returns goes to the game log.
 - **Changes**: every change you make, newest first, with what it was before. Switches, the mod's cheats that stay on, survivor values and the weather can be undone. **Restore settings** puts every switch back the way it was when you first opened the menu.
 - **Presets**: save the current switches as a named preset and apply it again later. **Default (no cheats)** goes back to the start.
@@ -46,11 +46,11 @@ Each row is marked with where it comes from: **GAME** (the game's own tool), **A
 
 - Survival Log 1.1.19611. A game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12).
-- Optional: [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) 0.4.0 or newer, so a new `PanelKey` set on the Mod Manager's Mods screen works without restarting. With 0.10.0 or newer, its UI size setting also draws the menu bigger or smaller. With 0.11.0 or newer, Cheat Menu's own `UiScale` under Interface sets a size for this mod alone; at 0, the default, it follows the Toolkit's.
+- [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) 0.11.0 or newer. Cheat Menu does not load without it. With it, a new `PanelKey` set on the Mod Manager's Mods screen works without restarting, and its UI size setting draws the menu bigger or smaller. Cheat Menu's own `UiScale` under Interface sets a size for this mod alone; at 0, the default, it follows the Toolkit's.
 
 ## Install
 
-Extract the zip into the game folder (the one with `SurvivalLog.exe`) and merge the folders, so the DLL ends up at `BepInEx\plugins\CheatMenu.dll`.
+Install [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) first. Then extract the zip into the game folder (the one with `SurvivalLog.exe`) and merge the folders, so the DLL ends up at `BepInEx\plugins\CheatMenu.dll`.
 
 ## Uninstall
 
