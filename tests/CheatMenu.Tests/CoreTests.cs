@@ -380,3 +380,23 @@ public class LoopRewardTests
         Assert.True(ModCheats.IsList("talents"));
     }
 }
+
+public class RewardScreenModeTests
+{
+    [Fact]
+    public void Opened_mid_run_by_the_menu_the_next_loop_button_says_close_in_the_games_language()
+    {
+        Assert.Equal("Close", RewardScreenModes.CloseLabel(RewardScreenModes.MidRun, isChinese: false));
+        Assert.Equal("关闭", RewardScreenModes.CloseLabel(RewardScreenModes.MidRun, isChinese: true));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Opened_by_the_game_the_button_keeps_its_own_text_since_it_really_starts_the_next_loop(int gameOpenMode)
+    {
+        Assert.Null(RewardScreenModes.CloseLabel(gameOpenMode, isChinese: false));
+        Assert.Null(RewardScreenModes.CloseLabel(gameOpenMode, isChinese: true));
+    }
+}

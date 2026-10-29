@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Fixed: after closing the loop reward screen opened mid-run, the game stayed paused.
+- The loop reward screen opened mid-run now labels its start-the-next-loop button Close. That button only ever closed the screen there; now it says so.
+- Made for Survival Log 1.1.20151.
+
 ## 0.3.1
 
 - Exiled's Toolkit 0.11.0 or newer is now required.

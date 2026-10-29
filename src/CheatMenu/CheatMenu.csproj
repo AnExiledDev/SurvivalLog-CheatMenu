@@ -45,7 +45,7 @@
     <AssemblyMetadata Include="ModManager.Description" Value="A cheat and test menu that opens with F3. It puts every debug tool the game ships with in one panel with tabs: money, items, stats, time, weather, home, farm, danger, exploring, people and more. Every change is listed with the value before it, can be undone, and can be saved as a preset. Note: the game reports cheat use to its developer.&#10;一个用 F3 打开的作弊与测试菜单。把游戏自带的全部调试工具放进一个分页面板：金钱、物品、属性、时间、天气、家园、农场、危险、探索、人物等。每次修改都会记下修改前的值，可以撤销，也可以存为预设。注意：游戏会向开发者报告作弊行为。" />
     <AssemblyMetadata Include="ModManager.Author" Value="AnExiledDev" />
     <AssemblyMetadata Include="ModManager.Category" Value="Tools" />
-    <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.19611" />
+    <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.20151" />
     <AssemblyMetadata Include="ModManager.Settings" Value="Live" />
     <AssemblyMetadata Include="ModManager.GitHub" Value="AnExiledDev/SurvivalLog-CheatMenu" />
     <AssemblyMetadata Include="ModManager.Changelog" Value="https://github.com/AnExiledDev/SurvivalLog-CheatMenu/blob/main/CHANGELOG.md" />
