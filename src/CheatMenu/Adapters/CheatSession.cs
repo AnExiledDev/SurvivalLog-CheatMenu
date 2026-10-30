@@ -44,8 +44,8 @@ internal sealed class CheatSession
         _slowPartMs = 0;
         _page.KeepInstalled(Time.unscaledTime);
 
-        // While a text box has the keyboard, the panel key is typing, not a toggle.
-        if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key)) Toggle();
+        // While a text box has the keyboard, here or in another mod's window, the panel key is typing, not a toggle.
+        if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key) && !OptionalLive.IsTyping()) Toggle();
 
         while (PageMessages.TryTake(out var command))
         {

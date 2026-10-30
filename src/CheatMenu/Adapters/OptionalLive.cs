@@ -17,8 +17,8 @@ internal static class OptionalLive
 {
     public const string ToolkitGuid = "com.dev.survivallog.exiledtoolkit";
 
-    /// <summary>The oldest Toolkit the mod loads with: its toasts, live settings and UI size all come from it.</summary>
-    public const string ToolkitVersion = ">=0.11.0";
+    /// <summary>The oldest Toolkit the mod loads with: its toasts, live settings, UI size and typing watch all come from it.</summary>
+    public const string ToolkitVersion = ">=0.12.0";
 
     private static readonly Lazy<ManualLogSource> Log = new(() => Logger.CreateLogSource(typeof(OptionalLive).Assembly.GetName().Name ?? "Settings"));
 
@@ -51,6 +51,10 @@ internal static class OptionalLive
             return false;
         }
     }
+
+    /// <summary>Whether a text box in any mod's page has the keyboard, this menu's own or another's.</summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static bool IsTyping() => ExiledToolkit.Typing.IsActive;
 
     // Kept in its own method so the Toolkit's types are only looked up when it is installed.
     [MethodImpl(MethodImplOptions.NoInlining)]

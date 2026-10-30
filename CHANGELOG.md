@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.3
+
+- Fixed: keys typed in the menu's search and number boxes also reached the game, so WASD moved the camera and P took a photo. While a box has the keyboard, the game's keys and the camera keys now stay off. Click the world to leave the box.
+- The menu key does nothing while you type in another mod's text box.
+- Exiled's Toolkit 0.12.0 or newer is now required.
+- Made for Survival Log 1.1.20151.
+
 ## 0.3.2
 
 - Fixed: after closing the loop reward screen opened mid-run, the game stayed paused.
