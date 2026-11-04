@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- New: "Finish an event" on the Story & Events tab plays a running event to its end with the game's own auto-play, its choice and result included. Leave the event empty to finish every running event. Other events wait until it is done, and a message says when it has finished. An event that waits for days to pass cannot finish this way, and after 30 seconds the message says so.
+- "Force an event" is now called "Start an event".
+- Made for Survival Log 1.1.20151.
+
 ## 0.3.3
 
 - Fixed: keys typed in the menu's search and number boxes also reached the game, so WASD moved the camera and P took a photo. While a box has the keyboard, the game's keys and the camera keys now stay off. Click the world to leave the box.

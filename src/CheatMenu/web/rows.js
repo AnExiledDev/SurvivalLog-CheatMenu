@@ -257,7 +257,7 @@
     'story|Skip the opening': { cmd: 'SkipOpeningTimeline', also: ['SkipOpeningBlackScreen'] },
     'story|Play a timeline': { cmd: 'PlayTimeline', opts: [['Opening', { Kind: 'opening' }], ['Disaster', { Kind: 'zaibian' }], ['Scene', { Kind: 'scene' }], ['Wake-up', { Kind: 'awaken' }], ['Wake-up: dream layer', { Kind: 'awaken', Name: 'dream' }], ['Wake-up: camera layer', { Kind: 'awaken', Name: 'camera' }], ['Stop wake-up', { Kind: 'stop', Name: 'stop' }]], in: [{ f: 'Name', l: 'timeline name', t: 'text', v: '' }] },
     'story|Toggle a date timeline': { cmd: 'GmToggleDateTimeline', main: 'ConfigId', k: 'sel', opts: (X.dtl || []).map((d) => [`${d[1]} (${d[0]}, day ${d[2]})`, d[0]]), in: [{ f: 'Active', l: 'on', t: 'bool', v: true }], d: 'Turns one dated timeline on or off.' },
-    'story|Force an event': { cmd: 'TriggerEvent', main: 'EventConfigId', ml: 'event', live: 'allevents', d: 'Any event, even another survivor\'s.' },
+    'story|Start an event': { cmd: 'TriggerEvent', main: 'EventConfigId', ml: 'event', live: 'allevents', d: 'Any event, even another survivor\'s.' },
     'story|Force game over': { cmd: 'GmForceGameOver', main: 'Result', ml: 'result', opts: RESULT, in: [{ f: 'ConfigId', l: 'ending event', opts: ENDINGS, blank: '(the game picks)' }, { f: 'UseRealDeathChain', l: 'real death', t: 'bool', v: false }], risky: true },
     'story|Write a day snapshot now': { cmd: 'RebirthSnap', in: [{ f: 'Day', l: 'day (blank = today)', v: '' }] },
     'story|Set rebirth state': { cmd: 'RebirthSetState', main: 'ChancesUsed', opts: [['0 used', 0], ['1 used', 1], ['2 used', 2], ['3 used', 3]], in: [{ f: 'FaithPoint', l: 'Planning Points', v: '' }, { f: 'HpPenaltyStacks', l: 'life penalty stacks', v: '' }], risky: true },
@@ -267,6 +267,7 @@
     'story|Pick a choice for me': { act: 'event-choice', in: [{ f: 'event', l: 'event', live: 'events' }] },
     'story|End it with a result': { act: 'event-end', in: [{ f: 'event', l: 'event', live: 'events' }] },
     'story|Reset the event': { act: 'event-reset', in: [{ f: 'event', l: 'event', live: 'events' }] },
+    'story|Finish an event': { act: 'event-finish', in: [{ f: 'event', l: 'event', live: 'events' }], d: 'Plays the event to its end with the game\'s own auto-play, its choice and result included. Other events wait until it is done. An event that waits for days to pass cannot finish this way.' },
 
     // ---------- progress ----------
     'progress|Unlock a survivor': { cmd: 'UnlockPlayerSelect', main: 'PlayerSelectId', raw: { PlayerSelectId: 'int', Revoke: 'bool' }, opts: PS.concat([['All', '*']]), fix: { Revoke: false } },

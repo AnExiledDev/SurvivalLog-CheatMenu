@@ -12,7 +12,7 @@ public static class ModCheats
     /// <summary>One-shot actions. Each may take a small JSON object of arguments.</summary>
     public static readonly string[] Actions =
     {
-        "mature", "tend", "anomaly", "freebuild", "ally", "allyone", "exposure", "event-choice", "event-end", "event-reset",
+        "mature", "tend", "anomaly", "freebuild", "ally", "allyone", "exposure", "event-choice", "event-end", "event-reset", "event-finish",
         "loan-clear", "debuffs", "buff-remove", "snapshot", "list", "fresh", "recipes", "skipto", "repairall", "containers",
         "unsearch", "traps", "basket", "toast", "health", "loopreward", "rewardscreen", "modtests", "modtest",
     };

@@ -24,6 +24,10 @@ internal sealed class Holds
     private const int PressRunning = 1;
     private const string Durability = "LockFurnitureDurability";
 
+    // Auto-play moves an event on once its timer reaches 1.5 seconds; a held event's timer is set back every half
+    // second, and if one were ever left behind it would only wait a minute.
+    private const float HeldBack = -60f;
+
     private static readonly (string Stat, AttrName Value, AttrName Max)[] Bars =
     {
         ("Satiety", AttrName.Satiety, AttrName.MaxSatiety),
@@ -39,9 +43,13 @@ internal sealed class Holds
     private readonly GmFlags _flags;
     private readonly Harmony _harmony;
     private readonly Action<string> _log;
+    private readonly EventFinish _finish = new();
+    private readonly GameEvents _events = new();
     private float _nextAt;
     private float _stepEndsAt;
-    private bool _stepWas;
+    private bool _isStepping;
+    private bool _isAutoOwned;
+    private bool _autoWas;
     private bool _durabilityWas;
     private int _spoilHour;
     private long _hovered;
@@ -83,13 +91,16 @@ internal sealed class Holds
     /// <summary>Called every frame. Returns true when a hold ended by itself, so the panel's switches need a refresh.</summary>
     public bool Tick(float now)
     {
-        if (_on.Count == 0) return false;
+        if (_on.Count == 0 && !_finish.IsActive) return false;
 
         if (!GmBridge.IsInGame)
         {
             // A save unloaded under the holds: the game's own state they changed went with it. No fuel use is the
             // mod's own switch, so it stays.
             RotPatch.IsOn = false;
+            _finish.Forget();
+            _isStepping = false;
+            _isAutoOwned = false;
 
             return _on.RemoveWhere(name => name != "nofuel") > 0;
         }
@@ -110,7 +121,51 @@ internal sealed class Holds
 
         foreach (var name in _on) Keep(name, world);
 
+        if (_finish.IsActive) KeepFinishing(world, now);
+
         return ended;
+    }
+
+    /// <summary>
+    /// Starts playing the picked running event, or every running one, through to its end. Null when it started, or
+    /// why it did not. How each one ends is told in a toast.
+    /// </summary>
+    public string? Finish(long? only, float now, out string text)
+    {
+        text = "";
+
+        if (!GmBridge.IsInGame || GameSingleton.Existing<BattleLogicWorld>() is not { } world) return "load a save first";
+
+        var manager = world._DynamicEventManager;
+        var events = manager?.CurrentArgsDict;
+
+        if (manager == null || events == null) return "no events are running";
+
+        var config = GameSingleton.Existing<ConfigManager>();
+        var isChinese = GameLanguage.IsChinese();
+        var picked = new List<(long Id, string Name)>();
+
+        foreach (var pair in events)
+        {
+            if (pair.Value == null) continue;
+            if (only is { } id && pair.Key != id) continue;
+
+            var eventId = pair.Value.EventId;
+            var row = config?._Config_Event_Dict is { } table && table.TryGetValue(eventId, out var found) ? found : null;
+
+            picked.Add((pair.Key, ListLabels.Named(ModActions.GameName(config, row?._Name_k__BackingField, row?._Name_Local_k__BackingField), "Event", "事件", eventId, isChinese)));
+        }
+
+        if (picked.Count == 0) return only == null ? "no events are running" : "that event is no longer running";
+
+        _events.Manager = manager;
+        foreach (var (id, name) in picked) _finish.Pick(_events, id, name, now);
+        SyncAuto(manager);
+        KeepFinishing(world, now);
+
+        text = picked.Count == 1 ? "finishing " + picked[0].Name : $"finishing {picked.Count} events";
+
+        return null;
     }
 
     /// <summary>Every hold as a JSON object of name to on or off.</summary>
@@ -157,8 +212,9 @@ internal sealed class Holds
                 _hovered = 0;
                 break;
             case "eventstep":
-                _stepWas = world!._DynamicEventManager.IsGmAutoComplete;
-                world._DynamicEventManager.IsGmAutoComplete = true;
+                var manager = world!._DynamicEventManager;
+                _isStepping = true;
+                SyncAuto(manager);
                 _stepEndsAt = now + StepSeconds;
                 break;
         }
@@ -183,7 +239,8 @@ internal sealed class Holds
                 RotPatch.IsOn = false;
                 break;
             case "eventstep":
-                if (world != null) world._DynamicEventManager.IsGmAutoComplete = _stepWas;
+                _isStepping = false;
+                SyncAuto(world?._DynamicEventManager);
                 break;
         }
     }
@@ -220,6 +277,68 @@ internal sealed class Holds
         catch (Exception ex)
         {
             Report(name, ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// The game's auto-play switch is the mod's while the event step or a finish needs it, and goes back to what it
+    /// was when neither does.
+    /// </summary>
+    private void SyncAuto(DynamicEventManager? manager)
+    {
+        var isWanted = _isStepping || _finish.IsBusy;
+
+        if (isWanted == _isAutoOwned) return;
+
+        if (isWanted)
+        {
+            _autoWas = manager!.IsGmAutoComplete;
+            manager.IsGmAutoComplete = true;
+        }
+        else if (manager != null)
+        {
+            manager.IsGmAutoComplete = _autoWas;
+        }
+
+        _isAutoOwned = isWanted;
+    }
+
+    /// <summary>
+    /// Tells how each picked event ended, holds the other events back while one is still going (unless the player had
+    /// auto-play on for all of them, or the event step is running), and hands the switch back when all are done.
+    /// </summary>
+    private void KeepFinishing(BattleLogicWorld world, float now)
+    {
+        var manager = world._DynamicEventManager;
+
+        _events.Manager = manager;
+
+        try
+        {
+            foreach (var ended in _finish.Tick(_events, now, !_autoWas && !_isStepping))
+            {
+                var waitsOnDays = !ended.IsFinished && manager.GetEventByInstanceId(ended.Id) is { } args && manager.IsGmTimeBasedTask(args.EventId);
+
+                _log("finish event: " + EventFinish.Say(ended, waitsOnDays, false));
+                ModActions.ToolkitToast(EventFinish.Say(ended, waitsOnDays, GameLanguage.IsChinese()), ended.IsFinished ? "success" : "warning");
+            }
+
+            SyncAuto(manager);
+        }
+        catch (Exception ex)
+        {
+            // Something in the game changed under the finish: it stops rather than leave auto-play on for good.
+            _log($"finish event stopped: {ex}");
+
+            try
+            {
+                _finish.Drop(_events);
+                SyncAuto(manager);
+            }
+            catch (Exception again)
+            {
+                _log($"finish event could not let the events go: {again.Message}");
+            }
         }
     }
 
@@ -312,6 +431,29 @@ internal sealed class Holds
             if (!isTradeLocked && AgentTools.GetAgentComponent<DroneTripComponent>(furniture) is { } drone && drone.IsBusy() && drone.ReturnSec > now)
                 drone.ReturnSec = now;
         }
+    }
+
+    /// <summary>The game's running events, for <see cref="EventFinish"/>.</summary>
+    private sealed class GameEvents : EventFinish.IEvents
+    {
+        public DynamicEventManager Manager { get; set; } = null!;
+
+        public IEnumerable<long> Running()
+        {
+            var running = new List<long>();
+            var events = Manager.CurrentArgsDict;
+
+            if (events == null) return running;
+
+            foreach (var pair in events)
+                if (pair.Value != null) running.Add(pair.Key);
+
+            return running;
+        }
+
+        public void HoldBack(long id) => Manager._gmAutoTimers[id] = HeldBack;
+
+        public void LetGo(long id) => Manager.GmAutoReset(id);
     }
 
     /// <summary>Each distinct failure of a hold is logged once, so a hold that keeps failing does not flood the log.</summary>

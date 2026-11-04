@@ -184,7 +184,12 @@ internal sealed class CheatSession
         // Lists only read the game, so they stay out of the cheat log.
         if (act.Name != "list") _log($"cheat: {act.Name} {act.ArgsJson}".TrimEnd());
 
-        var error = _actions.Run(act.Name, act.ArgsJson, out var text);
+        string text;
+
+        // Finishing an event keeps working after this frame, alongside the holds that share the game's auto-play.
+        var error = act.Name == "event-finish"
+            ? _holds.Finish(ActArgs.Parse(act.ArgsJson).Long("event"), Time.unscaledTime, out text)
+            : _actions.Run(act.Name, act.ArgsJson, out text);
 
         if (error != null) _log($"cheat {act.Name}: {error}");
 

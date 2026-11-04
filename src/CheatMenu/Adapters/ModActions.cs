@@ -579,7 +579,7 @@ internal sealed class ModActions
         return null;
     }
 
-    private static ExiledToolkit.ToastId ToolkitToast(string words, string? kind) =>
+    internal static ExiledToolkit.ToastId ToolkitToast(string words, string? kind) =>
         ExiledToolkit.Toasts.Show(new ExiledToolkit.ToastRequest("Cheat Menu", words)
         {
             Kind = kind switch
@@ -973,7 +973,7 @@ internal sealed class ModActions
     }
 
     /// <summary>A table row's name in the game's language: its text key looked up, else the Chinese name the row carries.</summary>
-    private static string? GameName(ConfigManager? config, string? key, string? local)
+    internal static string? GameName(ConfigManager? config, string? key, string? local)
     {
         if (config != null && !string.IsNullOrEmpty(key))
         {

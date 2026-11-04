@@ -310,7 +310,8 @@
       btn('End it with a result', 'G', '', 'End'),
       btn('Reset the event', 'G', '', 'Reset'),
       tog('Auto-confirm events', 'G', ''),
-      num('Force an event', 'G', 'Any event id, even another survivor\'s.', 20230, 'event', 'Trigger'),
+      num('Start an event', 'G', 'Any event id, even another survivor\'s.', 20230, 'event', 'Start'),
+      btn('Finish an event', 'M', '', 'Finish'),
       tog('Skip daily settlement', 'G', '')
     ]),
     grp('Cutscenes', '过场', [
