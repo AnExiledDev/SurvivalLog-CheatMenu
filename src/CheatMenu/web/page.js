@@ -13,15 +13,16 @@
   const REFS = window.REFS;
   const KIND = { cmd: 'Panel command', read: 'Readout', sub: 'Panel sub-command', gm: 'Gm method', hook: 'GM hook' };
   const CHIP = { G: '<span class="c gm">GAME</span>', M: '<span class="c add">ADDED BY MOD</span>', E: '<span class="c ed">EDITOR</span>', S: '<span class="c steam">STEAM</span>', X: '<span class="c nw">NOT WIRED</span>' };
-  const send = (m) => { try { if (window.vuplex) window.vuplex.postMessage(PREFIX + m); } catch (e) { /* the bridge is gone; the plugin reinstalls us */ } };
+  // Exiled's Toolkit's page API, once its script has run (see startWithToolkit).
+  let etk = null;
+  // Through the Toolkit's bridge. Nothing goes before its page API is there; the page says it is ready once it is.
+  const send = (m) => { if (etk) etk.send(PREFIX, m); };
 
   // The game's own Chinese font, from its web UI folder; the panel falls back to Windows fonts without it.
-  const fonts = document.createElement('style');
   const at = location.href.indexOf('/WebUI/');
   const res = (at >= 0 ? location.href.slice(0, at + 7) : '../../') + 'Res/GameResult/';
-
-  fonts.textContent = `@font-face{font-family:"SL Cheat Sans";src:url("${res}SourceHanSansSC-Regular-2.otf");font-weight:400 600}@font-face{font-family:"SL Cheat Sans";src:url("${res}SourceHanSansSC-Heavy-2.otf");font-weight:700 900}`;
-  (document.head || document.documentElement).appendChild(fonts);
+  const FONTS_ID = 'slcheatmenu-fonts';
+  const FONTS = `@font-face{font-family:"SL Cheat Sans";src:url("${res}SourceHanSansSC-Regular-2.otf");font-weight:400 600}@font-face{font-family:"SL Cheat Sans";src:url("${res}SourceHanSansSC-Heavy-2.otf");font-weight:700 900}`;
 
   const host = document.createElement('div');
 
@@ -2159,20 +2160,13 @@
   }
 
   // ---------- wiring ----------
-  // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
-  // waits in a list the Toolkit reads; without the Toolkit nothing happens.
-  function uiSize(node, options) {
-    options = Object.assign({ mod: 'CheatMenu' }, options);
-    const toolkit = window.ExiledUi;
-
-    if (toolkit) {
-      toolkit.size(node, options);
-      return;
-    }
-
-    const waiting = window.__exiledUiWait = window.__exiledUiWait || [];
-    waiting.push([node, options]);
-    if (waiting.length > 32) waiting.shift();
+  // Runs once the Toolkit's page API is there: at once when its script ran first, else when it runs. The stage fills
+  // the screen at any size, so the window on it is what follows the UI size and has to fit.
+  function startWithToolkit(api) {
+    etk = api;
+    etk.addStyle(document, FONTS_ID, FONTS);
+    etk.size($('#cm'), { mod: 'CheatMenu' });
+    send('ready');
   }
 
   function fitStage() {
@@ -2277,8 +2271,6 @@
   });
 
   (document.body || document.documentElement).appendChild(host);
-  // The stage fills the screen at any size, so the window on it is what follows the UI size and has to fit.
-  uiSize($('#cm'));
   wire();
 
   // ---------- what the plugin calls ----------
@@ -2401,5 +2393,5 @@
   // Readouts the game repeats every second or so while the menu is open; the log would show nothing else.
   const QUIET = ['AllCharactersKeyArray', 'CharacterBaseConfig', 'SkillListInfo', 'ReportBuffInfo', 'ReportAuraInfo', 'ReportPassiveSkillInfo', 'Permissions', 'UIStack', 'NearbyFurnitureList', 'EnvironmentSnapshot', 'ReportAIStatus', 'ActionTypeList'];
 
-  send('ready');
+  (window.ExiledToolkitReady = window.ExiledToolkitReady || []).push(startWithToolkit);
 })();

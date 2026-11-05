@@ -1,7 +1,7 @@
 using System;
+using ExiledToolkit.Game;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
-using HarmonyLib;
 
 namespace CheatMenu.Adapters;
 
@@ -13,29 +13,19 @@ namespace CheatMenu.Adapters;
 internal static class RotPatch
 {
     private static bool _hasTried;
-    private static bool _hasReported;
-    private static Action<string> _log = _ => { };
+    private static PatchKit? _hooks;
 
     public static bool IsOn { get; set; }
 
     public static bool IsHooked { get; private set; }
 
-    public static void Install(Harmony harmony, Action<string> log)
+    public static void Install(PatchKit hooks)
     {
         if (_hasTried) return;
 
         _hasTried = true;
-        _log = log;
-
-        try
-        {
-            harmony.Patch(AccessTools.Method(typeof(ItemManager), nameof(ItemManager.CheckAndProcessRot)), prefix: new HarmonyMethod(typeof(RotPatch), nameof(NoRot)));
-            IsHooked = true;
-        }
-        catch (Exception ex)
-        {
-            log("could not hook the rot check, Never spoil only holds freshness: " + ex.Message);
-        }
+        _hooks = hooks;
+        IsHooked = hooks.Patch(typeof(RotPatch), typeof(ItemManager), nameof(ItemManager.CheckAndProcessRot), prefix: nameof(NoRot), consequence: "Never spoil only holds freshness");
     }
 
     /// <summary>Moves every food clock on by <paramref name="hours"/>, so the hours that passed are not counted. Returns how many moved.</summary>
@@ -79,11 +69,7 @@ internal static class RotPatch
         }
         catch (Exception ex)
         {
-            if (!_hasReported)
-            {
-                _hasReported = true;
-                _log("Never spoil hook failed, food rots as usual (reported once): " + ex);
-            }
+            _hooks?.Fail("in the Never spoil hook, food rots as usual", ex);
 
             return true;
         }

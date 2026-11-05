@@ -1,6 +1,6 @@
 using System;
+using ExiledToolkit.Game;
 using GameCore.HotUpdate.Battle.Logic;
-using HarmonyLib;
 using Il2CppSystem.Collections.Generic;
 
 namespace CheatMenu.Adapters;
@@ -11,31 +11,24 @@ namespace CheatMenu.Adapters;
 /// </summary>
 internal static class FuelPatch
 {
+    private const string Consequence = "No fuel use does nothing";
+    private const string Doing = "in the No fuel use hook, the game burns fuel as usual";
+
     private static bool _hasTried;
-    private static bool _hasReported;
-    private static Action<string> _log = _ => { };
+    private static PatchKit? _hooks;
 
     public static bool IsOn { get; set; }
 
     public static bool IsHooked { get; private set; }
 
-    public static void Install(Harmony harmony, Action<string> log)
+    public static void Install(PatchKit hooks)
     {
         if (_hasTried) return;
 
         _hasTried = true;
-        _log = log;
-
-        try
-        {
-            harmony.Patch(AccessTools.Method(typeof(GeneratorFuelComponent), nameof(GeneratorFuelComponent.ConsumeFuel)), prefix: new HarmonyMethod(typeof(FuelPatch), nameof(NoBurn)));
-            harmony.Patch(AccessTools.Method(typeof(CookingComponent), nameof(CookingComponent.UpdateFuelFromProgress)), prefix: new HarmonyMethod(typeof(FuelPatch), nameof(NoCookBurn)));
-            IsHooked = true;
-        }
-        catch (Exception ex)
-        {
-            log("could not hook fuel use, No fuel use does nothing: " + ex.Message);
-        }
+        _hooks = hooks;
+        IsHooked = hooks.Patch(typeof(FuelPatch), typeof(GeneratorFuelComponent), nameof(GeneratorFuelComponent.ConsumeFuel), prefix: nameof(NoBurn), consequence: Consequence)
+                   && hooks.Patch(typeof(FuelPatch), typeof(CookingComponent), nameof(CookingComponent.UpdateFuelFromProgress), prefix: nameof(NoCookBurn), consequence: Consequence);
     }
 
     private static void NoBurn(ref float burnValueToConsume)
@@ -46,7 +39,7 @@ internal static class FuelPatch
         }
         catch (Exception ex)
         {
-            Report(ex);
+            _hooks?.Fail(Doing, ex);
         }
     }
 
@@ -71,17 +64,9 @@ internal static class FuelPatch
         }
         catch (Exception ex)
         {
-            Report(ex);
+            _hooks?.Fail(Doing, ex);
 
             return true;
         }
-    }
-
-    private static void Report(Exception ex)
-    {
-        if (_hasReported) return;
-
-        _hasReported = true;
-        _log("No fuel use hook failed, the game burns fuel as usual (reported once): " + ex);
     }
 }

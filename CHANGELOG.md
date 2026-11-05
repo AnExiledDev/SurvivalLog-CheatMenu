@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+
+- Now uses Exiled's Toolkit for its shared parts, so it needs Exiled's Toolkit 0.19.0 or newer.
+- Made for Survival Log 1.1.20719.
+
 ## 0.4.0
 
 - New: "Finish an event" on the Story & Events tab plays a running event to its end with the game's own auto-play, its choice and result included. Leave the event empty to finish every running event. Other events wait until it is done, and a message says when it has finished. An event that waits for days to pass cannot finish this way, and after 30 seconds the message says so.

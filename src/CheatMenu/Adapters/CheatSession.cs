@@ -1,6 +1,9 @@
 using System;
 using System.Diagnostics;
 using CheatMenu.Core;
+using ExiledToolkit;
+using ExiledToolkit.Game;
+using ExiledToolkit.Web;
 using UnityEngine;
 
 namespace CheatMenu.Adapters;
@@ -8,12 +11,16 @@ namespace CheatMenu.Adapters;
 /// <summary>One frame of the mod: the key, the panel's messages, the GM handler's own work and what it sent back.</summary>
 internal sealed class CheatSession
 {
+    /// <summary>The name the panel holds the game's keys and clicks under.</summary>
+    private const string WindowName = "CheatMenu.panel";
+
     private readonly GmBridge _gm;
     private readonly GmFlags _flags;
     private readonly ModActions _actions;
     private readonly Holds _holds;
     private readonly PresetStore _presets;
     private readonly WebPage _page;
+    private readonly PageMailbox _inbox;
     private readonly Action<string> _log;
     private const double SlowPartMs = 20;
 
@@ -22,7 +29,7 @@ internal sealed class CheatSession
     private bool _isOpen;
     private double _slowPartMs;
 
-    public CheatSession(GmBridge gm, GmFlags flags, ModActions actions, Holds holds, PresetStore presets, WebPage page, Action<string> log)
+    public CheatSession(GmBridge gm, GmFlags flags, ModActions actions, Holds holds, PresetStore presets, WebPage page, PageMailbox inbox, Action<string> log)
     {
         _gm = gm;
         _flags = flags;
@@ -30,6 +37,7 @@ internal sealed class CheatSession
         _holds = holds;
         _presets = presets;
         _page = page;
+        _inbox = inbox;
         _log = log;
     }
 
@@ -45,10 +53,12 @@ internal sealed class CheatSession
         _page.KeepInstalled(Time.unscaledTime);
 
         // While a text box has the keyboard, here or in another mod's window, the panel key is typing, not a toggle.
-        if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key) && !OptionalLive.IsTyping()) Toggle();
+        if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key) && !Typing.IsActive) Toggle();
 
-        while (PageMessages.TryTake(out var command))
+        while (_inbox.TryTake(out var message))
         {
+            var command = PageCommand.Parse(message);
+
             _part.Restart();
             Handle(command);
             if (IsSlowest(out var ms)) SlowPart = $"{command.Describe()} took {ms:0} ms";
@@ -101,7 +111,7 @@ internal sealed class CheatSession
         if (!_page.Open(state)) return;
 
         _isOpen = true;
-        InputGate.PanelOpened();
+        InputGate.Opened(WindowName);
         _gm.Live(true);
     }
 
@@ -110,7 +120,7 @@ internal sealed class CheatSession
         _isOpen = false;
         _keyboard.Release();
         _page.Close();
-        InputGate.PanelClosed();
+        InputGate.Closed(WindowName);
         _gm.Live(false);
     }
 

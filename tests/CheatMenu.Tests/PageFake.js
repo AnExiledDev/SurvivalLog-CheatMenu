@@ -1,5 +1,6 @@
-// A fake game page for the shipped bundle: elements that keep their children, a shadow root whose querySelector gives
-// one element per selector, and a fake Exiled's Toolkit that records the panels handed to it.
+// A fake game page for the shipped bundle and the Toolkit's page API: elements that keep their children, a shadow root
+// whose querySelector gives one element per selector, and a fake of the Toolkit's UI size script that records the
+// panels handed to it.
 var window = this;
 var location = { href: 'file:///D:/Game/WebUI/Root.html' };
 var localStorage = { getItem: function () { return null; }, setItem: function () {} };
@@ -79,8 +80,16 @@ var document = {
   documentElement: new FakeEl('html'),
   head: new FakeEl('head'),
   body: new FakeEl('body'),
-  createElement: function (tag) { return new FakeEl(tag); }
+  createElement: function (tag) { return new FakeEl(tag); },
+  getElementById: function (id) {
+    return document.head.children.filter(function (el) { return el.id === id; })[0] || null;
+  }
 };
+
+// The style elements put in the page's head with this id.
+function headStyles(id) {
+  return document.head.children.filter(function (el) { return el.tagName === 'STYLE' && el.id === id; });
+}
 
 var posted = [];
 window.vuplex = { postMessage: function (m) { posted.push(m); } };

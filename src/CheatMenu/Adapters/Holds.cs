@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CheatMenu.Core;
+using ExiledToolkit.Game;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using GameCore.HotUpdate.Battle.Show;
 using GameCore.HotUpdate.ReduxUI;
-using HarmonyLib;
 
 namespace CheatMenu.Adapters;
 
@@ -41,7 +41,7 @@ internal sealed class Holds
     private readonly HashSet<string> _reported = new(StringComparer.Ordinal);
     private readonly GmBridge _gm;
     private readonly GmFlags _flags;
-    private readonly Harmony _harmony;
+    private readonly PatchKit _hooks;
     private readonly Action<string> _log;
     private readonly EventFinish _finish = new();
     private readonly GameEvents _events = new();
@@ -54,11 +54,11 @@ internal sealed class Holds
     private int _spoilHour;
     private long _hovered;
 
-    public Holds(GmBridge gm, GmFlags flags, Harmony harmony, Action<string> log)
+    public Holds(GmBridge gm, GmFlags flags, PatchKit hooks, Action<string> log)
     {
         _gm = gm;
         _flags = flags;
-        _harmony = harmony;
+        _hooks = hooks;
         _log = log;
     }
 
@@ -199,12 +199,12 @@ internal sealed class Holds
                 Report("peaceful", _gm.Run("{\"msgHead\":103,\"ConfigId\":0,\"Active\":false}"));
                 break;
             case "nofuel":
-                FuelPatch.Install(_harmony, _log);
+                FuelPatch.Install(_hooks);
                 if (!FuelPatch.IsHooked) throw new InvalidOperationException("the fuel hooks could not go in");
                 FuelPatch.IsOn = true;
                 break;
             case "nospoil":
-                RotPatch.Install(_harmony, _log);
+                RotPatch.Install(_hooks);
                 RotPatch.IsOn = true;
                 _spoilHour = Hour(world!);
                 break;

@@ -8,15 +8,20 @@ namespace CheatMenu.Tests;
 
 /// <summary>
 /// The menu follows Exiled's Toolkit's UI size: the shipped bundle hands the Toolkit its window, run in Jint on a fake
-/// game page (PageFake.js). The stage under the window fills the screen at any size, so handing it over would never let
-/// the window be fitted; the window itself is what is zoomed and what must fit.
+/// game page (PageFake.js) with the Toolkit's own page API (api.js), which the game may run before or after the menu.
+/// The stage under the window fills the screen at any size, so handing it over would never let the window be fitted;
+/// the window itself is what is zoomed and what must fit.
 /// </summary>
 public class MenuUiSizeTests
 {
-    [Fact]
-    public void The_window_is_handed_over_once_and_fitted_to_the_screen()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_window_is_handed_over_once_and_fitted_to_the_screen_whichever_script_runs_first(bool isToolkitFirst)
     {
-        var page = new Page();
+        var page = new Page(isToolkitFirst);
+
+        if (!isToolkitFirst) page.LoadToolkit();
 
         Assert.Equal(1, page.Number("handed.length"));
         Assert.Equal(1, page.Number("handed.filter(function (h) { return h.options.mod === 'CheatMenu'; }).length"));
@@ -25,12 +30,48 @@ public class MenuUiSizeTests
     }
 
     [Fact]
-    public void Before_the_Toolkit_loads_the_window_waits_for_it()
+    public void Before_the_Toolkit_s_UI_size_script_loads_the_window_waits_for_it()
     {
-        var page = new Page("delete window.ExiledUi");
+        var page = new Page(before: "delete window.ExiledUi");
 
         Assert.Equal(1, page.Number("window.__exiledUiWait.length"));
         Assert.True(page.Bool("window.__exiledUiWait[0][0] === menuRoot().querySelector('#cm')"));
+        Assert.Equal("CheatMenu", page.Text("window.__exiledUiWait[0][1].mod"));
+    }
+
+    /// <summary>
+    /// The plugin closes the menu when the page says it is ready, and every message goes through the Toolkit's bridge,
+    /// so the page says it once the Toolkit's page API is there, and only once.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_page_says_it_is_ready_once_the_Toolkit_is_there(bool isToolkitFirst)
+    {
+        var page = new Page(isToolkitFirst);
+        var ready = "posted.filter(function (m) { return m === '" + PageCommand.Prefix + "ready'; }).length";
+
+        if (!isToolkitFirst)
+        {
+            Assert.Equal(0, page.Number("posted.length"));
+            page.LoadToolkit();
+        }
+
+        Assert.Equal(1, page.Number(ready));
+    }
+
+    /// <summary>The game's own Chinese font goes in the page once, so the menu's Chinese text uses it.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_game_s_font_is_put_in_the_page_once(bool isToolkitFirst)
+    {
+        var page = new Page(isToolkitFirst);
+
+        if (!isToolkitFirst) page.LoadToolkit();
+
+        Assert.Equal(1, page.Number("headStyles('slcheatmenu-fonts').length"));
+        Assert.True(page.Bool("headStyles('slcheatmenu-fonts')[0].textContent.indexOf('file:///D:/Game/WebUI/Res/GameResult/SourceHanSansSC-Regular-2.otf') >= 0"));
     }
 
     /// <summary>
@@ -77,17 +118,23 @@ public class MenuUiSizeTests
         Assert.Equal("", page.Text(focus));
     }
 
-    /// <summary>The shipped bundle on PageFake.js; <paramref name="before"/> runs between the two.</summary>
+    /// <summary>
+    /// The shipped bundle on PageFake.js, after the Toolkit's page API when <paramref name="isToolkitFirst"/> (else call
+    /// <see cref="LoadToolkit"/>); <paramref name="before"/> runs after the fake page.
+    /// </summary>
     private sealed class Page
     {
         private readonly Engine _engine = new();
 
-        public Page(string? before = null)
+        public Page(bool isToolkitFirst = true, string? before = null)
         {
             _engine.Execute(Resource("CheatMenu.Tests.PageFake.js"));
             if (before != null) _engine.Execute(before);
+            if (isToolkitFirst) LoadToolkit();
             _engine.Execute(PageBundle.Join(LogicTests.Web));
         }
+
+        public void LoadToolkit() => _engine.Execute(Resource("ExiledToolkit.api.js"));
 
         public int Number(string expression) => (int)_engine.Evaluate($"Number({expression})").AsNumber();
 

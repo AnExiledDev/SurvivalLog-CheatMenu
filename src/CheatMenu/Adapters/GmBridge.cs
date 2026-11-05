@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using CheatMenu.Core;
 using GameCore.HotUpdate;
+using ExiledToolkit.Game;
 using GameCore.HotUpdate.Battle.Logic;
-using HarmonyLib;
 
 namespace CheatMenu.Adapters;
 
@@ -17,7 +17,7 @@ internal sealed class GmBridge
 {
     private static GmBridge? _active;
     private static Action<string> _log = _ => { };
-    private static bool _hasReportedSendFailure;
+    private static PatchKit? _hooks;
 
     private static readonly List<string> NoneSent = new();
 
@@ -34,10 +34,11 @@ internal sealed class GmBridge
 
     public static bool IsInGame => BaseSingleton<BattleLogicWorld>.IsInstanceCreated;
 
-    public static void Apply(Harmony harmony, Action<string> log)
+    public static void Apply(PatchKit hooks)
     {
-        Patch(harmony, "OnSend", nameof(CatchSend), log);
-        Patch(harmony, "OnSendDedup", nameof(CatchSendDedup), log);
+        _hooks = hooks;
+        Patch(hooks, "OnSend", nameof(CatchSend));
+        Patch(hooks, "OnSendDedup", nameof(CatchSendDedup));
     }
 
     /// <summary>Runs one GM message now. Returns null when the game took it, or why it did not.</summary>
@@ -111,18 +112,8 @@ internal sealed class GmBridge
         return _gm;
     }
 
-    private static void Patch(Harmony harmony, string method, string prefix, Action<string> log)
-    {
-        try
-        {
-            harmony.Patch(AccessTools.Method(typeof(WebGm), method), prefix: new HarmonyMethod(typeof(GmBridge), prefix));
-            log("catching GM " + method);
-        }
-        catch (Exception ex)
-        {
-            log($"could not hook WebGm.{method}, the panel will not see the game's GM readouts: {ex.Message}");
-        }
-    }
+    private static void Patch(PatchKit hooks, string method, string prefix) =>
+        hooks.Patch(typeof(GmBridge), typeof(WebGm), method, prefix: prefix, done: "catching GM " + method, consequence: "the panel will not see the game's GM readouts");
 
     private static bool CatchSend(WebGm __instance, BaseMsg msg) => !Take(__instance, msg);
 
@@ -147,9 +138,7 @@ internal sealed class GmBridge
         }
         catch (Exception ex)
         {
-            if (!_hasReportedSendFailure) _log("reading a GM readout failed (reported once): " + ex.Message);
-
-            _hasReportedSendFailure = true;
+            _hooks?.Fail("reading a GM readout", ex);
 
             // Ours or not, the original would only fail on the missing socket.
             return _active?._gm != null && instance.Pointer == _active._gm.Pointer;

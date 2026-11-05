@@ -6,10 +6,11 @@ using System.Text;
 using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using CheatMenu.Core;
+using ExiledToolkit.Game;
+using ExiledToolkit.Web;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using GameCore.HotUpdate.ReduxUI;
-using HarmonyLib;
 
 namespace CheatMenu.Adapters;
 
@@ -27,14 +28,14 @@ internal sealed class ModActions
     private const int MaxContainers = 60;
 
     private readonly GmBridge _gm;
-    private readonly Harmony _harmony;
+    private readonly PatchKit _hooks;
     private readonly Action<string> _log;
     private Dictionary<int, LoopRewards.Owned>? _rewardsAtOpen;
 
-    public ModActions(GmBridge gm, Harmony harmony, Action<string> log)
+    public ModActions(GmBridge gm, PatchKit hooks, Action<string> log)
     {
         _gm = gm;
-        _harmony = harmony;
+        _hooks = hooks;
         _log = log;
     }
 
@@ -726,7 +727,7 @@ internal sealed class ModActions
     {
         text = "";
 
-        RewardScreenPatch.Install(_harmony, _log);
+        RewardScreenPatch.Install(_hooks);
 
         if (!RewardScreenPatch.IsHooked) return "the screen's close could not be hooked, and closing it would end the run";
 
@@ -973,15 +974,6 @@ internal sealed class ModActions
     }
 
     /// <summary>A table row's name in the game's language: its text key looked up, else the Chinese name the row carries.</summary>
-    internal static string? GameName(ConfigManager? config, string? key, string? local)
-    {
-        if (config != null && !string.IsNullOrEmpty(key))
-        {
-            var text = config.GetLocalTxt(key);
-
-            if (!string.IsNullOrWhiteSpace(text) && text != key) return text;
-        }
-
-        return string.IsNullOrWhiteSpace(local) ? null : local;
-    }
+    internal static string? GameName(ConfigManager? config, string? key, string? local) =>
+        (config == null ? null : GameNames.Translate(config, key)) ?? GameNames.NonEmpty(local);
 }

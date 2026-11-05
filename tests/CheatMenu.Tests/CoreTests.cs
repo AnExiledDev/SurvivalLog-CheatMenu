@@ -114,17 +114,6 @@ public class GmRequestTests
     }
 }
 
-public class JsTextTests
-{
-    [Fact]
-    public void A_literal_cannot_close_a_script_tag_or_break_a_line()
-    {
-        var literal = JsText.Literal("a\"b\\c</script>\n" + (char)0x2028);
-
-        Assert.Equal("\"a\\\"b\\\\c\\u003c/script>\\u000a\\u2028\"", literal);
-    }
-}
-
 public class LoopRewardBuffTests
 {
     /// <summary>

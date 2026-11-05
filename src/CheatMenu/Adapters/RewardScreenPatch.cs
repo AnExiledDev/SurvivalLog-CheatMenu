@@ -1,8 +1,8 @@
 using System;
 using CheatMenu.Core;
+using ExiledToolkit.Game;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.ReduxUI;
-using HarmonyLib;
 using Il2CppInterop.Runtime;
 
 namespace CheatMenu.Adapters;
@@ -19,52 +19,31 @@ internal static class RewardScreenPatch
 {
     public const int MidRun = RewardScreenModes.MidRun;
 
+    private const string TextConsequence = "so the loop reward screen's close button still says it starts the next loop";
+
     private static bool _hasTried;
-    private static bool _hasReported;
     private static bool _hasClosed;
     private static int _openMode;
     private static bool _isRelabeled;
-    private static Action<string> _log = _ => { };
+    private static PatchKit? _hooks;
 
     public static bool IsHooked { get; private set; }
 
-    public static void Install(Harmony harmony, Action<string> log)
+    public static void Install(PatchKit hooks)
     {
         if (_hasTried) return;
 
         _hasTried = true;
-        _log = log;
+        _hooks = hooks;
+        IsHooked = hooks.Patch(typeof(RewardScreenPatch), typeof(Reducer_Web_RebirthUpgrade), "RA_Close", prefix: nameof(KeepRun), consequence: "so the menu will not open the loop reward screen");
 
-        try
-        {
-            harmony.Patch(AccessTools.Method(typeof(Reducer_Web_RebirthUpgrade), "RA_Close"), prefix: new HarmonyMethod(typeof(RewardScreenPatch), nameof(KeepRun)));
-            IsHooked = true;
-        }
-        catch (Exception ex)
-        {
-            log("could not hook the loop reward screen's close, so the menu will not open that screen: " + ex.Message);
+        if (!IsHooked) return;
 
-            return;
-        }
+        hooks.Patch(typeof(RewardScreenPatch), typeof(Reducer_Web_RebirthUpgrade), "RA_TryClose", prefix: nameof(SkipConfirm), consequence: "so the loop reward screen's close button asks before closing");
 
-        try
-        {
-            harmony.Patch(AccessTools.Method(typeof(Reducer_Web_RebirthUpgrade), "RA_TryClose"), prefix: new HarmonyMethod(typeof(RewardScreenPatch), nameof(SkipConfirm)));
-        }
-        catch (Exception ex)
-        {
-            log("could not hook the loop reward screen's close button, so it asks before closing: " + ex.Message);
-        }
-
-        try
-        {
-            harmony.Patch(AccessTools.Method(typeof(Reducer_Web_RebirthUpgrade), "RA_Open"), prefix: new HarmonyMethod(typeof(RewardScreenPatch), nameof(NoteOpenMode)), postfix: new HarmonyMethod(typeof(RewardScreenPatch), nameof(RelabelOpenScreen)));
-            harmony.Patch(AccessTools.Method(typeof(WebUI_RebirthUpgrade), nameof(WebUI_RebirthUpgrade.InitLocalText)), postfix: new HarmonyMethod(typeof(RewardScreenPatch), nameof(RelabelAfterGameText)));
-        }
-        catch (Exception ex)
-        {
-            log("could not hook the loop reward screen's text, so its close button still says it starts the next loop: " + ex.Message);
-        }
+        // The page's own text is put right only once the open notes the mode.
+        if (hooks.Patch(typeof(RewardScreenPatch), typeof(Reducer_Web_RebirthUpgrade), "RA_Open", prefix: nameof(NoteOpenMode), postfix: nameof(RelabelOpenScreen), consequence: TextConsequence))
+            hooks.Patch(typeof(RewardScreenPatch), typeof(WebUI_RebirthUpgrade), nameof(WebUI_RebirthUpgrade.InitLocalText), postfix: nameof(RelabelAfterGameText), consequence: TextConsequence);
     }
 
     /// <summary>True once after the screen the menu opened has closed.</summary>
@@ -209,11 +188,5 @@ internal static class RewardScreenPatch
         }
     }
 
-    private static void Report(Exception ex)
-    {
-        if (_hasReported) return;
-
-        _hasReported = true;
-        _log("loop reward screen hook failed (reported once): " + ex);
-    }
+    private static void Report(Exception ex) => _hooks?.Fail("in a loop reward screen hook", ex);
 }
