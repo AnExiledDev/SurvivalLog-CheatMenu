@@ -15,7 +15,7 @@ using GameCore.HotUpdate.ReduxUI;
 namespace CheatMenu.Adapters;
 
 /// <summary>
-/// The mod's one-shot cheats. Each calls the game's own methods (most of them the developers' own GM helpers that
+/// The mod's one-shot cheats. Each calls the game's methods (most of them the developers' own GM helpers that
 /// no GM message reaches), so the game does its usual follow-up work. Each returns null when it ran, or why it did
 /// not, and may hand back a line of text for the panel to show.
 /// </summary>
@@ -173,7 +173,7 @@ internal sealed class ModActions
 
     private static string? FreeBuild(bool on, out string text)
     {
-        // The game's own toggle flips the switch and shows its popup; it only runs when the switch is not already there.
+        // The game's toggle flips the switch and shows its popup; it only runs when the switch is not already there.
         if (GmFreeBuild.Enabled != on) Ac_FreeBuildMenu_GmToggle.SendAction();
 
         text = on ? "free build on" : "free build off";
@@ -369,9 +369,9 @@ internal sealed class ModActions
     }
 
     /// <summary>
-    /// Every cooking recipe and every workbench, robot and machine blueprint, the way the game's own unlock rewards do
+    /// Every cooking recipe and every workbench, robot and machine blueprint, the way the game's unlock rewards do
     /// it: the survivor's cooking record (then its unlock notice), and the tool table's craft unlocks (which skip
-    /// recipes the game marks unusable and show the game's own unlock tip).
+    /// recipes the game marks unusable and show the game's unlock tip).
     /// </summary>
     private static string? Recipes(BattleLogicWorld world, out string text)
     {
@@ -410,7 +410,7 @@ internal sealed class ModActions
         return null;
     }
 
-    /// <summary>The game's own Advance hours, by as many hours as it takes to reach that hour of the day.</summary>
+    /// <summary>The game's Advance hours, by as many hours as it takes to reach that hour of the day.</summary>
     private string? SkipTo(BattleLogicWorld world, int hour, out string text)
     {
         text = "";
@@ -426,7 +426,7 @@ internal sealed class ModActions
         return null;
     }
 
-    /// <summary>Every piece of furniture with durability set to its maximum, the way the game's own door and window repair does it.</summary>
+    /// <summary>Every piece of furniture with durability set to its maximum, the way the game's door and window repair does it.</summary>
     private static string? RepairAll(BattleLogicWorld world, out string text)
     {
         int repaired = 0, all = 0;
@@ -506,7 +506,7 @@ internal sealed class ModActions
     }
 
     /// <summary>
-    /// Every armed trap with no catch gets one, through the game's own catch roll and catch handling, so bait, the
+    /// Every armed trap with no catch gets one, through the game's catch roll and catch handling, so bait, the
     /// prey store and the HUD follow as if the hour had come. A trap whose room and bait give nothing keeps rolling nothing.
     /// </summary>
     private static string? Traps(BattleLogicWorld world, out string text)
@@ -543,7 +543,7 @@ internal sealed class ModActions
         return null;
     }
 
-    /// <summary>The neighbour's basket comes home now with what she sends, through the game's own early return.</summary>
+    /// <summary>The neighbour's basket comes home now with what she sends, through the game's early return.</summary>
     private static string? Basket(BattleLogicWorld world, out string text)
     {
         text = "";
@@ -558,7 +558,7 @@ internal sealed class ModActions
         return null;
     }
 
-    /// <summary>A test toast: the game's own short text (which Notifications turns into a toast), or one through Exiled's Toolkit.</summary>
+    /// <summary>A test toast: the game's short text (which Notifications turns into a toast), or one through Exiled's Toolkit.</summary>
     private static string? Toast(string? kind, string? said, out string text)
     {
         text = "";
@@ -671,7 +671,7 @@ internal sealed class ModActions
     /// <summary>
     /// Sets a loop reward to a level and puts that level's buff on the survivor now (<see cref="LoopRewards.SetLevel"/>), then
     /// writes the levels into the save, where the game and New Loop Plus read what is owned. When pay is on, the
-    /// Planning Points change by what the levels cost. The game's own purchase is not called: it only goes up one
+    /// Planning Points change by what the levels cost. The game's purchase is not called: it only goes up one
     /// level at a time and reports each purchase online.
     /// </summary>
     private static string? LoopReward(BattleLogicWorld world, int talent, int level, bool pay, out string text)

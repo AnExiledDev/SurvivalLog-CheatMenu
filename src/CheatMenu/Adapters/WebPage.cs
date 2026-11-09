@@ -8,7 +8,7 @@ using ExiledToolkit.Web;
 namespace CheatMenu.Adapters;
 
 /// <summary>
-/// The mod's half that lives in the game's web UI: the panel's script, run in the root document the game's own pages
+/// The mod's half that lives in the game's web UI: the panel's script, run in the root document the game's pages
 /// sit in. The web view can reload at any time and lose the script, so the Toolkit's page probe checks for it every
 /// couple of seconds and the page says when it is missing.
 /// </summary>

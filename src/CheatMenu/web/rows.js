@@ -8,7 +8,7 @@
 //   in    more inputs on the row: {f, l, v, t: 'bool'|'text'|'num', opts, live}; a blank one is left out
 //   each  one message per entry, each merged over the rest; more: false hides "More fields"
 //   k     the control, when it differs from the row's (num, sel, text)
-//   info  buffs, talents or plans: the game's own words on what the picked one does, shown under the row
+//   info  buffs, talents or plans: the game's words on what the picked one does, shown under the row
 (function () {
   const X = window.GAMEX || {};
   const named = (list, n) => (list || []).map((r) => [`${r[n || 1] || '#' + r[0]} (${r[0]})`, r[0]]);
@@ -267,7 +267,7 @@
     'story|Pick a choice for me': { act: 'event-choice', in: [{ f: 'event', l: 'event', live: 'events' }] },
     'story|End it with a result': { act: 'event-end', in: [{ f: 'event', l: 'event', live: 'events' }] },
     'story|Reset the event': { act: 'event-reset', in: [{ f: 'event', l: 'event', live: 'events' }] },
-    'story|Finish an event': { act: 'event-finish', in: [{ f: 'event', l: 'event', live: 'events' }], d: 'Plays the event to its end with the game\'s own auto-play, its choice and result included. Other events wait until it is done. An event that waits for days to pass cannot finish this way.' },
+    'story|Finish an event': { act: 'event-finish', in: [{ f: 'event', l: 'event', live: 'events' }], d: 'Plays the event to its end with the game\'s auto-play, its choice and result included. Other events wait until it is done. An event that waits for days to pass cannot finish this way.' },
 
     // ---------- progress ----------
     'progress|Unlock a survivor': { cmd: 'UnlockPlayerSelect', main: 'PlayerSelectId', raw: { PlayerSelectId: 'int', Revoke: 'bool' }, opts: PS.concat([['All', '*']]), fix: { Revoke: false } },

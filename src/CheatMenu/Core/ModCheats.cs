@@ -4,7 +4,7 @@ using System.Linq;
 namespace CheatMenu.Core;
 
 /// <summary>
-/// The cheats this mod adds on top of the game's own GM tools. An action runs once; a hold is kept true by the mod
+/// The cheats this mod adds on top of the game's GM tools. An action runs once; a hold is kept true by the mod
 /// every half second while it is on. The panel may only name these, so a stray message cannot call anything else.
 /// </summary>
 public static class ModCheats
@@ -17,7 +17,7 @@ public static class ModCheats
         "unsearch", "traps", "basket", "toast", "health", "loopreward", "rewardscreen", "modtests", "modtest",
     };
 
-    /// <summary>Actions that open one of the game's own screens, so the panel closes once they run to let the player use it.</summary>
+    /// <summary>Actions that open one of the game's screens, so the panel closes once they run to let the player use it.</summary>
     public static readonly string[] OpenScreens = { "rewardscreen" };
 
     /// <summary>Things the mod keeps true while they are on.</summary>

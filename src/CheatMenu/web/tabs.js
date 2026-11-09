@@ -1,5 +1,5 @@
 // The tabs: every row, its source tag and its words.
-// Source tags: G = the game's own GM tool, M = added by the mod, E = editor or dev build only, S = writes Steam achievements.
+// Source tags: G = the game's GM tool, M = added by the mod, E = editor or dev build only, S = writes Steam achievements.
 (function () {
   const tog = (l, s, d, on) => ({ k: 'tog', l, s, d, on: !!on });
   const btn = (l, s, d, b, red) => ({ k: 'btn', l, s, d, b: b || 'Run', red });
@@ -29,7 +29,7 @@
   T.push({ id: 'quick', name: 'Quick', zh: '常用', blurb: 'The cheats most people want, in one place. Pin any row from another tab to add it here.', groups: [
     grp('Survival', '生存', [
       tog('God mode', 'M', 'All five stats held at max; you cannot die.'),
-      tog('Lock stats where they are', 'G', 'The game\'s own attribute lock (角色属性锁定).'),
+      tog('Lock stats where they are', 'G', 'The game\'s attribute lock (角色属性锁定).'),
       tog('Doors and windows never wear', 'G', 'Durability lock (门窗耐久锁定).'),
       tog('Revive when a door breaks', 'G', 'A broken door no longer ends the run; all doors refill next frame.'),
       tog('No exposure gain', 'G', 'Exposure lock while exploring (探索暴露值锁定).')
@@ -41,7 +41,7 @@
       btn('Repair all doors and windows', 'G', 'Fills durability on every door and window.', 'Repair')
     ]),
     grp('Time', '时间', [
-      sel('Game speed', 'G', 'Any speed, past the game\'s own buttons.', ['x0.5', 'x1', 'x2', 'x4', 'x8', 'x16'], 'Set'),
+      sel('Game speed', 'G', 'Any speed, past the game\'s buttons.', ['x0.5', 'x1', 'x2', 'x4', 'x8', 'x16'], 'Set'),
       btn('Skip to 23:00', 'G', 'Jump to tonight\'s end of day.', 'Skip'),
       num('Skip days', 'G', 'Forward only; daily ticks run for each day.', 1, 'days', 'Skip')
     ]),
@@ -104,7 +104,7 @@
     ]),
     grp('Pre-disaster shopping', '灾前物资', [
       btn('Buy everything in this shop', 'G', 'Free; the ledger records it.', 'Buy all'),
-      btn('Search every container here', 'G', 'With the game\'s own search rolls.', 'Search'),
+      btn('Search every container here', 'G', 'With the game\'s search rolls.', 'Search'),
       btn('Grab the ground loot', 'G', 'PsOpGroundLoot', 'Grab'),
       btn('Run the rush sale', 'G', 'The first shelf of the rush shop.', 'Rush'),
       btn('Buy a vehicle', 'G', 'PsOpBuyVehicle', 'Buy'), btn('Sell the vehicle', 'G', 'PsOpSellVehicle', 'Sell'),
@@ -124,7 +124,7 @@
 
   T.push({ id: 'time', name: 'Time & Weather', zh: '时间与天气', blurb: 'The clock, the day, the speed, the weather and the light.', custom: 'weather', groups: [
     grp('Clock', '时钟', [
-      sel('Game speed', 'G', 'Any speed, past the game\'s own buttons.', ['x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16', 'x32'], 'Set'),
+      sel('Game speed', 'G', 'Any speed, past the game\'s buttons.', ['x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16', 'x32'], 'Set'),
       tog('Speed hotkeys', 'G', 'The developers\' speed keys (快捷键倍速).'),
       tog('Pause means pause', 'G', 'Turns off the paused-frame freeze (暂停冻帧禁用).'),
       num('Advance hours', 'G', 'Hourly events still fire.', 6, 'h', 'Advance'),
@@ -147,7 +147,7 @@
 
   T.push({ id: 'home', name: 'Home & Build', zh: '家园与建造', blurb: 'Free build, furniture, power, doors and windows.', groups: [
     grp('Building', '建造', [
-      tog('Free build', 'G', 'The game\'s own GM free-build mode (GM 自由建造).'),
+      tog('Free build', 'G', 'The game\'s GM free-build mode (GM 自由建造).'),
       num('Install furniture in a slot', 'G', 'QuickInstall: config id, then pick the slot.', 66201, 'id', 'Install'),
       btn('Install a preset layout', 'G', 'QuickInstallPreset: a whole list at once.', 'Install'),
       num('Clear a slot', 'G', 'Removes whatever furniture is in that slot.', 31, 'slot', 'Clear'),
@@ -425,7 +425,7 @@
     grp('Mod testing', '模组测试', [
       tog('Show hovered id', 'M', 'Names the instance and config id of whatever the cursor is on, in the game\'s short text.'),
       btn('Mod health', 'M', 'Every loaded plugin with its version and the errors it logged this session. Works from the title screen.', 'Show'),
-      btn('Fill every trap', 'M', 'Every set trap with no catch rolls one now, the game\'s own way.', 'Fill'),
+      btn('Fill every trap', 'M', 'Every set trap with no catch rolls one now, the game\'s way.', 'Fill'),
       btn('Bring the basket back', 'M', 'The neighbour basket out on a trip comes back now.', 'Return'),
       sel('Test toast', 'M', 'Shows a test message in the style you pick.', ['Game short text', 'Info', 'Success', 'Warning', 'Error'], 'Show')
     ]),

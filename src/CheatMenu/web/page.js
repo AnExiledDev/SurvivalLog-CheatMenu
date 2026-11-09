@@ -1,6 +1,6 @@
 // The Cheat Menu panel, drawn over the game's web UI in its own shadow root so the game's styles and ids never meet
-// ours. Every action goes to the plugin: a GM message the game's own handler runs, or one of the mod's own cheats
-// (an action or a hold) the plugin runs through the game's own methods. Nothing here changes the game by itself.
+// ours. Every action goes to the plugin: a GM message the game's handler runs, or one of the mod's own cheats
+// (an action or a hold) the plugin runs through the game's methods. Nothing here changes the game by itself.
 (function () {
   if (window.__slcheatmenu) return;
 
@@ -18,7 +18,7 @@
   // Through the Toolkit's bridge. Nothing goes before its page API is there; the page says it is ready once it is.
   const send = (m) => { if (etk) etk.send(PREFIX, m); };
 
-  // The game's own Chinese font, from its web UI folder; the panel falls back to Windows fonts without it.
+  // The game's Chinese font, from its web UI folder; the panel falls back to Windows fonts without it.
   const at = location.href.indexOf('/WebUI/');
   const res = (at >= 0 ? location.href.slice(0, at + 7) : '../../') + 'Res/GameResult/';
   const FONTS_ID = 'slcheatmenu-fonts';
@@ -401,7 +401,7 @@
     send('flag|' + name + '|' + (on ? '1' : '0'));
   }
 
-  // A toggle row that is one game message: a plain one flips the game's own switch each time it is sent, a bool one
+  // A toggle row that is one game message: a plain one flips the game's switch each time it is sent, a bool one
   // says on or off.
   function toggleSetting(r) {
     return {
@@ -444,7 +444,7 @@
     return { key: 'hold:' + name, l: r.l, s: r.s, tab: r.tab, get: () => !!state.holds[name], set: (x) => { state.holds[name] = !!x; send('hold|' + name + '|' + (x ? '1' : '0')); }, show: onOff };
   }
 
-  // A switch row from rows.js: a game message (its field set to on or off, or sent again to flip the game's own
+  // A switch row from rows.js: a game message (its field set to on or off, or sent again to flip the game's
   // switch) or one of the mod's actions told on or off.
   function specToggleSetting(r) {
     const sp = r.bind.spec;
@@ -472,7 +472,7 @@
     };
   }
 
-  // An attribute of the survivor, set with the game's own ChangeAttr. Ratios start at the game's 0, so "as before"
+  // An attribute of the survivor, set with the game's ChangeAttr. Ratios start at the game's 0, so "as before"
   // is known; a maximum is known once the game has sent the survivor's attributes.
   function attrSetting(r) {
     const sp = r.bind.spec;
@@ -627,7 +627,7 @@
     else if (!t.page) {
       const c = headCounts(t);
 
-      counts = [['all', 'All', c.all], ['game', "Game's own", c.all - c.mod], ['mod', 'Added by mod', c.mod]].map(([k, l, n]) => `<button data-f="${k}" class="${state.filter === k ? 'on' : ''}"><b>${n}</b> ${l}</button>`).join('') + (c.ed ? `<span title="Editor-only or not wired: shown greyed, they do nothing in the release game"><b>${c.ed}</b> inactive</span>` : '');
+      counts = [['all', 'All', c.all], ['game', "Built-in", c.all - c.mod], ['mod', 'Added by mod', c.mod]].map(([k, l, n]) => `<button data-f="${k}" class="${state.filter === k ? 'on' : ''}"><b>${n}</b> ${l}</button>`).join('') + (c.ed ? `<span title="Editor-only or not wired: shown greyed, they do nothing in the release game"><b>${c.ed}</b> inactive</span>` : '');
     }
 
     head.innerHTML = `<h1>${t.title || t.name}</h1><p>${t.blurb}</p><div class="counts${t.page || t.custom === 'items' ? '' : ' filter'}">${counts}</div>`;
@@ -844,7 +844,7 @@
     const sp = b.kind === 'spec' ? b.spec : null;
     const stack = isStacked(r);
     const cls = `row${r.s === 'E' || r.s === 'X' ? ' ed' : ''}${r.s === 'M' ? ' added' : ''}${b.kind === 'none' ? ' off' : ''}${b.kind === 'form' ? ' formrow' : ''}${sp ? ' specrow' : ''}${stack ? ' stack' : ''}`;
-    // The game's own words on what the picked buff, talent or plan does, kept in step with the list.
+    // The game's words on what the picked buff, talent or plan does, kept in step with the list.
     const info = sp && sp.info ? `<p class="info" data-nolang data-of="${esc(sp.live || '*')}" hidden></p>` : '';
     const ctl = b.kind === 'form' ? '' : stack ? tierHtml(r) : `<div class="ctl">${sp ? specControlsHtml(r) : controlHtml(r)}</div>`;
 
@@ -899,7 +899,7 @@
   }
 
   // Reads a live list once; Reload reads it again. Most come from the plugin; the saves, backups, shops, slots and UI
-  // actions are the game's own readouts. A list the game never answers for shows as empty after a few seconds.
+  // actions are the game's readouts. A list the game never answers for shows as empty after a few seconds.
   function loadList(of) {
     const ofs = PRESUPPLY.indexOf(of) >= 0 ? PRESUPPLY : [of];
     const failed = () => ofs.forEach((o) => { if (!listReq[o]) return; listReq[o] = false; state.lists[o] = []; notify(o); });
@@ -1271,7 +1271,7 @@
   }
 
   // ---------- fields ----------
-  // A switch in "More fields" also has the game's own default, which sends nothing.
+  // A switch in "More fields" also has the game's default, which sends nothing.
   const TRI = [['on', true], ['off', false]];
   const MORE = new WeakMap();
 
@@ -1625,7 +1625,7 @@
 
   // ---------- custom groups ----------
   function statGroup(v) {
-    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's own attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw" data-set="flag:LockCharacterAttr"></button></div></div><div class="stbody"></div></section>`);
+    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw" data-set="flag:LockCharacterAttr"></button></div></div><div class="stbody"></div></section>`);
 
     $('.sw', g).onclick = () => {
       const x = flagSetting('LockCharacterAttr');
@@ -1792,7 +1792,7 @@
     const it = state.item;
     const d = $('.detail', wrap);
 
-    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(nameOf(it))}</h3><div class="meta">id ${it.id} - <span>stack</span> ${it.st} - <span>${ITEM_CATS[it.c] || 'Other'}</span></div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's own add-item (AddItem).</div>`;
+    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(nameOf(it))}</h3><div class="meta">id ${it.id} - <span>stack</span> ${it.st} - <span>${ITEM_CATS[it.c] || 'Other'}</span></div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's add-item (AddItem).</div>`;
     localize(d);
 
     const n = $('.num', d);
@@ -1877,7 +1877,7 @@
     const top = h(`<section class="group before"><h2>Before cheating<em>${bak ? 'backup: ' + esc(bak) : backup.step === 'failed' ? 'backup failed' : 'no cheats yet'}</em></h2>
       <div class="bstat"><div><b>${changed.length}</b><span>settings differ from before</span></div><div><b>${oneTime.length}</b><span>one-time actions</span></div><div><b>${live.length}</b><span>changes in the journal</span></div></div>
       <div class="row"><div class="lab"><b>Return to before cheating</b><span class="c add">ADDED BY MOD</span><p>Puts every switch back the way it was when you first opened the menu this session, and the weather back to the forecast. One-time actions (items, skipped days, kills) stay.</p></div><div class="ctl"><button class="btn" id="tobase"${changed.length ? '' : ' disabled'}>Restore settings</button></div></div>
-      <div class="row"><div class="lab"><b>Load the before-cheating backup</b><span class="c gm">GAME</span><p>${bak ? `Undoes everything, one-time actions too, by loading the save the menu backed up before your first cheat: <b>${esc(bak)}</b>. Uses the game's own InjectSave. Anything since then is lost.` : 'The menu backs up your save with the game\'s own BackupSave the moment you make your first change, so this has something to load.'}</p></div><div class="ctl"><button class="btn red" id="loadbak"${bak ? '' : ' disabled'}>${confirmLoad ? 'Click again to load' : 'Load backup'}</button></div></div></section>`);
+      <div class="row"><div class="lab"><b>Load the before-cheating backup</b><span class="c gm">GAME</span><p>${bak ? `Undoes everything, one-time actions too, by loading the save the menu backed up before your first cheat: <b>${esc(bak)}</b>. Uses the game's InjectSave. Anything since then is lost.` : 'The menu backs up your save with the game\'s BackupSave the moment you make your first change, so this has something to load.'}</p></div><div class="ctl"><button class="btn red" id="loadbak"${bak ? '' : ' disabled'}>${confirmLoad ? 'Click again to load' : 'Load backup'}</button></div></div></section>`);
 
     $('#tobase', top).onclick = returnToBefore;
     $('#loadbak', top).onclick = () => {
@@ -2233,7 +2233,7 @@
     $('#lang').onclick = () => setLang(state.lang === 'zh' ? 'en' : 'zh');
   }
 
-  // The menu starts in the game's language. A switch is kept until the game's own language changes.
+  // The menu starts in the game's language. A switch is kept until the game's language changes.
   const LANG_KEY = 'slcheatmenu.lang';
 
   function startLang(chinese) {

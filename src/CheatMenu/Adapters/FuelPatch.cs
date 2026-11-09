@@ -7,7 +7,7 @@ namespace CheatMenu.Adapters;
 
 /// <summary>
 /// No fuel use: generators and stoves burn nothing while it is on. Hooked the first time it is turned on, so a game
-/// where it is never used is never hooked. Both hooks fail soft and hand the game its own burn when off.
+/// where it is never used is never hooked. Both hooks fail soft and let the game burn fuel as normal when off.
 /// </summary>
 internal static class FuelPatch
 {

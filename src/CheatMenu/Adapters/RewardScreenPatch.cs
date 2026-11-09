@@ -57,7 +57,7 @@ internal static class RewardScreenPatch
     }
 
     /// <summary>
-    /// Skips the game's close for the menu's screen: the game's own would save the run as over. Its one other job, lifting
+    /// Skips the game's close for the menu's screen: the game's would save the run as over. Its one other job, lifting
     /// the hold on skill level-up popups that opening the screen put on, is done here.
     /// </summary>
     private static bool KeepRun(State_Web_RebirthUpgrade state, ref State_Web_RebirthUpgrade __result)

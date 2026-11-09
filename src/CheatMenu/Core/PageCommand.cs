@@ -16,7 +16,7 @@ public abstract record PageCommand
 
     public sealed record Close : PageCommand;
 
-    /// <summary>One of the game's own GM messages, as the game's GM panel would send it, tagged with the panel's request id.</summary>
+    /// <summary>One of the game's GM messages, as the game's GM panel would send it, tagged with the panel's request id.</summary>
     public sealed record Gm(string RequestId, string Json) : PageCommand;
 
     /// <summary>One of the game's GM switches set on or off.</summary>

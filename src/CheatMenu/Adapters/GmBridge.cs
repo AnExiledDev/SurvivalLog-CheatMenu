@@ -8,9 +8,9 @@ using GameCore.HotUpdate.Battle.Logic;
 namespace CheatMenu.Adapters;
 
 /// <summary>
-/// The game's own GM handler. The game ships it whole but never makes one outside the developers' builds, where it
+/// The game's GM handler. The game ships it whole but never makes one outside the developers' builds, where it
 /// talks to a GM web page over a socket. The mod makes its own, hands it the same JSON messages that page sent, and
-/// catches what it would send back (readouts and results) before it reaches the missing socket. The game's own
+/// catches what it would send back (readouts and results) before it reaches the missing socket. The game's
 /// instance, if a build ever makes one, is left alone.
 /// </summary>
 internal sealed class GmBridge

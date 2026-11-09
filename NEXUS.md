@@ -14,20 +14,20 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 [list]
 [*][b]17 tabs[/b]: Quick, Survivor, Items, Money & Trade, Time & Weather, Home & Build, Farm & Robots, Danger, Explore, People, Story & Events, Unlocks, Saves and Debug, plus Changes, Mod tests and Game index.[/*]
 [*][b]Search[/b]: find any tool on any tab by English or Chinese words.[/*]
-[*][b]Stats[/b]: drag a bar to set Satiety, Morale, Stamina, Health or Vitality, and lock them with the game's own stat lock.[/*]
+[*][b]Stats[/b]: drag a bar to set Satiety, Morale, Stamina, Health or Vitality, and lock them with the game's stat lock.[/*]
 [*][b]Item spawner[/b]: pick an item by picture, search by name or id, or type any item id.[/*]
 [*][b]Weather and maps[/b]: set any weather or go back to the forecast; enter any explore map at once.[/*]
-[*][b]Cheats the mod adds[/b]: God mode, Infinite power, Peaceful mode, Freeze the clock, No fuel use, Instant crafting, Free build, mature or tend plants, force a pot anomaly, ally with anyone, add exposure, finish any running event, step or end the current event, clear loan shark debt, clear debuffs, set any loop reward's level or buy loop rewards mid-run, never spoil, fresh food, unlock every recipe and blueprint, skip to morning or night, repair all furniture, preview container contents. They use the game's own code and are marked ADDED BY MOD.[/*]
+[*][b]Cheats the mod adds[/b]: God mode, Infinite power, Peaceful mode, Freeze the clock, No fuel use, Instant crafting, Free build, mature or tend plants, force a pot anomaly, ally with anyone, add exposure, finish any running event, step or end the current event, clear loan shark debt, clear debuffs, set any loop reward's level or buy loop rewards mid-run, never spoil, fresh food, unlock every recipe and blueprint, skip to morning or night, repair all furniture, preview container contents. They use the game's code and are marked ADDED BY MOD.[/*]
 [*][b]Survivor values[/b]: max stats, how fast each stat drains, move and interact speed, shop discount, loan cap and instant travel.[/*]
-[*][b]The game's own switches[/b]: skip cutscenes and the daily summary, lock door and window durability, lock explore exposure, debug overlays and more.[/*]
-[*][b]Every row works[/b]: lists and number boxes for every command. Anything the game knows by id is a searchable list of names: your pots, furniture, events, buffs, robots and people, this map's shops and what they sell, containers, trade points, home slots, saves and backups. Picking a buff, talent or daily plan shows the game's own description of it.[/*]
+[*][b]The game's switches[/b]: skip cutscenes and the daily summary, lock door and window durability, lock explore exposure, debug overlays and more.[/*]
+[*][b]Every row works[/b]: lists and number boxes for every command. Anything the game knows by id is a searchable list of names: your pots, furniture, events, buffs, robots and people, this map's shops and what they sell, containers, trade points, home slots, saves and backups. Picking a buff, talent or daily plan shows the game's description of it.[/*]
 [*][b]Every game command[/b]: the Game index tab runs any of the game's 167 GM commands with its fields, and a console takes typed commands and remembers them.[/*]
 [*][b]Testing mods[/b]: show the id of whatever the cursor is on, a mod health page with every plugin's version and errors, fill every trap, bring the basket back, and a test toast.[/*]
 [*][b]Mod tests[/b]: test buttons other mods add, grouped by mod. Loot Restock, for one, adds a button that restocks the location you are in right away.[/*]
 [*][b]Changes and undo[/b]: every change is listed with what it was before. Switches and the weather can be undone, and Restore settings puts them all back.[/*]
 [*][b]Presets[/b]: save a set of switches for a test, apply it again later, and go back to Default.[/*]
-[*][b]Backup before cheating[/b]: your first cheat in a session waits while the menu backs up your save with the game's own backup. Load backup undoes everything since. Red rows back up the save again first (a switch on the Saves tab turns that off).[/*]
-[*][b]Clearly marked[/b]: every row says whether it is the game's own tool, a tool this mod adds, or one that does nothing in the release game.[/*]
+[*][b]Backup before cheating[/b]: your first cheat in a session waits while the menu backs up your save with the game's backup. Load backup undoes everything since. Red rows back up the save again first (a switch on the Saves tab turns that off).[/*]
+[*][b]Clearly marked[/b]: every row says whether it is the game's tool, a tool this mod adds, or one that does nothing in the release game.[/*]
 [/list]
 
 [size=5]Hotkeys[/size]
@@ -37,7 +37,7 @@ Survival Log ships with a GM panel its developer uses for testing, but players c
 [*][b]Ctrl+K[/b]: search.[/*]
 [*][b]1-0[/b]: jump to the first ten tabs.[/*]
 [/list]
-F3 can be changed or turned off in the config. The game's own hotkeys are off while the menu is open.
+F3 can be changed or turned off in the config. The game's hotkeys are off while the menu is open.
 
 Works in English and Chinese. The menu starts in the game's language; the EN / 中文 button at the top right switches it.
 

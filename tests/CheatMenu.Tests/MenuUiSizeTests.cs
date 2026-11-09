@@ -60,7 +60,7 @@ public class MenuUiSizeTests
         Assert.Equal(1, page.Number(ready));
     }
 
-    /// <summary>The game's own Chinese font goes in the page once, so the menu's Chinese text uses it.</summary>
+    /// <summary>The game's Chinese font goes in the page once, so the menu's Chinese text uses it.</summary>
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

@@ -7,7 +7,7 @@
 
 ## 0.4.0
 
-- New: "Finish an event" on the Story & Events tab plays a running event to its end with the game's own auto-play, its choice and result included. Leave the event empty to finish every running event. Other events wait until it is done, and a message says when it has finished. An event that waits for days to pass cannot finish this way, and after 30 seconds the message says so.
+- New: "Finish an event" on the Story & Events tab plays a running event to its end with the game's auto-play, its choice and result included. Leave the event empty to finish every running event. Other events wait until it is done, and a message says when it has finished. An event that waits for days to pass cannot finish this way, and after 30 seconds the message says so.
 - "Force an event" is now called "Start an event".
 - Made for Survival Log 1.1.20151.
 
@@ -36,7 +36,7 @@
 
 ## 0.2.11
 
-- The menu is much faster. A tab you have opened before shows at once, the All, Game's own and Added by mod buttons no longer redraw the tab, and long tabs only draw the part you can see.
+- The menu is much faster. A tab you have opened before shows at once, the All, Game's and Added by mod buttons no longer redraw the tab, and long tabs only draw the part you can see.
 - Fixed: on rows with several fields, the button showed as an empty amber bar across the row.
 - Fixed: a dropdown showed its old choice for a moment before it changed. Dropdowns open and change at once now, and work with the arrow keys and Enter.
 - Opening a tab no longer reads lists from your game. A list is read the first time you open its box, so tabs open without a pause.
@@ -66,7 +66,7 @@
 ## 0.2.7
 
 - New in the Survivor tab: "Open the loop reward screen" opens the screen where you buy loop rewards, in the middle of a run. What you buy works right away, and the run goes on when you close the screen.
-- Picking a buff, talent or daily plan now shows the game's own description of it under the row, with what each talent level gives.
+- Picking a buff, talent or daily plan now shows the game's description of it under the row, with what each talent level gives.
 - The buff lists say whether each buff is good or bad, the talent list shows each talent's top level, and the crisis list shows each crisis by name with how many days it lasts.
 - Force game over lists the endings by name instead of "Ending line 1" to "Ending line 9".
 - The lists of your own pots, furniture, events and buffs show names instead of numbers. Pots also show whether the plant is growing, ripe or withered.
@@ -114,12 +114,12 @@
 - Survivor rows set max stats, drain rates, move and interact speed, shop discount, loan cap and instant travel, and can be undone.
 - Lists of your own pots, furniture, events, buffs, saves and backups, read from the game, with Reload and a filter for long lists.
 - New "Back up before every risky cheat" switch on the Saves tab, on by default: red rows back up the save first and don't run if the backup fails.
-- The menu uses the game's own Chinese font.
+- The menu uses the game's Chinese font.
 
 ## 0.1.0
 
 - First release.
 - Every cheat and developer tool built into the game, in a menu with tabs that opens with F3.
-- Stats, item spawner, weather, maps, the game's own switches, and every GM command with its fields.
+- Stats, item spawner, weather, maps, the game's switches, and every GM command with its fields.
 - Changes tab with undo, presets, and a backup of your save made before your first cheat.
 - Made for Survival Log 1.1.19611.

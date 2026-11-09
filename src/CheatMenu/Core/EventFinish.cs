@@ -4,7 +4,7 @@ using System.Linq;
 namespace CheatMenu.Core;
 
 /// <summary>
-/// Plays picked events through to their end with the game's own GM auto-play, and only those. The game's auto-play
+/// Plays picked events through to their end with the game's GM auto-play, and only those. The game's auto-play
 /// switch covers every event at once, so while a picked event is still going every other running event has its
 /// auto-play timer held back, and gets it back once nothing is left to finish. A picked event still running after
 /// <see cref="GiveUpSeconds"/> is given up on: an event that waits for days to pass never ends by auto-play.

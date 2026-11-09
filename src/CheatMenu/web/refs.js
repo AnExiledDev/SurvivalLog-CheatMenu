@@ -294,7 +294,7 @@
     { tab: 'money', group: 'Pre-disaster shopping', row: { k: 'num', l: 'Buy one item', s: 'G', d: 'From a shop on this map point. Free; the ledger records it.', v: 1203, u: 'item', b: 'Buy' } },
     { tab: 'money', group: 'Pre-disaster shopping', row: { k: 'num', l: 'Buy one piece of furniture', s: 'G', d: 'From the furniture shop.', v: 3001, u: 'id', b: 'Buy' } },
     { tab: 'money', group: 'Pre-disaster shopping', row: { k: 'num', l: 'Grant an item', s: 'G', d: 'Straight into the bag or trunk, pre-disaster rules.', v: 1203, u: 'item', b: 'Grant' } },
-    { tab: 'money', group: 'Pre-disaster shopping', row: { k: 'btn', l: 'Search one container', s: 'G', d: 'Uses the game\'s own search roll on the chosen container.', b: 'Search' } },
+    { tab: 'money', group: 'Pre-disaster shopping', row: { k: 'btn', l: 'Search one container', s: 'G', d: 'Uses the game\'s search roll on the chosen container.', b: 'Search' } },
     { tab: 'money', group: 'Pre-disaster shopping', row: { k: 'btn', l: 'Search this whole scene', s: 'G', d: 'Every container in the current scene.', b: 'Search' } },
     { tab: 'farm', group: 'Robot planner', zh: '机器人排班', row: { k: 'btn', l: 'Plan the robots\' jobs', s: 'G', d: 'Runs the job planner now and shows its plan.', b: 'Plan' } },
     { tab: 'farm', group: 'Robot planner', row: { k: 'btn', l: 'Show job claims', s: 'G', d: 'Which robot holds which job.', b: 'Show' } },

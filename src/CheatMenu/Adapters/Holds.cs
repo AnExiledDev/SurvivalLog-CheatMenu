@@ -95,7 +95,7 @@ internal sealed class Holds
 
         if (!GmBridge.IsInGame)
         {
-            // A save unloaded under the holds: the game's own state they changed went with it. No fuel use is the
+            // A save unloaded under the holds: the game's state they changed went with it. No fuel use is the
             // mod's own switch, so it stays.
             RotPatch.IsOn = false;
             _finish.Forget();
@@ -373,7 +373,7 @@ internal sealed class Holds
         Ac_PopText_AddPopText.SendAction(config is { } c ? $"#{id}  config {c}" : $"#{id}");
     }
 
-    /// <summary>Each of the five bars below its maximum is set to it with the game's own GM attribute message.</summary>
+    /// <summary>Each of the five bars below its maximum is set to it with the game's GM attribute message.</summary>
     private void FillBars(BattleLogicWorld world)
     {
         var role = world._AgentManager?.GetLeadingRole();
@@ -391,7 +391,7 @@ internal sealed class Holds
     }
 
     /// <summary>
-    /// Every running timed machine has its start moved back so the game's own update finishes the job the usual way.
+    /// Every running timed machine has its start moved back so the game's update finishes the job the usual way.
     /// Workbench crafting is the survivor's own action, not a machine, so it is not here.
     /// </summary>
     private static void FinishMachines(BattleLogicWorld world)

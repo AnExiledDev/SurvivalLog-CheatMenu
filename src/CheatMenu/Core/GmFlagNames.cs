@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace CheatMenu.Core;
 
-/// <summary>The game's own GM switches: static flags on its GM class that the rest of the game reads.</summary>
+/// <summary>The game's GM switches: static flags on its GM class that the rest of the game reads.</summary>
 public static class GmFlagNames
 {
     public static readonly string[] All =

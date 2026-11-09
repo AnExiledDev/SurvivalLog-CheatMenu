@@ -376,7 +376,7 @@
     return (lang === 'zh' && t[1]) || t[0] || '';
   }
 
-  // A row description worth showing: not the game's method names, and not the game's own Chinese name alone.
+  // A row description worth showing: not the game's method names, and not the game's Chinese name alone.
   const METHOD = /^[A-Za-z]*[a-z][A-Z_][A-Za-z_]*$/;
   function shownDesc(d) {
     if (typeof d !== 'string' || !d.trim()) return '';
