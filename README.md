@@ -47,6 +47,7 @@ Each row is marked with where it comes from: **GAME** (the game's own tool), **A
 - Survival Log 1.1.20719. A game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12).
 - [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) 0.19.0 or newer. Cheat Menu does not load without it. It keeps the game's keys off while you type in the menu's boxes, applies a new `PanelKey` set on the Mod Manager's Mods screen without a restart, and its UI size setting draws the menu bigger or smaller. Cheat Menu's own `UiScale` under Interface sets a size for this mod alone; at 0, the default, it follows the Toolkit's.
+- Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.
 
 ## Install
 
@@ -59,6 +60,12 @@ Delete `BepInEx\plugins\CheatMenu.dll`. Anything you changed with the menu stays
 ## Configuration
 
 See [CONFIG.md](CONFIG.md). Presets are kept in `BepInEx\config\CheatMenu\presets.json`.
+
+## Feedback and bug reports
+
+Found a bug, have an idea, or something feels off? Come say so on the Core Directive Discord: https://discord.gg/trTsyxUFqg . When reporting a bug, attach `BepInEx\LogOutput.log`.
+
+To reach me directly, message `exiled.dev` on Discord. You can find me in the [official Survival Log Discord](https://discord.gg/MZGg4gQAUe). I'm also on X as [@AnExiledDev](https://x.com/AnExiledDev).
 
 ## License
 
