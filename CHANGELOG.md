@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2
+
+- Fixed: the item spawner's search found only about one item in nine. The menu had a short list of items; it now has all 3,894 in the game. Search words can come in any order, in English or Chinese, and an exact name or id comes first.
+- Long lists in the spawner fill in as you scroll, so the Food tab and big searches open quickly.
+- The spawner has two more tabs, Electronics and Boxes, and Packages is now called Furniture.
+- Enter in the spawner's search box picks the best match, and Enter in its count box spawns. Enter in any other number box does what the button next to it does.
+- Fixed: the spawner said a full bag drops the rest on the floor. The game stops adding when the bag is full.
+- Made for Survival Log 1.1.20719.
+
 ## 0.4.1
 
 - Now uses Exiled's Toolkit for its shared parts, so it needs Exiled's Toolkit 0.19.0 or newer.

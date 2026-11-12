@@ -421,5 +421,34 @@
     return x.blank || 'Type to search';
   }
 
-  window.__slcheatmenuLogic = { tr, detail, startLang, shownDesc, balance, pickHint, FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, preSupply, homeSlots, humanize, readName, vitals, currentSave, describe };
+  // The spawner's items from items.js rows: [id, English name, Chinese name, category, stack limit, icon]. Each keeps
+  // its names and id in one lowercase key to search.
+  function itemRows(rows) {
+    return (rows || []).map(([id, n, zh, c, st, i]) => ({ id, n, zh, c, st, i, k: `${n} ${zh} ${id}`.toLowerCase() }));
+  }
+
+  // The items a search finds: every word has to be in a name (English or Chinese) or the id. An exact name or id comes
+  // first, then names that start with the search, then the rest, each group in id order.
+  function findItems(items, query) {
+    const text = String(query || '').trim().toLowerCase();
+    const words = text.split(/\s+/).filter(Boolean);
+
+    const rank = (it) => {
+      const en = it.n.toLowerCase();
+
+      if (String(it.id) === text || en === text || it.zh === text) return 0;
+
+      return en.startsWith(text) || (it.zh && it.zh.startsWith(text)) ? 1 : 2;
+    };
+
+    if (!words.length) return [];
+
+    return items
+      .filter((it) => words.every((w) => it.k.includes(w)))
+      .map((it, at) => ({ it, at, r: rank(it) }))
+      .sort((a, b) => a.r - b.r || a.at - b.at)
+      .map((x) => x.it);
+  }
+
+  window.__slcheatmenuLogic = { tr, itemRows, findItems, detail, startLang, shownDesc, balance, pickHint, FLAGS, flagOf, coerce, message, bind, rowMessage, control, specValues, specMessages, actArgs, attrValue, attrShown, attrMessage, parseList, saveList, preSupply, homeSlots, humanize, readName, vitals, currentSave, describe };
 })();

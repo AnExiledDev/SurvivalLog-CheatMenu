@@ -173,7 +173,9 @@
   // Clicks, wheels and keys stay in the panel, so the game under it never reacts to them.
   ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'click', 'wheel', 'keydown', 'keyup'].forEach((t) => host.addEventListener(t, (e) => e.stopPropagation()));
 
-  const ITEM_CATS = { 1: 'Food', 2: 'Medicine', 3: 'Books', 5: 'Leisure', 6: 'Tools', 9: 'Materials', 10: 'Seeds', 11: 'Fertilizer', 12: 'Traps', 13: 'Fuel', 14: 'Packages', 15: 'Flowers', 16: 'Weapons & bait', 17: 'Robot modules', 18: 'Story items', 19: 'Decor', 20: 'Records', 21: 'Renovation', 22: 'Keys' };
+  const ITEMS = L.itemRows(window.GAMEITEMS);
+  const ITEM_CATS = { 1: 'Food', 2: 'Medicine', 3: 'Books', 4: 'Electronics', 5: 'Leisure', 6: 'Tools', 8: 'Boxes', 9: 'Materials', 10: 'Seeds', 11: 'Fertilizer', 12: 'Traps', 13: 'Fuel', 14: 'Furniture', 15: 'Flowers', 16: 'Weapons & bait', 17: 'Robot modules', 18: 'Story items', 19: 'Decor', 20: 'Records', 21: 'Renovation', 22: 'Keys' };
+  const ITEM_CHUNK = 120;
   const COLORS = { Satiety: '#c9a14a', Morale: '#d36aa0', Stamina: '#e2b23a', Health: '#d9534f', Vitality: '#7fbf6a' };
 
   const state = {
@@ -272,7 +274,7 @@
   let itemNames = null;
 
   function containerText(text) {
-    if (!itemNames) itemNames = new Map(GAME.items.map((i) => [i.id, i.n]));
+    if (!itemNames) itemNames = new Map(ITEMS.map((i) => [i.id, i.n]));
 
     const lines = String(text || '').split('\n').filter(Boolean).map((line) => {
       const [inst, cfg, searched, items] = line.split('|');
@@ -580,7 +582,7 @@
   }
 
   function countTools(t) {
-    if (t.custom === 'items') return GAME.itemTotal;
+    if (t.custom === 'items') return ITEMS.length;
     if (t.id === 'changes') return state.journal.filter((j) => !j.undone).length;
     if (t.id === 'index') return CATALOG.length;
 
@@ -623,7 +625,7 @@
 
     if (t.page === 'index') counts = kindCounts || (kindCounts = Object.keys(KIND).map((k) => `<span><b>${CATALOG.filter((c) => c.kind === k).length}</b> ${KIND[k].toLowerCase()}s</span>`).join(''));
     else if (t.page === 'changes') counts = `<span><b>${state.journal.length}</b> changes</span><span><b>${state.presets.length + 1}</b> presets</span>`;
-    else if (t.custom === 'items') counts = `<span><b>${GAME.itemTotal}</b> items in the game</span><span><b>${GAME.items.length}</b> with pictures here; any id works</span>`;
+    else if (t.custom === 'items') counts = `<span><b>${ITEMS.length}</b> items in the game</span>`;
     else if (!t.page) {
       const c = headCounts(t);
 
@@ -1579,6 +1581,8 @@
   }
 
   function onBodyKey(e) {
+    if (e.key === 'Enter' && e.target.matches && e.target.matches('input.num')) return pressRowButton(e.target);
+
     const el = e.target.closest && e.target.closest('.drop');
 
     if (!el) return;
@@ -1596,6 +1600,14 @@
     } else if (e.key === 'Tab') {
       closeDrop();
     }
+  }
+
+  // Enter in a row's box does what the row's button does.
+  function pressRowButton(box) {
+    const row = box.closest('.row');
+    const button = row && $('[data-do="fire"], [data-do="spec"]', row);
+
+    if (button) button.click();
   }
 
   // A pick can change what another list on the row offers (a shop's goods, the slots a furniture fits), and what the
@@ -1738,27 +1750,65 @@
   }
 
   // ---------- items ----------
+  // Every item in the game, by category or by search. A category or a search can find thousands, so the grid draws
+  // them a chunk at a time as it scrolls.
   function itemSpawner() {
-    const cats = [...new Set(GAME.items.map((i) => i.c))].filter((c) => ITEM_CATS[c]);
-    const wrap = h(`<div class="spawner"><div><div class="chips">${cats.map((c) => `<button class="chip${c === state.cat ? ' on' : ''}" data-c="${c}">${ITEM_CATS[c]}</button>`).join('')}</div><label class="search" style="margin:0 0 12px;max-width:none"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="iq" placeholder="Search items by name, Chinese name or id"></label><div class="igrid"></div></div><div class="detail"></div></div>`);
+    const cats = Object.keys(ITEM_CATS).map(Number).filter((c) => ITEMS.some((i) => i.c === c));
+    const wrap = h(`<div class="spawner"><div><div class="chips">${cats.map((c) => `<button class="chip${c === state.cat ? ' on' : ''}" data-c="${c}">${ITEM_CATS[c]}</button>`).join('')}</div><label class="search" style="margin:0 0 12px;max-width:none"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="iq" placeholder="Search items by name, Chinese name or id" autocomplete="off" spellcheck="false"></label><div class="igrid"></div></div><div class="detail"></div></div>`);
     const chips = $('.chips', wrap);
     const grid = $('.igrid', wrap);
     const iq = $('#iq', wrap);
     let list = [];
+    let drawn = 0;
     let timer = null;
-    const paintGrid = () => {
-      const q = iq.value.trim().toLowerCase();
+    let io = null;
 
-      list = GAME.items.filter((i) => q ? (i.n.toLowerCase().includes(q) || i.zh.includes(q) || String(i.id) === q) : i.c === state.cat);
-      if (list.length) {
-        grid.innerHTML = list.map((it, i) => `<button class="cell${state.item === it ? ' on' : ''}" data-i="${i}" title="${esc(nameOf(it))} - ${it.id}"><img src="${it.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(it))}</span></button>`).join('');
-        return;
-      }
-      grid.innerHTML = `<div class="empty">No pictured item matches.${/^\d+$/.test(q) ? ` Id ${esc(q)} can still be spawned: it is in the box on the right.` : ''}</div>`;
-      localize(grid);
-      if (/^\d+$/.test(q)) { state.item = { id: +q, n: 'Item ' + q, zh: '', st: '?', c: 0, i: '' }; paintDetail(wrap); }
+    const cell = (it, i) => `<button class="cell${state.item === it ? ' on' : ''}" data-i="${i}" title="${esc(nameOf(it))} - ${it.id}">${it.i ? `<img src="${it.i}" alt="" loading="lazy" decoding="async">` : ''}<span>${esc(nameOf(it))}</span></button>`;
+
+    const more = () => {
+      const end = Math.min(list.length, drawn + ITEM_CHUNK);
+      const old = $('.imore', grid);
+      let html = '';
+
+      for (let i = drawn; i < end; i++) html += cell(list[i], i);
+      if (old) old.remove();
+      grid.insertAdjacentHTML('beforeend', html + (end < list.length ? '<div class="imore"></div>' : ''));
+      drawn = end;
+
+      const marker = $('.imore', grid);
+
+      if (io) { io.disconnect(); if (marker) io.observe(marker); }
     };
 
+    const paintGrid = () => {
+      const q = iq.value.trim();
+
+      clearTimeout(timer);
+      list = q ? L.findItems(ITEMS, q) : ITEMS.filter((i) => i.c === state.cat);
+      drawn = 0;
+      grid.innerHTML = '';
+      grid.scrollTop = 0;
+      if (list.length) return more();
+
+      const isId = /^\d+$/.test(q);
+
+      grid.innerHTML = `<div class="empty"><span>No item matches.</span>${isId ? ' <span>That id is not in the list. You can still send it from the box on the right; the game ignores ids it doesn\'t have.</span>' : ''}</div>`;
+      localize(grid);
+      if (isId) { state.item = { id: +q, n: 'Item ' + q, zh: '', st: '?', c: 0, i: '' }; paintDetail(wrap); }
+    };
+
+    const pick = (i) => {
+      const was = $('.cell.on', grid);
+      const now = $(`.cell[data-i="${i}"]`, grid);
+
+      if (was) was.classList.remove('on');
+      if (now) now.classList.add('on');
+      state.item = list[i];
+      paintDetail(wrap);
+    };
+
+    if (window.IntersectionObserver) io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting) && drawn < list.length) more(); }, { root: grid, rootMargin: '300px' });
+    else grid.onscroll = () => { if (drawn < list.length && grid.scrollTop + grid.clientHeight > grid.scrollHeight - 300) more(); };
     chips.onclick = (e) => {
       const b = e.target.closest && e.target.closest('.chip');
 
@@ -1771,17 +1821,16 @@
     grid.onclick = (e) => {
       const c = e.target.closest && e.target.closest('.cell');
 
-      if (!c) return;
-
-      const was = $('.cell.on', grid);
-
-      if (was) was.classList.remove('on');
-      c.classList.add('on');
-      state.item = list[+c.dataset.i];
-      paintDetail(wrap);
+      if (c) pick(+c.dataset.i);
     };
     iq.oninput = () => { clearTimeout(timer); timer = setTimeout(paintGrid, 100); };
-    state.item = state.item || GAME.items.find((i) => i.c === state.cat);
+    // Enter shows the best match on the right, ready to spawn.
+    iq.onkeydown = (e) => {
+      if (e.key !== 'Enter') return;
+      paintGrid();
+      if (list.length) pick(0);
+    };
+    state.item = state.item || ITEMS.find((i) => i.c === state.cat);
     paintGrid();
     paintDetail(wrap);
 
@@ -1792,15 +1841,19 @@
     const it = state.item;
     const d = $('.detail', wrap);
 
-    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(nameOf(it))}</h3><div class="meta">id ${it.id} - <span>stack</span> ${it.st} - <span>${ITEM_CATS[it.c] || 'Other'}</span></div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. Bag full? The rest goes to the floor, like the game's add-item (AddItem).</div>`;
+    d.innerHTML = `<div class="big">${it.i ? `<img src="${it.i}" alt="">` : ''}</div><h3>${esc(nameOf(it))}</h3><div class="meta">id ${it.id} - <span>stack</span> ${it.st} - <span>${ITEM_CATS[it.c] || 'Other'}</span></div><div class="stepper"><button class="btn ghost" data-d="-10">-10</button><button class="btn ghost" data-d="-1">-1</button><input class="num" inputmode="numeric" value="${state.count}"><button class="btn ghost" data-d="1">+1</button><button class="btn ghost" data-d="10">+10</button></div><button class="go">SPAWN</button><div class="foot">Goes to your bag. When the bag is full the game stops adding, so you can get fewer (AddItem).</div>`;
     localize(d);
 
     const n = $('.num', d);
+    const go = $('.go', d);
 
     $$('[data-d]', d).forEach((b) => { b.onclick = () => { state.count = Math.max(1, (+n.value || 0) + +b.dataset.d); n.value = state.count; }; });
     n.oninput = () => { state.count = Math.max(1, Math.floor(+n.value) || 1); };
-    $('.go', d).onclick = () => cheat(() => {
-      log(`Added item: ${it.n} x${state.count} (id ${it.id})`);
+    // Once the box is left it shows the count that will be spawned, so a typo or a zero never sits there.
+    n.onchange = () => { n.value = state.count; };
+    n.onkeydown = (e) => { if (e.key === 'Enter') { n.value = state.count; go.click(); } };
+    go.onclick = () => cheat(() => {
+      log(`Spawn item: ${it.n} x${state.count} (id ${it.id})`);
       once({ l: 'Spawn item', s: 'G', tab: 'items', ref: ['AddItem'] }, `${it.n} x${state.count}`);
       post({ msgHead: S.AddItem.id, ItemConfigId: it.id, Count: state.count, RequestId: 'cheatmenu' + nextId }, 'Spawn item');
     });

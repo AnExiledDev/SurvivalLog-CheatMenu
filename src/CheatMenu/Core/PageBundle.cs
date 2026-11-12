@@ -10,7 +10,7 @@ namespace CheatMenu.Core;
 /// </summary>
 public static class PageBundle
 {
-    public static readonly string[] Scripts = { "data.js", "catalog.js", "schema.js", "gamedata.js", "pickers.js", "tabs.js", "refs.js", "rows.js", "zh.js", "logic.js", "page.js" };
+    public static readonly string[] Scripts = { "data.js", "items.js", "catalog.js", "schema.js", "gamedata.js", "pickers.js", "tabs.js", "refs.js", "rows.js", "zh.js", "logic.js", "page.js" };
 
     public const string Style = "menu.css";
 

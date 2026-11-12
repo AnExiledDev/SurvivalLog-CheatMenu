@@ -16,7 +16,7 @@ namespace CheatMenu;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.cheatmenu";
-    private const string Version = "0.4.1";
+    private const string Version = "0.4.2";
 
     /// <summary>Exiled's Toolkit: its shared helpers, toasts, live settings, UI size and typing check all come from it.</summary>
     private const string ToolkitGuid = "com.dev.survivallog.exiledtoolkit";

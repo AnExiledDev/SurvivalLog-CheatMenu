@@ -32,7 +32,7 @@ internal sealed class WebPage
     public void KeepInstalled(float now) => _page.KeepInstalled(now);
 
     /// <summary>
-    /// The panel is its style and eleven files joined (<see cref="PageBundle"/>), so it is sent as one script here
+    /// The panel is its style and twelve files joined (<see cref="PageBundle"/>), so it is sent as one script here
     /// rather than by the Toolkit's install, which only joins files as they are.
     /// </summary>
     public void Install()
