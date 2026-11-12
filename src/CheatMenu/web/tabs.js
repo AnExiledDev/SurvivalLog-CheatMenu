@@ -28,30 +28,30 @@
 
   T.push({ id: 'quick', name: 'Quick', zh: '常用', blurb: 'The cheats most people want, in one place. Pin any row from another tab to add it here.', groups: [
     grp('Survival', '生存', [
-      tog('God mode', 'M', 'All five stats held at max; you cannot die.'),
+      tog('God mode', 'M', 'Keeps all five stats at max, so you can\'t die.'),
       tog('Lock stats where they are', 'G', 'The game\'s attribute lock (角色属性锁定).'),
       tog('Doors and windows never wear', 'G', 'Durability lock (门窗耐久锁定).'),
-      tog('Revive when a door breaks', 'G', 'A broken door no longer ends the run; all doors refill next frame.'),
+      tog('Revive when a door breaks', 'G', 'A broken door no longer ends the run, and every door gets its durability back right away.'),
       tog('No exposure gain', 'G', 'Exposure lock while exploring (探索暴露值锁定).')
     ]),
     grp('Stuff', '物资', [
-      num('Add money', 'G', 'Pre-disaster only: the game hides money after the outbreak.', 5000, 'gold', 'Add'),
+      num('Add money', 'G', 'Only works before the disaster, because the game hides money after the outbreak.', 5000, 'gold', 'Add'),
       num('Add carry weight', 'G', 'Raise the bag weight limit.', 20, 'kg', 'Add'),
-      btn('Clear every daily cooldown', 'G', 'Furniture, item daily uses, research, rescue, trade limits.', 'Clear'),
+      btn('Clear every daily cooldown', 'G', 'Clears the daily limits on furniture, items, research, rescue and trading.', 'Clear'),
       btn('Repair all doors and windows', 'G', 'Fills durability on every door and window.', 'Repair')
     ]),
     grp('Time', '时间', [
-      sel('Game speed', 'G', 'Any speed, past the game\'s buttons.', ['x0.5', 'x1', 'x2', 'x4', 'x8', 'x16'], 'Set'),
-      btn('Skip to 23:00', 'G', 'Jump to tonight\'s end of day.', 'Skip'),
-      num('Skip days', 'G', 'Forward only; daily ticks run for each day.', 1, 'days', 'Skip')
+      sel('Game speed', 'G', 'Includes speeds the game\'s speed buttons don\'t have.', ['x0.5', 'x1', 'x2', 'x4', 'x8', 'x16'], 'Set'),
+      btn('Skip to 23:00', 'G', 'Moves the clock to the end of today.', 'Skip'),
+      num('Skip days', 'G', 'Moves forward only. Everything that happens once a day still happens for each day you skip.', 1, 'days', 'Skip')
     ]),
     grp('Test kit', '跑测套装', [
-      btn('Apply the developers\' test kit', 'G', 'Their one-click set: character thinking off, skip settlement, stat lock, door lock, event oracle, auto-confirm, buff 999 and every stat at 100.', 'Apply'),
-      btn('Skip prologue and pre-disaster', 'G', 'Ends the prologue, skips the opening, lands you after the disaster.', 'Skip')
+      btn('Apply the developers\' test kit', 'G', 'The developers\' one-click setup: character thinking off, skip settlement, stat lock, door lock, event oracle, auto-confirm, buff 999 and every stat at 100.', 'Apply'),
+      btn('Skip prologue and pre-disaster', 'G', 'Ends the prologue, skips the opening and puts you after the disaster.', 'Skip')
     ])
   ]});
 
-  T.push({ id: 'survivor', name: 'Survivor', zh: '角色', blurb: 'Stats, buffs, talents, skills and what the survivor does next. Drag a bar to set a stat; the lock holds it.', custom: 'stats', groups: [
+  T.push({ id: 'survivor', name: 'Survivor', zh: '角色', blurb: 'Stats, buffs, talents, skills and what the survivor does next. Drag a bar to set a stat, and the lock keeps it there.', custom: 'stats', groups: [
     grp('Max values and rates', '上限与倍率', [
       num('Max satiety', 'M', 'The most satiety the survivor can have.', 166, ''), num('Max morale', 'M', 'The most morale the survivor can have.', 500, ''), num('Max stamina', 'M', 'The most stamina the survivor can have.', 197, ''), num('Max life', 'M', 'The most life the survivor can have.', 201, ''),
       sel('Stat drain', 'M', 'How fast satiety, morale, stamina, life and vitality drop, over time and from what you do.', ['Normal', 'Half', 'None'], 'Set'),
@@ -83,7 +83,7 @@
       tog('Always offer dancing', 'G', 'The dance suggestion shows every time, with no stat gate, cooldown or daily cap.')
     ]),
     grp('Death', '死亡', [
-      btn('Real death', 'G', 'Drains life to 0 and lets the game\'s death chain play out.', 'Die', true),
+      btn('Real death', 'G', 'Drops life to 0, and the survivor dies like they normally would.', 'Die', true),
       sel('Force game over', 'G', 'Ends the run now with the result you pick, a loss or one of the endings.', ['0 Exhausted', '1 Door broken', '2 Event complete', '3 Days reached', '4 No rebirths left', '5-13 Endings'], 'End run')
     ], { warn: true })
   ]});
@@ -91,22 +91,22 @@
   T.push({ id: 'items', name: 'Items', zh: '物品', blurb: 'Every item in the game, searchable. Spawn into the bag, home storage or the car trunk.', custom: 'items', groups: [
     grp('Food', '食物', [
       tog('Never spoil', 'M', 'Nothing rots, and food stays as fresh as it is now while this is on.'),
-      btn('Make all food fresh', 'M', 'Every food item everywhere goes back to as fresh as new.', 'Freshen')
+      btn('Make all food fresh', 'M', 'Makes every food item everywhere as fresh as new.', 'Freshen')
     ])
   ] });
 
   T.push({ id: 'money', name: 'Money & Trade', zh: '金钱与交易', blurb: 'Gold, shops, the pawn shop, strangers and trade points.', groups: [
     grp('Money', '金钱', [
-      num('Add money', 'G', 'Pre-disaster only.', 5000, 'gold', 'Add'),
+      num('Add money', 'G', 'Only works before the disaster.', 5000, 'gold', 'Add'),
       num('Set money', 'G', '', 99999, 'gold', 'Set'),
       btn('Clear loan shark debt', 'M', '', 'Clear'),
       num('Loan cap bonus', 'M', 'Raises how much you can borrow.', 10000, 'gold')
     ]),
     grp('Pre-disaster shopping', '灾前物资', [
-      btn('Buy everything in this shop', 'G', 'Free; the ledger records it.', 'Buy all'),
-      btn('Search every container here', 'G', 'With the game\'s search rolls.', 'Search'),
+      btn('Buy everything in this shop', 'G', 'It\'s free, and the GM ledger keeps a record.', 'Buy all'),
+      btn('Search every container here', 'G', 'What you find is rolled like a normal search.', 'Search'),
       btn('Grab the ground loot', 'G', 'PsOpGroundLoot', 'Grab'),
-      btn('Run the rush sale', 'G', 'The first shelf of the rush shop.', 'Rush'),
+      btn('Run the rush sale', 'G', 'Runs the sale on the first shelf of the rush shop.', 'Rush'),
       btn('Buy a vehicle', 'G', 'PsOpBuyVehicle', 'Buy'), btn('Sell the vehicle', 'G', 'PsOpSellVehicle', 'Sell'),
       btn('Pawn furniture', 'G', 'PsOpPawn / GmPawnFurniture', 'Pawn'),
       btn('Return every package', 'G', 'Sends every home package back for a refund.', 'Return all'),
@@ -124,24 +124,24 @@
 
   T.push({ id: 'time', name: 'Time & Weather', zh: '时间与天气', blurb: 'The clock, the day, the speed, the weather and the light.', custom: 'weather', groups: [
     grp('Clock', '时钟', [
-      sel('Game speed', 'G', 'Any speed, past the game\'s buttons.', ['x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16', 'x32'], 'Set'),
+      sel('Game speed', 'G', 'Includes speeds the game\'s speed buttons don\'t have.', ['x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16', 'x32'], 'Set'),
       tog('Speed hotkeys', 'G', 'The developers\' speed keys (快捷键倍速).'),
       tog('Pause means pause', 'G', 'Turns off the paused-frame freeze (暂停冻帧禁用).'),
       num('Advance hours', 'G', 'Hourly events still fire.', 6, 'h', 'Advance'),
       btn('Skip to 23:00', 'G', '', 'Skip'),
-      num('Skip days', 'G', 'Daily and endless ticks run for each day.', 1, 'days', 'Skip'),
-      num('Set the day counter', 'G', 'Changes only the number on the HUD; supplies and cooldowns stay.', 50, 'day', 'Set'),
+      num('Skip days', 'G', 'Everything that happens once a day, endless mode included, still happens for each day you skip.', 1, 'days', 'Skip'),
+      num('Set the day counter', 'G', 'Changes only the day number on screen. Supplies and cooldowns stay as they are.', 50, 'day', 'Set'),
       tog('Freeze the clock', 'M', ''),
-      sel('Skip to a time of day', 'M', 'Moves the clock on to the next one; hourly events still fire.', ['Morning 07:00', 'Noon 12:00', 'Evening 18:00', 'Night 22:00'], 'Skip')
+      sel('Skip to a time of day', 'M', 'Moves the clock forward to the next time of day you pick. Hourly events still happen.', ['Morning 07:00', 'Noon 12:00', 'Evening 18:00', 'Night 22:00'], 'Skip')
     ]),
     grp('Before the outbreak', '灾前', [
-      btn('Jump to the outbreak', 'G', 'Fast-forwards the countdown; the disaster starts next frame.', 'Jump'),
+      btn('Jump to the outbreak', 'G', 'Runs the countdown out, and the disaster starts right away.', 'Jump'),
       num('Add to the countdown', 'G', '', 3600, 'sec', 'Add'),
       btn('Skip the disaster cutscene', 'G', 'Goes straight to after the disaster.', 'Skip')
     ]),
     grp('Light', '光照', [
-      sel('Time-of-day light', 'G', 'Light types 1-4, instant or with a transition.', ['1 Dawn', '2 Day', '3 Dusk', '4 Night'], 'Set'),
-      tog('Instant light change', 'G', 'Off plays the transition.')
+      sel('Time-of-day light', 'G', 'Sets the light to dawn, day, dusk or night, at once or slowly.', ['1 Dawn', '2 Day', '3 Dusk', '4 Night'], 'Set'),
+      tog('Instant light change', 'G', 'When this is off, the light changes slowly.')
     ])
   ]});
 
@@ -181,13 +181,13 @@
 
   T.push({ id: 'farm', name: 'Farm & Robots', zh: '种植与机器人', blurb: 'Plants, the planting robot, and every robot tool the developers built.', groups: [
     grp('Plants', '植物', [
-      btn('Mature every plant', 'M', 'Calls the game\'s force-mature on each pot.', 'Mature'),
-      num('Mature one pot', 'G', 'Ripe next frame.', 1, 'pot', 'Mature'),
-      sel('Force an anomaly', 'G', 'On the chosen pot.', ['Giant', 'Glowing', 'Twin', 'Withered'], 'Force'),
+      btn('Mature every plant', 'M', 'Makes the plant in every pot ripe right away.', 'Mature'),
+      num('Mature one pot', 'G', 'The plant is ripe right away.', 1, 'pot', 'Mature'),
+      sel('Force an anomaly', 'G', 'Forces an anomaly on the pot you pick.', ['Giant', 'Glowing', 'Twin', 'Withered'], 'Force'),
       btn('Water and fertilize all', 'M', '', 'Tend')
     ]),
     grp('Planting robot', '种植机器人', [
-      btn('Scan', 'G', 'Ranks every pot the robot could claim and why the rest are out.', 'Scan'),
+      btn('Scan', 'G', 'Lists every pot the robot could take, and says why it can\'t take the rest.', 'Scan'),
       btn('Show claims', 'G', '', 'Show'),
       sel('Do an action', 'G', 'Robot, action, pot.', ['Plant', 'Water', 'Fertilize', 'Harvest'], 'Do'),
       sel('Preset', 'G', 'Robot tier and seed.', ['Tier 1', 'Tier 2', 'Tier 3'], 'Set'),
@@ -198,22 +198,22 @@
       num('Set battery', 'G', '', 100, '%', 'Set'),
       num('Fill its bag', 'G', 'With an item id.', 1, 'item', 'Fill'),
       sel('Master switch', 'G', '', ['On', 'Off'], 'Set'),
-      btn('Dock info', 'G', 'Every dock, its robot, and orphaned robots.', 'Show'),
-      sel('Fake a state', 'G', 'For testing robot UI.', ['Idle', 'Working', 'Charging', 'Stuck'], 'Fake'),
-      tog('Trip stub', 'G', 'Replaces the trip provider so injected trips run.'),
+      btn('Dock info', 'G', 'Lists every dock with its robot, and robots with no dock.', 'Show'),
+      sel('Fake a state', 'G', 'Puts a robot in a fake state to test the robot screens.', ['Idle', 'Working', 'Charging', 'Stuck'], 'Fake'),
+      tog('Trip stub', 'G', 'Needed for Queue a trip. Without it, nothing runs the trips you queue.'),
       btn('Queue a trip', 'G', 'From a container to a container.', 'Queue')
     ]),
     grp('Robot modules', '机器人模块', [
       sel('Give a module', 'G', '', ['Battery Lv1', 'Battery Lv2', 'Battery Lv3', 'Fast Charge'], 'Give'),
       btn('Install', 'G', '', 'Install'), btn('Uninstall', 'G', '', 'Uninstall'),
-      btn('Dump modules', 'G', '', 'Dump'), btn('Clear all slots', 'G', 'Modules are discarded.', 'Clear', true)
+      btn('Dump modules', 'G', '', 'Dump'), btn('Clear all slots', 'G', 'The modules in them are thrown away.', 'Clear', true)
     ]),
     grp('Robot talk and containers', '机器人对话与容器', [
       btn('List robots and talk state', 'G', '', 'List'),
       sel('Say a line', 'G', '', ['Greeting', 'Low battery', 'Bag full', 'Idle chatter'], 'Say'),
       btn('Reset talk cooldowns', 'G', '', 'Reset'),
       btn('Force a robot meeting', 'G', 'GmForceMeet', 'Meet'),
-      btn('Scan robot containers', 'G', 'Tag cabinets and material racks with a robot switch.', 'Scan'),
+      btn('Scan robot containers', 'G', 'Adds a robot switch to cabinets and material racks.', 'Scan'),
       tog('Watch container changes', 'G', '')
     ])
   ]});
@@ -226,7 +226,7 @@
       btn('Kill every zombie', 'G', '', 'Kill all', true),
       btn('Kill the front attacker', 'G', '', 'Kill one'),
       num('Remove a defence device', 'G', 'By config id and slot.', 0, 'id', 'Remove'),
-      btn('Wave status', 'G', 'Event, on field, budget left, targets.', 'Query')
+      btn('Wave status', 'G', 'Shows the event, the zombies on the field, the budget left and their targets.', 'Query')
     ], { warn: true }),
     grp('Endless', '无尽', [
       sel('Start a horde wave', 'G', 'By tier and day slot.', ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Tier 5'], 'Start'),
@@ -237,10 +237,10 @@
     grp('Strays and rats', '零星丧尸与老鼠', [
       btn('Spawn a stray zombie', 'G', '', 'Spawn'),
       num('Spawn a scene rat', 'G', '0 picks a weighted random one.', 0, 'id', 'Spawn'),
-      tog('Peaceful mode', 'M', 'No attacks, no strays, doors never break.')
+      tog('Peaceful mode', 'M', 'No attacks and no stray zombies, and doors never break.')
     ]),
     grp('Mood of the block', '群愤怒值', [
-      num('Set group anger', 'G', 'Post-disaster only.', 0, '', 'Set'),
+      num('Set group anger', 'G', 'Only works after the disaster.', 0, '', 'Set'),
       btn('Close every zombie timeline', 'G', '', 'Close all')
     ]),
     grp('Overlays', '调试显示', [
@@ -250,7 +250,7 @@
 
   T.push({ id: 'explore', name: 'Explore', zh: '探索', blurb: 'Go anywhere, see everything, take everything.', custom: 'maps', groups: [
     grp('Access', '进入', [
-      btn('Unlock every location', 'G', 'Tags every point. Day and time rules can still block some.', 'Unlock'),
+      btn('Unlock every location', 'G', 'Unlocks every location. Some can still be closed on certain days or at certain times.', 'Unlock'),
       btn('Reset warehouse rescue for today', 'G', '', 'Reset')
     ]),
     grp('While exploring', '探索中', [
@@ -263,18 +263,18 @@
     ]),
     grp('Auto search', '模拟搜刮', [
       btn('Simulate a search run', 'G', 'Plans the best route by budget and shows what you would get.', 'Simulate'),
-      btn('Run it', 'G', 'Walks the plan for you.', 'Run'),
+      btn('Run it', 'G', 'Walks the planned route for you.', 'Run'),
       tog('Instant travel', 'M', ''), tog('No fuel use', 'M', '')
     ]),
     grp('Containers', '容器', [
       btn('Container contents preview', 'M', 'Lists what every container here holds, unsearched first, without opening them.', 'Show'),
-      btn('Mark containers unsearched', 'M', 'Brings back the unsearched marker. What is inside stays the same; it does not refill.', 'Mark')
+      btn('Mark containers unsearched', 'M', 'Brings back the unsearched marker. What is inside stays the same, so nothing is refilled.', 'Mark')
     ])
   ]});
 
   T.push({ id: 'people', name: 'People', zh: '人物', blurb: 'Neighbours, the companion, strangers, texts and the group chat.', custom: 'people', groups: [
     grp('Rescue clocks', '救助计时', [
-      num('Shift the neglect clock', 'G', 'Hours forward, for both lines.', 24, 'h', 'Shift'),
+      num('Shift the neglect clock', 'G', 'Moves it forward by this many hours, for both the companion and the neighbour rescue.', 24, 'h', 'Shift'),
       num('Shift the tier clock', 'G', '', 24, 'h', 'Shift'),
       sel('Set survival tier', 'G', '', ['0', '1', '2', '3', '4'], 'Set'),
       btn('Force a wish', 'G', 'Generates the next wish now.', 'Wish'),
@@ -298,8 +298,8 @@
     ]),
     grp('Phone', '手机', [
       num('Deliver a text', 'G', 'By SMS id.', 1, 'sms', 'Send'),
-      sel('Reply to a text', 'G', 'Contact and option.', ['Option 1', 'Option 2', 'Option 3'], 'Reply'),
-      num('Push a group chat post', 'G', 'Main posts only (mood or task).', 1, 'sms', 'Push')
+      sel('Reply to a text', 'G', 'Pick the contact and the reply.', ['Option 1', 'Option 2', 'Option 3'], 'Reply'),
+      num('Push a group chat post', 'G', 'Only main posts, about mood or a task.', 1, 'sms', 'Push')
     ])
   ]});
 
@@ -324,14 +324,14 @@
     ]),
     grp('Endings', '结局', [
       sel('Force game over', 'G', 'Ends the run now with the result you pick, a loss or one of the endings.', ['0 Exhausted', '1 Door broken', '2 Event complete', '3 Days reached', '4 No rebirths left', '5-13 Endings'], 'End run'),
-      btn('Play the DemoTwo ending', 'G', 'Big Zombie timeline, then day-end settlement.', 'Play')
+      btn('Play the DemoTwo ending', 'G', 'Plays the Big Zombie timeline, then the end-of-day summary.', 'Play')
     ], { warn: true }),
     grp('Rebirth', '重生', [
       btn('Write a day snapshot now', 'G', '', 'Write'),
-      sel('Set rebirth state', 'G', 'Chances used.', ['0 used', '1 used', '2 used', 'All used'], 'Set'),
-      num('Minor rebirth', 'G', 'Go back N days and re-enter.', 1, 'days', 'Rebirth'),
+      sel('Set rebirth state', 'G', 'Sets how many rebirth chances are used.', ['0 used', '1 used', '2 used', 'All used'], 'Set'),
+      num('Minor rebirth', 'G', 'Goes back this many days and starts from there.', 1, 'days', 'Rebirth'),
       btn('Open the rebirth choice', 'G', '', 'Open'),
-      btn('Restart this loop', 'G', 'Back to the pre-disaster start; re-pick talent points.', 'Restart', true)
+      btn('Restart this loop', 'G', 'Goes back to the start, before the disaster, and you pick your talent points again.', 'Restart', true)
     ])
   ]});
 
@@ -359,14 +359,14 @@
     grp('Achievements', '成就', [
       btn('Unlock every achievement', 'S', 'Writes to your Steam account. Cannot be undone in game.', 'Unlock', true),
       sel('Unlock one', 'S', '', ['Survivor', 'Hoarder', 'Green Thumb'], 'Unlock'),
-      btn('Clear unlocked list', 'G', 'Local list only.', 'Clear'),
+      btn('Clear unlocked list', 'G', 'Clears only the list kept on this PC.', 'Clear'),
       btn('Record an ending', 'S', '', 'Record'),
-      btn('Taboo list', 'G', 'List, set, clear taboos.', 'Open'),
+      btn('Taboo list', 'G', 'Lists, sets and clears taboos.', 'Open'),
       btn('Recheck counters', 'G', '', 'Recheck'),
       btn('Achievement stats', 'G', '', 'Show')
     ], { warn: true, note: 'Steam achievements are permanent on your account.' }),
     grp('Game state', '状态', [
-      num('Set a symbol', 'G', 'Story flags by name.', 1, 'value', 'Set'),
+      num('Set a symbol', 'G', 'Sets a story flag by name.', 1, 'value', 'Set'),
       num('Set a game counter', 'G', '', 0, '', 'Set')
     ])
   ]});
@@ -380,12 +380,12 @@
     ]),
     grp('Backups', '备份', [
       btn('List backups', 'G', '', 'List'),
-      btn('Load a backup', 'G', 'Injects it and reloads.', 'Load'),
+      btn('Load a backup', 'G', 'Loads the backup into the game and reloads the save.', 'Load'),
       btn('Delete a backup', 'G', '', 'Delete', true),
       btn('Open the backups folder', 'G', '', 'Open')
     ]),
     grp('Snapshots', '快照', [
-      tog('Back up before every risky cheat', 'M', 'Kill all, game over, rebirth, delete.', true),
+      tog('Back up before every risky cheat', 'M', 'Backs up your save before kill all, game over, rebirth or deleting.', true),
       btn('Write a day snapshot', 'G', '', 'Write')
     ])
   ]});
@@ -399,10 +399,10 @@
       btn('Nearby furniture', 'G', '', 'Show'),
       btn('Neighbour line probe', 'G', '', 'Probe'),
       btn('Companion and rescue snapshot', 'G', '', 'Show'),
-      btn('Furniture tag probe', 'G', 'Which tag rule takes an item.', 'Probe')
+      btn('Furniture tag probe', 'G', 'Shows which tag rule an item falls under.', 'Probe')
     ]),
     grp('Overlays', '叠加显示', [
-      tog('Temperature and light labels', 'G', 'Over furniture, drops and people; bag food shows its spoil rate.'),
+      tog('Temperature and light labels', 'G', 'Shows temperature and light over furniture, drops and people. Food in the bag shows how fast it spoils.'),
       tog('Click ray hits', 'G', ''),
       tog('Zombie behaviour labels', 'G', ''),
       tog('Photo mode', 'G', 'The game\'s sightseeing screenshot mode.'),
@@ -419,14 +419,14 @@
     grp('Logs', '日志', [
       tog('Forward Debug.Log here', 'G', 'Shows the game\'s Unity log in this panel.', true),
       tog('Loading profiler', 'G', ''),
-      btn('Stop the music', 'G', 'Comes back on the next scene change.', 'Stop'),
+      btn('Stop the music', 'G', 'The music comes back when the scene changes.', 'Stop'),
       btn('Scene: reload the 3D menu', 'G', '', 'Reload')
     ]),
     grp('Mod testing', '模组测试', [
       tog('Show hovered id', 'M', 'Names the instance and config id of whatever the cursor is on, in the game\'s short text.'),
       btn('Mod health', 'M', 'Every loaded plugin with its version and the errors it logged this session. Works from the title screen.', 'Show'),
-      btn('Fill every trap', 'M', 'Every set trap with no catch rolls one now, the game\'s way.', 'Fill'),
-      btn('Bring the basket back', 'M', 'The neighbour basket out on a trip comes back now.', 'Return'),
+      btn('Fill every trap', 'M', 'Every set trap with nothing in it rolls for a catch now, like it normally would.', 'Fill'),
+      btn('Bring the basket back', 'M', 'If the neighbour basket is out on a trip, it comes back now.', 'Return'),
       sel('Test toast', 'M', 'Shows a test message in the style you pick.', ['Game short text', 'Info', 'Success', 'Warning', 'Error'], 'Show')
     ]),
     grp('Telemetry tests', '遥测', [

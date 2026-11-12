@@ -1,8 +1,14 @@
 # Changelog
 
+## 0.4.3
+
+- Clearer wording in the menu and its messages.
+- The top of the menu no longer shows an old version number.
+- Made for Survival Log 1.1.20719.
+
 ## 0.4.2
 
-- Fixed: the item spawner's search found only about one item in nine. The menu had a short list of items; it now has all 3,894 in the game. Search words can come in any order, in English or Chinese, and an exact name or id comes first.
+- Fixed: the item spawner's search found only about one item in nine. The menu had a short list of items. It now has all 3,894 in the game. Search words can come in any order, in English or Chinese, and an exact name or id comes first.
 - Long lists in the spawner fill in as you scroll, so the Food tab and big searches open quickly.
 - The spawner has two more tabs, Electronics and Boxes, and Packages is now called Furniture.
 - Enter in the spawner's search box picks the best match, and Enter in its count box spawns. Enter in any other number box does what the button next to it does.
@@ -30,7 +36,7 @@
 ## 0.3.2
 
 - Fixed: after closing the loop reward screen opened mid-run, the game stayed paused.
-- The loop reward screen opened mid-run now labels its start-the-next-loop button Close. That button only ever closed the screen there; now it says so.
+- On the loop reward screen opened mid-run, the button that starts the next loop is now called Close, since all it does there is close the screen.
 - Made for Survival Log 1.1.20151.
 
 ## 0.3.1
@@ -40,7 +46,7 @@
 
 ## 0.3.0
 
-- New: `UiScale` under Interface sets the size of Cheat Menu's own windows on their own, from 75% to 200%, whatever Exiled's Toolkit's UI size is. At 0, the default, they follow the Toolkit's. Needs Exiled's Toolkit 0.11.0 or newer.
+- New: `UiScale` under Interface sets the size of Cheat Menu's windows, from 75% to 200%, no matter what Exiled's Toolkit's UI size is. At 0, the default, they use the Toolkit's size. Needs Exiled's Toolkit 0.11.0 or newer.
 - Made for Survival Log 1.1.19611.
 
 ## 0.2.11
@@ -66,7 +72,7 @@
 
 ## 0.2.9
 
-- Fixed: "Set a loop reward level" to the level a reward already has said "already level" and did nothing, so a reward set with 0.2.5 stayed without its effect. It now puts the reward's effect on if it is missing, for free.
+- Fixed: setting "Set a loop reward level" to the level a reward already had said "already level" and did nothing, so a reward set with 0.2.5 still had no effect. Now it adds the missing effect, for free.
 
 ## 0.2.8
 
@@ -111,7 +117,7 @@
 - Unlock every recipe and blueprint, on the Unlocks tab.
 - Skip to a time of day: morning, noon, evening or night.
 - Repair all furniture at home.
-- Container contents preview lists what every container holds without opening it; Mark containers unsearched brings back the unsearched marker (it does not refill them).
+- Container contents preview lists what every container holds without opening it. Mark containers unsearched brings back the unsearched marker (it does not refill them).
 - Debug tab: Show hovered id, Mod health (every plugin with its version and the errors it logged), Fill every trap, Bring the basket back, and Test toast.
 - The console remembers what you typed: the up and down arrows go through it, and `history` lists it.
 - Long replies in the log keep their line breaks.

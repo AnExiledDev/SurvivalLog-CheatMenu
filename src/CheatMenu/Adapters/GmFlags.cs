@@ -25,7 +25,7 @@ internal sealed class GmFlags
             var field = typeof(WebGm).GetProperty("_" + name + "_k__BackingField", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 
             if (field != null && field.PropertyType == typeof(bool)) _fields[name] = field;
-            else log("GM switch " + name + " is not in this game build; its row will do nothing");
+            else log("GM switch " + name + " is not in this game build, so its row does nothing");
         }
     }
 

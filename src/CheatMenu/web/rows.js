@@ -121,21 +121,21 @@
 
     // ---------- money ----------
     'money|Set money': Object.assign(ps('setmoney'), { main: 'Value' }),
-    'money|Buy everything in this shop': Object.assign(ps('buyshopall'), { in: [shopIn()], d: 'Pick a shop on this map. Free; the ledger records it.' }),
+    'money|Buy everything in this shop': Object.assign(ps('buyshopall'), { in: [shopIn()], d: 'Pick a shop on this map. It\'s free, and the GM ledger keeps a record.' }),
     'money|Search every container here': ps('searchall'),
     'money|Grab the ground loot': Object.assign(ps('groundloot'), { in: [force] }),
     'money|Run the rush sale': Object.assign(ps('rush'), { in: [force] }),
-    'money|Buy a vehicle': Object.assign(ps('buyvehicle'), { in: [{ f: 'Id', l: 'vehicle', opts: VEHICLES }], d: 'Free; the ledger records it.' }),
+    'money|Buy a vehicle': Object.assign(ps('buyvehicle'), { in: [{ f: 'Id', l: 'vehicle', opts: VEHICLES }], d: 'It\'s free, and the GM ledger keeps a record.' }),
     'money|Sell the vehicle': ps('sellvehicle'),
     'money|Pawn furniture': Object.assign(ps('pawn'), { in: [{ f: 'InstanceIds', l: 'furniture', live: 'furniture' }] }),
     'money|Reset the GM ledger': ps('resetledger'),
-    'money|Buy one item': Object.assign(ps('buyitem'), { in: [shopIn(false), wares, { f: 'Count', l: 'count', v: 1 }], d: 'From a shop on this map. Free; the ledger records it.' }),
-    'money|Buy one piece of furniture': Object.assign(ps('buyfurniture'), { in: [shopIn(true), wares, { f: 'Count', l: 'count', v: 1 }], d: 'From a furniture shop on this map. Free; the ledger records it.' }),
+    'money|Buy one item': Object.assign(ps('buyitem'), { in: [shopIn(false), wares, { f: 'Count', l: 'count', v: 1 }], d: 'From a shop on this map. It\'s free, and the GM ledger keeps a record.' }),
+    'money|Buy one piece of furniture': Object.assign(ps('buyfurniture'), { in: [shopIn(true), wares, { f: 'Count', l: 'count', v: 1 }], d: 'From a furniture shop on this map. It\'s free, and the GM ledger keeps a record.' }),
     'money|Grant an item': Object.assign(ps('grantitem'), { main: 'Id', ml: 'item', live: 'items', in: [{ f: 'Count', l: 'count', v: 1 }] }),
     'money|Search one container': Object.assign(ps('searchcontainer'), { in: [{ f: 'GroupId', l: 'container', live: 'containers', need: true }, force] }),
     'money|Search this whole scene': Object.assign(ps('searchscene'), { in: [{ f: 'MapPointId', l: 'scene', live: 'scenes', blank: '(this scene)' }], d: 'Every container in the scene you pick.' }),
     'money|Trade point relation (Casual)': { cmd: 'GmCasualDebug', fix: { Op: 'relation' }, main: 'B', ml: 'add', mainAt: 1, in: [{ f: 'A', l: 'trade point', opts: POINTS }], d: 'Adds to your standing with one trade point.' },
-    'money|Clear daily deal limits': { cmd: 'GmClearDailyCd', d: 'The game clears deal limits together with every other daily limit; it has no deal-only clear.' },
+    'money|Clear daily deal limits': { cmd: 'GmClearDailyCd', d: 'The game can only clear deal limits together with every other daily limit.' },
     'money|Every trader comes back now': aid('returnnow'),
     'money|Clear loan shark debt': { act: 'loan-clear' },
     'money|Loan cap bonus': { attr: 'LoanMaxBonus' },
@@ -166,7 +166,7 @@
     'home|Force a rat visit': { cmd: 'GmRatVisitMark', d: 'Puts one rat in every storage bag the survivor\'s home has.' },
     'home|Infinite power': { hold: 'power' },
     'home|Repair all furniture': { act: 'repairall' },
-    'home|Instant crafting, cooking, brewing': { hold: 'instant', d: 'Finishes running shredders, compressors, brewers, dye vats, stoves and drone trips. Workbench crafting is not covered.' },
+    'home|Instant crafting, cooking, brewing': { hold: 'instant', d: 'Finishes running shredders, compressors, brewers, dye vats, stoves and drone trips. It doesn\'t speed up workbench crafting.' },
 
     // ---------- farm ----------
     'farm|Scan': plant('scan'),
@@ -182,7 +182,7 @@
     'farm|Fill its bag': { cmd: 'GmRobotBagFill', main: 'ItemConfigId', ml: 'item', live: 'items', mainAt: 1, in: [robot, { f: 'Count', l: 'count', v: 10 }], d: 'Puts items in a robot\'s bag.' },
     'farm|Master switch': { cmd: 'GmRobotMaster', main: 'Value', opts: [['On', 1], ['Off', 0]] },
     'farm|Fake a state': { cmd: 'GmRobotFakeState', opts: [['Idle, full battery', { Battery: 100, BatteryMax: 100, MasterOn: 1, GroundOn: 1, IsCharging: 0 }], ['Low battery', { Battery: 5, BatteryMax: 100, MasterOn: 1, GroundOn: 1, IsCharging: 0 }], ['Charging', { Battery: 40, BatteryMax: 100, MasterOn: 1, GroundOn: 1, IsCharging: 1 }], ['Switched off', { Battery: 100, BatteryMax: 100, MasterOn: 0, GroundOn: 0, IsCharging: 0 }]], in: [robot] },
-    'farm|Queue a trip': { cmd: 'GmRobotTrip', in: [{ f: 'SrcId', l: 'from', live: 'furniture' }, { f: 'DstId', l: 'to', live: 'furniture' }, { f: 'Items', l: 'items (blank = all)', t: 'text', v: '' }], d: 'From a container to a container. Turn on Trip stub first, or nothing reads the trip.' },
+    'farm|Queue a trip': { cmd: 'GmRobotTrip', in: [{ f: 'SrcId', l: 'from', live: 'furniture' }, { f: 'DstId', l: 'to', live: 'furniture' }, { f: 'Items', l: 'items (blank = all)', t: 'text', v: '' }], d: 'Sends a robot from one container to another. Turn on Trip stub first, or the trip never runs.' },
     'farm|Give a module': { cmd: 'GmRobotModule', fix: { Op: 'give' }, main: 'ItemId', opts: named(X.modules) },
     'farm|Install': { cmd: 'GmRobotModule', fix: { Op: 'install' }, main: 'ItemId', ml: 'module', mainAt: 1, opts: named(X.modules), in: [robot, { f: 'Slot', l: 'slot', v: '' }] },
     'farm|Uninstall': module('uninstall'),
@@ -218,7 +218,7 @@
     'explore|Simulate a search run': { cmd: 'GmExploreAutoSearch', in: [{ f: 'BudgetPercent', l: 'budget %', v: 100 }] },
     'explore|Run it': { cmd: 'GmExploreAutoSearch', in: [{ f: 'BudgetPercent', l: 'budget %', v: 100 }] },
     'explore|Reset warehouse rescue for today': { cmd: 'GmClearDailyCd', d: 'The game resets it together with every other daily limit.' },
-    'explore|Add exposure': { act: 'exposure', main: 'value', u: 'points', d: 'Raw exposure points while exploring. Reaching the maximum ends the run.' },
+    'explore|Add exposure': { act: 'exposure', main: 'value', u: 'points', d: 'Adds exposure points while exploring. Reaching the maximum ends the run.' },
     'explore|Instant travel': { attr: 'VehicleTravelTimeReduce_Ratio', on: 1, off: 0 },
     'explore|No fuel use': { hold: 'nofuel' },
     'explore|Container contents preview': { act: 'containers' },
@@ -234,7 +234,7 @@
     'people|Force a wish': { cmd: 'GenerateWish', main: 'WishId', k: 'sel', opts: [['Next wish', 0]].concat(named(X.wishes)) },
     'people|Force a pool wish': { cmd: 'GenerateWish', main: 'WishId', k: 'sel', opts: named(X.wishes), d: 'Gives the survivor the wish you pick.' },
     'people|Meet an NPC': { cmd: 'MarkMetNpc', main: 'NpcConfigId', opts: [['Everyone', 0]].concat(named(X.npcs)), d: 'Marks one person as met, or everyone.' },
-    'people|Send an NPC somewhere': { cmd: 'GmNpcGoto', k: 'btn', in: [{ f: 'NpcId', l: 'person', live: 'people', need: true }, { f: 'TargetId', l: 'to furniture', live: 'furniture', blank: '(none)' }, { f: 'TargetMapId', l: 'or a floor', opts: FLOORS, blank: '(none)' }], d: 'To a piece of furniture, or to a floor; it takes the stairs between floors.' },
+    'people|Send an NPC somewhere': { cmd: 'GmNpcGoto', k: 'btn', in: [{ f: 'NpcId', l: 'person', live: 'people', need: true }, { f: 'TargetId', l: 'to furniture', live: 'furniture', blank: '(none)' }, { f: 'TargetMapId', l: 'or a floor', opts: FLOORS, blank: '(none)' }], d: 'Sends them to a piece of furniture or a floor. They take the stairs between floors.' },
     'people|Send a commission': { cmd: 'GmCommission', fix: { Op: 'send' }, in: [{ f: 'Contact', l: 'contact', opts: [['Least recent ally', 0]].concat(named(X.contacts)) }] },
     'people|Commission snapshot': { cmd: 'GmCommission', fix: { Op: 'query' } },
     'people|Open the platform': aid('open'),
@@ -257,13 +257,13 @@
     'story|Skip the opening': { cmd: 'SkipOpeningTimeline', also: ['SkipOpeningBlackScreen'] },
     'story|Play a timeline': { cmd: 'PlayTimeline', opts: [['Opening', { Kind: 'opening' }], ['Disaster', { Kind: 'zaibian' }], ['Scene', { Kind: 'scene' }], ['Wake-up', { Kind: 'awaken' }], ['Wake-up: dream layer', { Kind: 'awaken', Name: 'dream' }], ['Wake-up: camera layer', { Kind: 'awaken', Name: 'camera' }], ['Stop wake-up', { Kind: 'stop', Name: 'stop' }]], in: [{ f: 'Name', l: 'timeline name', t: 'text', v: '' }] },
     'story|Toggle a date timeline': { cmd: 'GmToggleDateTimeline', main: 'ConfigId', k: 'sel', opts: (X.dtl || []).map((d) => [`${d[1]} (${d[0]}, day ${d[2]})`, d[0]]), in: [{ f: 'Active', l: 'on', t: 'bool', v: true }], d: 'Turns one dated timeline on or off.' },
-    'story|Start an event': { cmd: 'TriggerEvent', main: 'EventConfigId', ml: 'event', live: 'allevents', d: 'Any event, even another survivor\'s.' },
+    'story|Start an event': { cmd: 'TriggerEvent', main: 'EventConfigId', ml: 'event', live: 'allevents', d: 'Starts any event, even one from another survivor\'s story.' },
     'story|Force game over': { cmd: 'GmForceGameOver', main: 'Result', ml: 'result', opts: RESULT, in: [{ f: 'ConfigId', l: 'ending event', opts: ENDINGS, blank: '(the game picks)' }, { f: 'UseRealDeathChain', l: 'real death', t: 'bool', v: false }], risky: true },
     'story|Write a day snapshot now': { cmd: 'RebirthSnap', in: [{ f: 'Day', l: 'day (blank = today)', v: '' }] },
     'story|Set rebirth state': { cmd: 'RebirthSetState', main: 'ChancesUsed', opts: [['0 used', 0], ['1 used', 1], ['2 used', 2], ['3 used', 3]], in: [{ f: 'FaithPoint', l: 'Planning Points', v: '' }, { f: 'HpPenaltyStacks', l: 'life penalty stacks', v: '' }], risky: true },
     'story|Minor rebirth': { cmd: 'RebirthMinor', main: 'DaysBack', in: [{ f: 'Force', l: 'skip the checks', t: 'bool', v: false }], risky: true },
     'story|Restart this loop': { cmd: 'RebirthRestart', in: [{ f: 'Force', l: 'skip the checks', t: 'bool', v: false }], risky: true },
-    'story|Step the current event': { pulse: 'eventstep', d: 'Lets the game step the open event once.' },
+    'story|Step the current event': { pulse: 'eventstep', d: 'Moves the open event on by one step.' },
     'story|Pick a choice for me': { act: 'event-choice', in: [{ f: 'event', l: 'event', live: 'events' }] },
     'story|End it with a result': { act: 'event-end', in: [{ f: 'event', l: 'event', live: 'events' }] },
     'story|Reset the event': { act: 'event-reset', in: [{ f: 'event', l: 'event', live: 'events' }] },
@@ -272,7 +272,7 @@
     // ---------- progress ----------
     'progress|Unlock a survivor': { cmd: 'UnlockPlayerSelect', main: 'PlayerSelectId', raw: { PlayerSelectId: 'int', Revoke: 'bool' }, opts: PS.concat([['All', '*']]), fix: { Revoke: false } },
     'progress|Revoke a survivor': { cmd: 'UnlockPlayerSelect', main: 'PlayerSelectId', raw: { PlayerSelectId: 'int', Revoke: 'bool' }, opts: PS, fix: { Revoke: true } },
-    'progress|Unlock for endless': { cmd: 'UnlockPlayerSelect', main: 'PlayerSelectId', raw: { PlayerSelectId: 'int', Revoke: 'bool' }, opts: PS.concat([['All', '*']]), fix: { Revoke: false }, d: 'The game unlocks a survivor for endless when it unlocks them; takes effect back on the main menu.' },
+    'progress|Unlock for endless': { cmd: 'UnlockPlayerSelect', main: 'PlayerSelectId', raw: { PlayerSelectId: 'int', Revoke: 'bool' }, opts: PS.concat([['All', '*']]), fix: { Revoke: false }, d: 'The game unlocks a survivor for endless mode when it unlocks them. You see the change back on the main menu.' },
     'progress|Set alert level': { cmd: 'GmCasualDebug', fix: { Op: 'alert' }, main: 'A', k: 'sel', opts: [0, 1, 2, 3].map((t) => [String(t), t]) },
     'progress|Reroll camp orders': { cmd: 'GmCasualDebug', fix: { Op: 'repost' } },
     'progress|Check home milestones now': { cmd: 'GmCasualHome', fix: { Op: 'check' } },
@@ -324,6 +324,6 @@
 
   // Rows whose words were wrong for what the game does.
   Object.assign(window.RETAG, {
-    'home|Clear rat marks': { s: 'X', d: 'The game has no clear on its own: Put a rat in every storage clears the old marks first.' }
+    'home|Clear rat marks': { s: 'X', d: 'The game has no command that only clears rat marks. Put a rat in every storage clears the old marks first.' }
   });
 })();

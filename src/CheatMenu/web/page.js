@@ -148,7 +148,7 @@
   <div id="veil"></div>
   <section id="cm" aria-label="Cheat Menu">
     <header id="top">
-      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span> - v0.2.11 - game 1.1.19611</div></div>
+      <div class="brand"><div class="mark">CHEAT<span>/</span>MENU</div><div class="sub"><span>Cheat and developer menu</span></div></div>
       <label class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><input id="q" placeholder="Find any cheat or tool..." autocomplete="off"><kbd>Ctrl K</kbd></label>
       <div class="lamp" title="The game reports cheat evidence to its developer"><i></i><div><b>Telemetry on</b><span>the game reports cheat use</span></div></div>
       <button class="lang" id="lang" title="Switch between English and Chinese"><b data-l="en">EN</b><b data-l="zh">中文</b></button>
@@ -323,7 +323,7 @@
     backup.step = ok ? 'done' : 'failed';
     if (ok) {
       state.backedUp = backup.name;
-      log(`First cheat this session: saved a backup "${backup.name}" first (BackupSave)`, 'mod');
+      log(`First cheat this session, so the menu saved a backup "${backup.name}".`, 'mod');
     } else {
       log('Could not back up the save before the first cheat (' + why + '). Cheats still work; "Load backup" will have nothing to load.', 'err');
     }
@@ -1637,7 +1637,7 @@
 
   // ---------- custom groups ----------
   function statGroup(v) {
-    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>The game's attribute lock (LockCharacterAttr).</p></div><div class="ctl"><button class="sw" data-set="flag:LockCharacterAttr"></button></div></div><div class="stbody"></div></section>`);
+    const g = h(`<section class="group"><h2>Stats<em>drag to set</em></h2><div class="row"><div class="lab"><b>Lock all stats where they are</b>${CHIP.G}<p>Stats don't go up or down until you turn this off.</p></div><div class="ctl"><button class="sw" data-set="flag:LockCharacterAttr"></button></div></div><div class="stbody"></div></section>`);
 
     $('.sw', g).onclick = () => {
       const x = flagSetting('LockCharacterAttr');
@@ -1690,7 +1690,7 @@
   }
 
   function weatherGroup() {
-    const g = h(`<section class="group"><h2>Weather<em>${GAME.weather.length}</em></h2><div class="row"><div class="lab"><b>Back to the forecast</b>${CHIP.G}<p>Hands the weather back to the game's tables (ResetWeather).</p></div><div class="ctl"><button class="btn ghost">Reset</button></div></div><div class="tiles">${GAME.weather.map((w, i) => `<button class="tile" data-w="${w.id}" data-i="${i}"><img src="${w.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(w))}</span></button>`).join('')}</div></section>`);
+    const g = h(`<section class="group"><h2>Weather<em>${GAME.weather.length}</em></h2><div class="row"><div class="lab"><b>Back to the forecast</b>${CHIP.G}<p>Lets the game pick the weather again from its forecast.</p></div><div class="ctl"><button class="btn ghost">Reset</button></div></div><div class="tiles">${GAME.weather.map((w, i) => `<button class="tile" data-w="${w.id}" data-i="${i}"><img src="${w.i}" alt="" loading="lazy" decoding="async"><span>${esc(nameOf(w))}</span></button>`).join('')}</div></section>`);
     const setW = (id) => {
       const was = weatherSetting.get();
 
@@ -1709,7 +1709,7 @@
   }
 
   function mapGroup() {
-    const g = h(`<section class="group"><h2>Go there now<em>${GAME.maps.length}</em></h2><div class="gnote" style="color:var(--steel-3)">Skips the map, the day and time rules, and the trip (BypassEnterExplore).</div><div class="tiles maps">${GAME.maps.map((m, i) => `<button class="tile" data-i="${i}">${m.i ? `<img src="${m.i}" alt="" loading="lazy" decoding="async">` : ''}<span>${esc(nameOf(m))}</span><small>${m.id}</small></button>`).join('')}</div></section>`);
+    const g = h(`<section class="group"><h2>Go there now<em>${GAME.maps.length}</em></h2><div class="gnote" style="color:var(--steel-3)">Skips the map, the day and time rules, and the trip.</div><div class="tiles maps">${GAME.maps.map((m, i) => `<button class="tile" data-i="${i}">${m.i ? `<img src="${m.i}" alt="" loading="lazy" decoding="async">` : ''}<span>${esc(nameOf(m))}</span><small>${m.id}</small></button>`).join('')}</div></section>`);
 
     $('.tiles', g).onclick = (e) => {
       const t = e.target.closest && e.target.closest('.tile');
@@ -1729,7 +1729,7 @@
   }
 
   function peopleGroup() {
-    const g = h(`<section class="group"><h2>Neighbour<em>quick</em></h2><div class="row"><div class="lab"><b>Affinity and rescue</b>${CHIP.G}<p>Adds to the neighbour's affinity or rescue progress (AddNeighborAffinity, AddNeighborRescueProgress).</p></div><div class="ctl"><input class="num" value="10"><button class="btn" data-c="AddNeighborAffinity">Affinity</button><button class="btn" data-c="AddNeighborRescueProgress">Rescue</button></div></div></section>`);
+    const g = h(`<section class="group"><h2>Neighbour<em>quick</em></h2><div class="row"><div class="lab"><b>Affinity and rescue</b>${CHIP.G}<p>Adds to the neighbour's affinity or rescue progress.</p></div><div class="ctl"><input class="num" value="10"><button class="btn" data-c="AddNeighborAffinity">Affinity</button><button class="btn" data-c="AddNeighborRescueProgress">Rescue</button></div></div></section>`);
     const n = $('.num', g);
 
     $$('[data-c]', g).forEach((b) => {
@@ -1792,7 +1792,7 @@
 
       const isId = /^\d+$/.test(q);
 
-      grid.innerHTML = `<div class="empty"><span>No item matches.</span>${isId ? ' <span>That id is not in the list. You can still send it from the box on the right; the game ignores ids it doesn\'t have.</span>' : ''}</div>`;
+      grid.innerHTML = `<div class="empty"><span>No item matches.</span>${isId ? ' <span>That id is not in the list. You can still send it from the box on the right, but the game ignores ids it doesn\'t have.</span>' : ''}</div>`;
       localize(grid);
       if (isId) { state.item = { id: +q, n: 'Item ' + q, zh: '', st: '?', c: 0, i: '' }; paintDetail(wrap); }
     };
@@ -1930,7 +1930,7 @@
     const top = h(`<section class="group before"><h2>Before cheating<em>${bak ? 'backup: ' + esc(bak) : backup.step === 'failed' ? 'backup failed' : 'no cheats yet'}</em></h2>
       <div class="bstat"><div><b>${changed.length}</b><span>settings differ from before</span></div><div><b>${oneTime.length}</b><span>one-time actions</span></div><div><b>${live.length}</b><span>changes in the journal</span></div></div>
       <div class="row"><div class="lab"><b>Return to before cheating</b><span class="c add">ADDED BY MOD</span><p>Puts every switch back the way it was when you first opened the menu this session, and the weather back to the forecast. One-time actions (items, skipped days, kills) stay.</p></div><div class="ctl"><button class="btn" id="tobase"${changed.length ? '' : ' disabled'}>Restore settings</button></div></div>
-      <div class="row"><div class="lab"><b>Load the before-cheating backup</b><span class="c gm">GAME</span><p>${bak ? `Undoes everything, one-time actions too, by loading the save the menu backed up before your first cheat: <b>${esc(bak)}</b>. Uses the game's InjectSave. Anything since then is lost.` : 'The menu backs up your save with the game\'s BackupSave the moment you make your first change, so this has something to load.'}</p></div><div class="ctl"><button class="btn red" id="loadbak"${bak ? '' : ' disabled'}>${confirmLoad ? 'Click again to load' : 'Load backup'}</button></div></div></section>`);
+      <div class="row"><div class="lab"><b>Load the before-cheating backup</b><span class="c gm">GAME</span><p>${bak ? `Undoes everything, one-time actions too, by loading the save the menu backed up before your first cheat: <b>${esc(bak)}</b>. Anything since then is lost.` : 'The menu backs up your save the moment you make your first change, so this has something to load.'}</p></div><div class="ctl"><button class="btn red" id="loadbak"${bak ? '' : ' disabled'}>${confirmLoad ? 'Click again to load' : 'Load backup'}</button></div></div></section>`);
 
     $('#tobase', top).onclick = returnToBefore;
     $('#loadbak', top).onclick = () => {
@@ -1939,13 +1939,13 @@
       confirmLoad = false;
       post({ msgHead: S.InjectSave.id, BackupName: bak, LoadAfterInject: true }, 'Load backup');
       state.journal.forEach((j) => { j.undone = true; });
-      log(`Loading backup "${bak}" (InjectSave). Every change since it is gone.`, 'mod');
+      log(`Loading backup "${bak}". Every change since then is gone.`, 'mod');
       refresh();
     };
     body.append(top);
 
     const pg = h(`<section class="group"><h2>Presets<em>${state.presets.length + 1}</em></h2><div class="gnote" style="color:var(--steel-3)">A preset is a saved set of switches. Apply one to set up a test, then pick Default to go back. They are kept in BepInEx/config/CheatMenu/presets.json.</div><div class="presets"></div>
-      <div class="row"><div class="lab"><b>Save the current settings as a preset</b><p>${changed.length ? `Saves the ${changed.length} settings that differ from before cheating.` : 'Change some settings first; a preset only stores what differs from before cheating.'}</p></div><div class="ctl"><input class="num wide" id="pname" placeholder="Preset name"><button class="btn" id="psave"${changed.length ? '' : ' disabled'}>Save</button></div></div></section>`);
+      <div class="row"><div class="lab"><b>Save the current settings as a preset</b><p>${changed.length ? `Saves the ${changed.length} settings that differ from before cheating.` : 'Change some settings first. A preset only stores what differs from before cheating.'}</p></div><div class="ctl"><input class="num wide" id="pname" placeholder="Preset name"><button class="btn" id="psave"${changed.length ? '' : ' disabled'}>Save</button></div></div></section>`);
     const list = $('.presets', pg);
     const card = (p, builtin) => {
       const entries = builtin ? changed.map((k) => [k, BASE.get(k)]) : Object.entries(p.values);
@@ -2105,7 +2105,7 @@
   let vitalsWas = '';
 
   function renderStatus() {
-    const html = `${state.inGame ? '<b>In a save</b>: cheats go to the game.' : '<span class="bad">No save loaded</span>: load one to use cheats.'}<br>${state.key ? `<b>${esc(state.key)}</b> opens and closes this menu.` : 'No key set; see the config.'}<br>Backup: ${state.backedUp ? esc(state.backedUp) : backup.step === 'failed' ? '<span class="bad">failed</span>' : 'made at your first cheat'}`;
+    const html = `${state.inGame ? '<b>In a save</b>: cheats go to the game.' : '<span class="bad">No save loaded</span>: load one to use cheats.'}<br>${state.key ? `<b>${esc(state.key)}</b> opens and closes this menu.` : 'No key is set. You can set one in the config.'}<br>Backup: ${state.backedUp ? esc(state.backedUp) : backup.step === 'failed' ? '<span class="bad">failed</span>' : 'made at your first cheat'}`;
 
     setProp($('#keyname'), 'textContent', state.key || tr('Close'));
     if (statusWas === state.lang + html) return;
@@ -2339,7 +2339,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu 0.2.11. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu is ready. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
       }
       const game = st.chinese ? 'zh' : 'en';
 

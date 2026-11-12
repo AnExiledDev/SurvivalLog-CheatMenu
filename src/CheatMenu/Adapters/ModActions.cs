@@ -231,7 +231,7 @@ internal sealed class ModActions
         shark.ClearRevenge();
         shark.ClearStalk();
         shark.ClearGnaw();
-        text = "loan shark settled; revenge, stalking and gnawing cleared";
+        text = "loan shark settled, and revenge, stalking and gnawing cleared";
 
         return null;
     }
@@ -404,8 +404,8 @@ internal sealed class ModActions
         if (blueprints.Count > 0) world._ToolTableManager.AddProductionCraftUnlocks(blueprints);
 
         text = record == null
-            ? $"no survivor, so no cooking recipes; {blueprints.Count} blueprints unlocked at the workbench"
-            : $"{cooking} cooking recipes newly unlocked; {blueprints.Count} blueprints unlocked at the workbench";
+            ? $"no survivor, so no cooking recipes. {blueprints.Count} blueprints unlocked at the workbench"
+            : $"{cooking} cooking recipes newly unlocked, and {blueprints.Count} blueprints unlocked at the workbench";
 
         return null;
     }
