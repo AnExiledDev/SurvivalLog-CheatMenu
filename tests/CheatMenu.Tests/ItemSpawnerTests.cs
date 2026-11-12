@@ -57,6 +57,15 @@ public class ItemSpawnerTests
     }
 
     [Fact]
+    public void A_typed_id_beats_a_name_that_starts_with_the_same_number()
+    {
+        // No name in the game's tables starts with another item's id yet, so this needs a made-up list.
+        var names = js.Evaluate("JSON.stringify(L.findItems(L.itemRows([[3, '50 Nails', '', 0, 1, ''], [50, 'Rope', '', 0, 1, '']]), '50').map(function (i) { return i.n; }))").AsString();
+
+        Assert.Equal("[\"Rope\",\"50 Nails\"]", names);
+    }
+
+    [Fact]
     public void An_item_without_a_picture_file_has_no_icon_to_load()
     {
         // The two items the game has no icon file for would draw as broken pictures.
