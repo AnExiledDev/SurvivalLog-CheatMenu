@@ -51,6 +51,9 @@ public class ItemSpawnerTests
         Assert.Equal("Apple Juice (Perfect)", juice[0]);
         Assert.Equal("Apple Juice she made", juice[^1]);
         Assert.Equal("Hamburger", Found("汉堡")[0]);
+
+        // In the game's tables its Chinese name starts with a zero-width space, which no one can type.
+        Assert.Equal("Multivitamins", Found("复合维生素")[0]);
     }
 
     [Fact]
