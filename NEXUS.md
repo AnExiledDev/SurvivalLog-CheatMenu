@@ -78,8 +78,8 @@ Delete [font=Courier New]CheatMenu.dll[/font] from the [font=Courier New]BepInEx
 To change the key, edit [font=Courier New]BepInEx\config\com.dev.survivallog.cheatmenu.cfg[/font] while the game is closed, or do it in game on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu/blob/main/CONFIG.md]CONFIG.md[/url]). Presets are kept in [font=Courier New]BepInEx\config\CheatMenu\presets.json[/font].
 
 [size=5]Feedback[/size]
-Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\cheat-menu.log[/font].
-To reach me directly, message [b]exiled.dev[/b] on Discord. You can find me in the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
+Found a bug or have an idea? Come say hi in the [url=https://discord.gg/pDrQtqbZgb]unofficial modding Discord for Survival Log[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\cheat-menu.log[/font].
+To reach me directly, message [b]exiled.dev[/b] on Discord. You can find me in the [url=https://discord.gg/pDrQtqbZgb]unofficial modding Discord[/url] and the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
 
 [size=5]Source and license[/size]
 Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu]github.com/AnExiledDev/SurvivalLog-CheatMenu[/url]
@@ -159,8 +159,8 @@ F3 可以在配置中修改或停用。菜单打开时游戏的快捷键不起�
 如需修改按键，可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.cheatmenu.cfg[/font]，也可以在游戏内 Mod Manager 的「模组」界面修改（完整说明见 [url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu/blob/main/CONFIG.md]CONFIG.md[/url]，英文）。预设保存在 [font=Courier New]BepInEx\config\CheatMenu\presets.json[/font]。
 
 [size=5]反馈[/size]
-发现问题或有想法？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url]，或在本页的「Posts」标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\cheat-menu.log[/font]。
-想直接联系我，可以在 Discord 上私信 [b]exiled.dev[/b]。我在 [url=https://discord.gg/MZGg4gQAUe]Survival Log 官方 Discord[/url] 里。我在 X 上是 [url=https://x.com/AnExiledDev]@AnExiledDev[/url]。
+发现问题或有想法？欢迎来 [url=https://discord.gg/pDrQtqbZgb]Survival Log 非官方模组 Discord[/url]，或在本页的「Posts」标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\cheat-menu.log[/font]。
+想直接联系我，可以在 Discord 上私信 [b]exiled.dev[/b]。我在 [url=https://discord.gg/pDrQtqbZgb]Survival Log 非官方模组 Discord[/url] 和 [url=https://discord.gg/MZGg4gQAUe]Survival Log 官方 Discord[/url] 里。我在 X 上是 [url=https://x.com/AnExiledDev]@AnExiledDev[/url]。
 
 [size=5]源代码与许可[/size]
 MIT 开源：[url=https://github.com/AnExiledDev/SurvivalLog-CheatMenu]github.com/AnExiledDev/SurvivalLog-CheatMenu[/url]
