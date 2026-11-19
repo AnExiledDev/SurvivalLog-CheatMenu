@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.4
+
+- The item spawner has the five new items from Survival Log 1.1.21671, like Two Boat Tickets and the Dock Queue Tag.
+- Fixed: wallpaper and flooring showed no picture in the item spawner, because the game changed those picture files.
+- The pickers use the game's new names, like Back-Alley Hideout, and list the Trash Can.
+- Made for Survival Log 1.1.21671.
+
 ## 0.4.3
 
 - Clearer wording in the menu and its messages.
