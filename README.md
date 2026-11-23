@@ -51,7 +51,7 @@ Each row is marked with where it comes from: **GAME** (the game's tool), **ADDED
 
 ## Install
 
-Install [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) first. Then extract the zip into the game folder (the one with `SurvivalLog.exe`) and merge the folders, so the DLL ends up at `BepInEx\plugins\CheatMenu.dll`.
+Install [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) first. Then download `CheatMenu-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-CheatMenu/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/140), and extract it into the game folder (the one with `SurvivalLog.exe`) and merge the folders, so the DLL ends up at `BepInEx\plugins\CheatMenu.dll`.
 
 ## Uninstall
 

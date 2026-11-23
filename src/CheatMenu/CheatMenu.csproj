@@ -48,6 +48,7 @@
     <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.21671" />
     <AssemblyMetadata Include="ModManager.Settings" Value="Live" />
     <AssemblyMetadata Include="ModManager.GitHub" Value="AnExiledDev/SurvivalLog-CheatMenu" />
+    <AssemblyMetadata Include="ModManager.NexusId" Value="140" />
     <AssemblyMetadata Include="ModManager.Changelog" Value="https://github.com/AnExiledDev/SurvivalLog-CheatMenu/blob/main/CHANGELOG.md" />
   </ItemGroup>
 
