@@ -1,4 +1,4 @@
-// Generated from the decomp: every built-in GM tool in game build 1.1.19611.
+// Generated from the decomp: every built-in GM tool in game build 1.1.21671.
 window.CATALOG = [
 {
 "key": "C2S_AllCharactersKeyArray",
