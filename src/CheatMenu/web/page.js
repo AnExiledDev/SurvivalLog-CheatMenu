@@ -190,6 +190,7 @@
     attrs: {},
     attrSet: {},
     lastRead: {},
+    save: null,
     saveFile: null,
     riskyBackup: true,
     weather: null,
@@ -363,6 +364,23 @@
 
     log(`Backed up the save as "${w.name}" first`, 'mod');
     w.fn();
+  }
+
+  // The page lives across saves. What it kept for the last one (its lists, its backup, its undo journal) would act on
+  // the wrong save, so a new save starts clean and gets its own backup at its first cheat.
+  function newSave(id) {
+    clearTimeout(backup.timer);
+    if (risky.wait) clearTimeout(risky.wait.timer);
+
+    Object.assign(backup, { step: 'none', queue: [], name: null, timer: null });
+    risky.wait = null;
+    state.save = id;
+    state.lists = {};
+    state.saveFile = null;
+    state.backedUp = null;
+    state.journal = [];
+    Object.keys(listReq).forEach((k) => { listReq[k] = false; });
+    dropViews();
   }
 
   function stamp(prefix) {
@@ -2328,9 +2346,9 @@
 
   // ---------- what the plugin calls ----------
   window.__slcheatmenu = {
-    // st: { inGame, chinese, key, flags, holds, presets }
+    // st: { inGame, save, chinese, key, flags, holds, presets }. save goes up each time a save loads or unloads.
     open(st) {
-      if (state.inGame !== !!st.inGame) { state.lists = {}; state.saveFile = null; Object.keys(listReq).forEach((k) => { listReq[k] = false; }); dropViews(); }
+      if (state.save !== st.save || state.inGame !== !!st.inGame) newSave(st.save);
       state.inGame = !!st.inGame;
       state.key = st.key || '';
       state.flags = st.flags || {};

@@ -96,7 +96,9 @@ internal sealed class Holds
         if (!GmBridge.IsInGame)
         {
             // A save unloaded under the holds: the game's state they changed went with it. No fuel use is the
-            // mod's own switch, so it stays.
+            // mod's own switch, so it stays. Peaceful's durability lock is a game switch that outlives the save, so
+            // it goes back to what it was before the next save loads.
+            if (_on.Contains("peaceful")) _flags.Set(Durability, _durabilityWas);
             RotPatch.IsOn = false;
             _finish.Forget();
             _isStepping = false;

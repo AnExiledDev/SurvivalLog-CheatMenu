@@ -1,5 +1,5 @@
 Name: Cheat Menu
-Summary: Every cheat and developer tool built into Survival Log, in one menu on F3: set stats, spawn any item, change weather and game speed, jump to any map, skip days and cutscenes, lock durability and more. Every change is listed and most can be undone, presets save test setups, and your save is backed up before the first cheat. Note: the game reports cheat use.
+Summary: Every cheat and developer tool in Survival Log, in one menu on F3: set stats, spawn any item, change weather and game speed, jump to any map, skip days and cutscenes, lock durability and more. Every change is listed and most can be undone, presets save setups, and your save is backed up before the first cheat. Note: the game reports cheat use.
 
 Description (BBCode):
 [center][img]https://sldb.core-directive.com/media/save/2-changes-stay.png[/img]

@@ -3,6 +3,9 @@
 ## 0.4.5
 
 - The message the menu's log shows when it starts is in Chinese too.
+- Fixed: after loading a different save, the menu kept the first save's backup. It now makes a new backup for each save at its first cheat, and Load backup only loads the backup of the save you are in.
+- Fixed: Peaceful stopped furniture wearing out in the next save you loaded, even though it showed as off.
+- Fixed: a presets file with a typo in it could stop the menu from opening. The menu now opens with no presets instead.
 
 ## 0.4.4
 

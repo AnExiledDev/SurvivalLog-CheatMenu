@@ -67,10 +67,17 @@ internal sealed class GmBridge
     public void Live(bool isOn)
     {
         if (isOn) _repeats.Clear();
-        if (_gm == null && !isOn) return;
+        // Turning off never needs a save: a handler left connected keeps building readouts nobody reads.
+        if (!isOn)
+        {
+            if (_gm != null) _gm.IsConnected = false;
+
+            return;
+        }
+
         if (!IsInGame) return;
 
-        Handler().IsConnected = isOn;
+        Handler().IsConnected = true;
     }
 
     /// <summary>The handler's own per-frame work: its queue, the debug overlays it draws, its chapter skip.</summary>

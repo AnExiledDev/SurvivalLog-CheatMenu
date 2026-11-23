@@ -26,6 +26,7 @@ internal sealed class CheatSession
 
     private readonly WebKeyboard _keyboard = new();
     private readonly Stopwatch _part = new();
+    private readonly SaveWatch _saves = new();
     private bool _isOpen;
     private double _slowPartMs;
 
@@ -51,6 +52,7 @@ internal sealed class CheatSession
         SlowPart = null;
         _slowPartMs = 0;
         _page.KeepInstalled(Time.unscaledTime);
+        _saves.Seen(GmBridge.IsInGame);
 
         // While a text box has the keyboard, here or in another mod's window, the panel key is typing, not a toggle.
         if (!_keyboard.IsClaimed && Key != KeyCode.None && Input.GetKeyDown(Key) && !Typing.IsActive) Toggle();
@@ -102,11 +104,12 @@ internal sealed class CheatSession
         }
 
         var state = "{\"inGame\":" + (GmBridge.IsInGame ? "true" : "false") +
+                    ",\"save\":" + _saves.Id +
                     ",\"chinese\":" + (GameLanguage.IsChinese() ? "true" : "false") +
                     ",\"key\":" + JsText.Literal(Key == KeyCode.None ? "" : Key.ToString()) +
                     ",\"flags\":" + _flags.Json() +
                     ",\"holds\":" + _holds.Json() +
-                    ",\"presets\":" + _presets.Load() + "}";
+                    ",\"presets\":" + PresetJson.OrNull(_presets.Load()) + "}";
 
         if (!_page.Open(state)) return;
 
