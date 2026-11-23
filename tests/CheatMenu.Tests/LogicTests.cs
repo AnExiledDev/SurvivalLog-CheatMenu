@@ -117,6 +117,7 @@ function row(key) { var r = ROWS.find(function (x) { return x.key === key; }); i
         Assert.Equal("物品 > 物品生成器", Tr("Item > Item spawner", "zh"));
         Assert.Equal("WebGm 面板命令 12", Tr("WebGm panel command 12", "zh"));
         Assert.Equal("5 结局线 1", Tr("5 Ending line 1", "zh"));
+        Assert.Equal("作弊菜单已就绪。游戏内置 GM 工具： 402", Tr("Cheat Menu is ready. Built-in GM tools: 402", "zh"));
         Assert.Equal("更多字段 (3)", Tr("More fields (3)", "zh"));
     }
 

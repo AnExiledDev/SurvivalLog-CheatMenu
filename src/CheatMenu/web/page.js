@@ -2339,7 +2339,7 @@
       if (!state.started) {
         state.started = true;
         allSettingKeys().forEach((k) => BASE.set(k, setting(k).get()));
-        log(`Cheat Menu is ready. ${CATALOG.length} built-in GM tools indexed.`, 'mod');
+        log(`Cheat Menu is ready. Built-in GM tools: ${CATALOG.length}`, 'mod');
       }
       const game = st.chinese ? 'zh' : 'en';
 

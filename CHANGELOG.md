@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.5
+
+- The message the menu's log shows when it starts is in Chinese too.
+
 ## 0.4.4
 
 - The item spawner has the five new items from Survival Log 1.1.21671, like Two Boat Tickets and the Dock Queue Tag.
