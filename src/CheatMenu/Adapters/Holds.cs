@@ -51,6 +51,7 @@ internal sealed class Holds
     private bool _isAutoOwned;
     private bool _autoWas;
     private bool _durabilityWas;
+    private bool _isUnloaded;
     private int _spoilHour;
     private long _hovered;
 
@@ -95,10 +96,15 @@ internal sealed class Holds
 
         if (!GmBridge.IsInGame)
         {
+            // Once per unload: with No fuel use still on at the title screen there is nothing more to put back.
+            if (_isUnloaded) return false;
+
+            _isUnloaded = true;
+
             // A save unloaded under the holds: the game's state they changed went with it. No fuel use is the
             // mod's own switch, so it stays. Peaceful's durability lock is a game switch that outlives the save, so
             // it goes back to what it was before the next save loads.
-            if (_on.Contains("peaceful")) _flags.Set(Durability, _durabilityWas);
+            if (_on.Contains("peaceful")) RestoreDurability();
             RotPatch.IsOn = false;
             _finish.Forget();
             _isStepping = false;
@@ -106,6 +112,8 @@ internal sealed class Holds
 
             return _on.RemoveWhere(name => name != "nofuel") > 0;
         }
+
+        _isUnloaded = false;
 
         var ended = false;
 
@@ -222,6 +230,9 @@ internal sealed class Holds
         }
     }
 
+    /// <summary>Puts the durability lock back as Peaceful found it, unless the player turned it off on the GM tab meanwhile.</summary>
+    private void RestoreDurability() => _flags.Set(Durability, PeacefulLock.After(_durabilityWas, _flags.IsOn(Durability)));
+
     private void Stop(string name)
     {
         var world = GameSingleton.Existing<BattleLogicWorld>();
@@ -232,7 +243,7 @@ internal sealed class Holds
                 if (world != null) world._GameTimeManager.IsClockFrozen = false;
                 break;
             case "peaceful":
-                _flags.Set(Durability, _durabilityWas);
+                RestoreDurability();
                 break;
             case "nofuel":
                 FuelPatch.IsOn = false;
@@ -396,6 +407,9 @@ internal sealed class Holds
     /// Every running timed machine has its start moved back so the game's update finishes the job the usual way.
     /// Workbench crafting is the survivor's own action, not a machine, so it is not here.
     /// </summary>
+    /// <summary>Furniture types with none of the machines below; a type's parts never change, so these are skipped.</summary>
+    private static readonly HashSet<int> NotMachines = new();
+
     private static void FinishMachines(BattleLogicWorld world)
     {
         var furnitures = world._AgentManager?.GetAllFurnitures();
@@ -409,29 +423,43 @@ internal sealed class Holds
 
             if (furniture == null || furniture.IsDead) continue;
 
-            if (AgentTools.GetAgentComponent<ShredderComponent>(furniture) is { State: ShredderRunning } shredder)
-                shredder.StartTotalSeconds = now - shredder.TotalSeconds;
+            var type = furniture._AgentConfigId_k__BackingField;
 
-            if (AgentTools.GetAgentComponent<CompressorComponent>(furniture) is { State: PressRunning } press)
-                press.StartTotalSeconds = now - press.TotalSeconds;
+            if (NotMachines.Contains(type)) continue;
 
-            if (AgentTools.GetAgentComponent<BrewComponent>(furniture) is { } brew && brew.IsBrewing())
+            var shredder = AgentTools.GetAgentComponent<ShredderComponent>(furniture);
+            var press = AgentTools.GetAgentComponent<CompressorComponent>(furniture);
+            var brew = AgentTools.GetAgentComponent<BrewComponent>(furniture);
+            var dye = AgentTools.GetAgentComponent<DyeComponent>(furniture);
+            var cooking = AgentTools.GetAgentComponent<CookingComponent>(furniture);
+            var drone = AgentTools.GetAgentComponent<DroneTripComponent>(furniture);
+
+            if (shredder == null && press == null && brew == null && dye == null && cooking == null && drone == null)
+            {
+                NotMachines.Add(type);
+
+                continue;
+            }
+
+            if (shredder is { State: ShredderRunning }) shredder.StartTotalSeconds = now - shredder.TotalSeconds;
+
+            if (press is { State: PressRunning }) press.StartTotalSeconds = now - press.TotalSeconds;
+
+            if (brew != null && brew.IsBrewing())
             {
                 brew.StartHour = nowHour - brew.TotalHours;
                 furniture.TryFinishBrew();
             }
 
-            if (AgentTools.GetAgentComponent<DyeComponent>(furniture) is { } dye && dye.IsRunning())
+            if (dye != null && dye.IsRunning())
             {
                 dye.StartHour = nowHour - dye.ResultCount * dye.HoursPerBucket;
                 furniture.TryFinishDye();
             }
 
-            if (AgentTools.GetAgentComponent<CookingComponent>(furniture) is { State: CookingState.Running } cooking)
-                cooking.CookStartTotalSeconds = now - cooking.CookDuration;
+            if (cooking is { State: CookingState.Running }) cooking.CookStartTotalSeconds = now - cooking.CookDuration;
 
-            if (!isTradeLocked && AgentTools.GetAgentComponent<DroneTripComponent>(furniture) is { } drone && drone.IsBusy() && drone.ReturnSec > now)
-                drone.ReturnSec = now;
+            if (!isTradeLocked && drone != null && drone.IsBusy() && drone.ReturnSec > now) drone.ReturnSec = now;
         }
     }
 

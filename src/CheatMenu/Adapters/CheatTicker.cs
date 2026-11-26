@@ -22,7 +22,7 @@ public sealed class CheatTicker : MonoBehaviour
     private static readonly Stopwatch Frame = new();
     private static double _worstMs;
     private static string? _worstPart;
-    private static float _nextSlowReportAt;
+    private static double _nextSlowReportAt;
 
     public CheatTicker(IntPtr pointer) : base(pointer)
     {
@@ -54,11 +54,11 @@ public sealed class CheatTicker : MonoBehaviour
             _worstPart = part;
         }
 
-        if (Time.unscaledTime < _nextSlowReportAt) return;
+        if (ExiledToolkit.Kit.Clock.Now < _nextSlowReportAt) return;
 
         Log($"the menu's own work took {_worstMs:0} ms in one frame (slowest in the last minute){(_worstPart == null ? "" : ": " + _worstPart)}");
         _worstMs = 0;
         _worstPart = null;
-        _nextSlowReportAt = Time.unscaledTime + SlowReportEverySeconds;
+        _nextSlowReportAt = ExiledToolkit.Kit.Clock.Now + SlowReportEverySeconds;
     }
 }

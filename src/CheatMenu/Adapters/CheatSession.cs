@@ -47,11 +47,16 @@ internal sealed class CheatSession
     /// <summary>The slowest part of the last frame when one took a while, so a slow frame in the log says what it was.</summary>
     public string? SlowPart { get; private set; }
 
+    private static readonly double StartedAt = ExiledToolkit.Kit.Clock.Now;
+
+    /// <summary>Seconds since the mod started, from the Toolkit's clock. Counted from the start so a float keeps its precision.</summary>
+    private static float Now() => (float)(ExiledToolkit.Kit.Clock.Now - StartedAt);
+
     public void Update()
     {
         SlowPart = null;
         _slowPartMs = 0;
-        _page.KeepInstalled(Time.unscaledTime);
+        _page.KeepInstalled(Now());
         _saves.Seen(GmBridge.IsInGame);
 
         // While a text box has the keyboard, here or in another mod's window, the panel key is typing, not a toggle.
@@ -70,7 +75,7 @@ internal sealed class CheatSession
         _gm.Tick(Time.deltaTime, Time.unscaledDeltaTime);
         if (IsSlowest(out var tickMs)) SlowPart = $"the game's GM handler and its readouts took {tickMs:0} ms";
 
-        if (_holds.Tick(Time.unscaledTime) && _isOpen) Switches();
+        if (_holds.Tick(Now()) && _isOpen) Switches();
 
         if (RewardScreenPatch.TakeClosed()) _actions.RewardScreenClosed();
 
@@ -146,7 +151,7 @@ internal sealed class CheatSession
                 RunAct(act);
                 break;
             case PageCommand.Hold hold:
-                var isHeld = _holds.Set(hold.Name, hold.IsOn, Time.unscaledTime);
+                var isHeld = _holds.Set(hold.Name, hold.IsOn, Now());
                 _log($"cheat: hold {hold.Name} {(hold.IsOn ? "on" : "off")}{(isHeld ? "" : " (not set)")}");
                 Switches();
                 break;
@@ -201,7 +206,7 @@ internal sealed class CheatSession
 
         // Finishing an event keeps working after this frame, alongside the holds that share the game's auto-play.
         var error = act.Name == "event-finish"
-            ? _holds.Finish(ActArgs.Parse(act.ArgsJson).Long("event"), Time.unscaledTime, out text)
+            ? _holds.Finish(ActArgs.Parse(act.ArgsJson).Long("event"), Now(), out text)
             : _actions.Run(act.Name, act.ArgsJson, out text);
 
         if (error != null) _log($"cheat {act.Name}: {error}");

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.7
+
+- Fixed: turning Peaceful off undid a change you made to the furniture durability switch on the GM tab while it was on.
+- Fixed: after loading another save, the selected survivor's readouts on the GM tab could stay empty.
+- A test cheat from another mod that fails in an odd way now shows its error instead of stopping the menu's reply.
+- Instant checks fewer pieces of furniture each pass, and the menu does less at the title screen.
+- Made for Survival Log 1.1.21671.
+
 ## 0.4.6
 
 - Fixed: turning No fuel use off in the middle of a cook burned, in one go, all the fuel the cook would have used while it was on. The stove now just carries on from there.

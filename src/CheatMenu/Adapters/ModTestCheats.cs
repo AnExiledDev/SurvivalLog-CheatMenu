@@ -53,6 +53,12 @@ internal static class ModTestCheats
 
             return ex.InnerException.GetType().Name + ": " + ex.InnerException.Message;
         }
+        catch (Exception ex)
+        {
+            log($"test cheat {mod} {cheat} could not run: {ex}");
+
+            return ex.GetType().Name + ": " + ex.Message;
+        }
     }
 
     private static List<Found> Discover(Action<string> log)

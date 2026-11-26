@@ -25,6 +25,7 @@ internal sealed class GmBridge
     private readonly RepeatedReadouts _repeats = new();
     private WebGm? _gm;
     private bool _hasReportedTickFailure;
+    private IntPtr _world;
 
     public GmBridge(Action<string> log)
     {
@@ -87,6 +88,7 @@ internal sealed class GmBridge
 
         try
         {
+            FollowWorld(_gm);
             _gm.OnUpdateAction(deltaTime, unscaledDeltaTime);
         }
         catch (Exception ex)
@@ -107,6 +109,21 @@ internal sealed class GmBridge
         _sent.Clear();
 
         return sent;
+    }
+
+    /// <summary>
+    /// The handler picks the survivor to send readouts for once, when nothing is picked, and keeps that id. Another save
+    /// has its own ids, so a new world clears the pick and the handler picks that save's survivor.
+    /// </summary>
+    private void FollowWorld(WebGm gm)
+    {
+        var world = GameSingleton.Existing<BattleLogicWorld>()?.Pointer ?? IntPtr.Zero;
+
+        if (world == _world) return;
+
+        if (_world != IntPtr.Zero) gm._CurSendId_k__BackingField = -1;
+
+        _world = world;
     }
 
     private WebGm Handler()
