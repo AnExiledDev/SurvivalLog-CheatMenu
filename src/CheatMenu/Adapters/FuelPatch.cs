@@ -45,9 +45,11 @@ internal static class FuelPatch
 
     /// <summary>
     /// The stove burns fuel by how far the cook has got, so the burn is skipped whole rather than scaled: the game
-    /// then reads its fuel as still there and the cook goes on.
+    /// then reads its fuel as still there and the cook goes on. The game burns the gap between how much the cook so
+    /// far needs and ConsumedFuelCapacity, so that count is moved up to match. Otherwise turning the cheat off
+    /// mid-cook would burn all the fuel the cook needed while it was on, in one go.
     /// </summary>
-    private static bool NoCookBurn(CookingComponent __instance, ref List<CookingFuelSlot> burnedOut, ref bool __result)
+    private static bool NoCookBurn(CookingComponent __instance, float cookingProgress, float fuelRate, ref List<CookingFuelSlot> burnedOut, ref bool __result)
     {
         try
         {
@@ -56,6 +58,10 @@ internal static class FuelPatch
             var slots = __instance.GetFuelSlots();
 
             if (slots == null || slots.Count == 0) return true;
+
+            var needed = cookingProgress * __instance.CookDuration * fuelRate;
+
+            if (needed > __instance.ConsumedFuelCapacity) __instance.ConsumedFuelCapacity = needed;
 
             burnedOut = null!;
             __result = true;

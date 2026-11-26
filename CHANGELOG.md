@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.6
+
+- Fixed: turning No fuel use off in the middle of a cook burned, in one go, all the fuel the cook would have used while it was on. The stove now just carries on from there.
+- Made for Survival Log 1.1.21671.
+
 ## 0.4.5
 
 - The message the menu's log shows when it starts is in Chinese too.
