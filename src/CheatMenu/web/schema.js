@@ -1,4 +1,4 @@
-// Every GM command the game's handler reads: its msgHead and the fields of its message, in game build 1.1.21671.
+// Every GM command the game's handler reads: its msgHead and the fields of its message, in game build 1.1.22055.
 window.SCHEMA = {
 "SelectCharacter": {
 "id": 2,

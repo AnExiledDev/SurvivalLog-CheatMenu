@@ -313,7 +313,7 @@
     { tab: 'debug', group: 'UI actions', row: { k: 'btn', l: 'UI permissions', s: 'G', d: 'Turns UI permission flags on or off.', b: 'Edit' } },
     { tab: 'debug', group: 'Logs', row: { k: 'btn', l: 'Flush the PlayMode log', s: 'E', d: 'Editor only.', b: 'Flush' } },
     { tab: 'debug', group: 'Logs', row: { k: 'sel', l: 'Scene: switch the main menu scene', s: 'G', d: 'Only a preview. The main menu picks its scene again when the game restarts.', o: ['Rooftop', 'Street', 'Apartment'], b: 'Switch' } },
-    { tab: 'debug', group: 'Not wired in this build', zh: '未接线', warn: false, note: 'These are in the game\'s command table, but nothing handles them in build 1.1.21671. Listed so nothing is hidden.', row: { k: 'btn', l: 'Add an aura', s: 'X', d: 'S2C_AddAura (11).', b: 'Run' } },
+    { tab: 'debug', group: 'Not wired in this build', zh: '未接线', warn: false, note: 'These are in the game\'s command table, but nothing handles them in build 1.1.22055. Listed so nothing is hidden.', row: { k: 'btn', l: 'Add an aura', s: 'X', d: 'S2C_AddAura (11).', b: 'Run' } },
     { tab: 'debug', group: 'Not wired in this build', row: { k: 'btn', l: 'Remove an aura', s: 'X', d: 'S2C_RemoveAura (12).', b: 'Run' } },
     { tab: 'debug', group: 'Not wired in this build', row: { k: 'btn', l: 'Add DJ', s: 'X', d: 'S2C_AddDj (15).', b: 'Run' } }
   ];

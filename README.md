@@ -44,7 +44,7 @@ Each row is marked with where it comes from: **GAME** (the game's tool), **ADDED
 
 ## Requirements
 
-- Survival Log 1.1.21671. A game update can break it until the mod is updated.
+- Survival Log 1.1.22055. A game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12).
 - [Exiled's Toolkit](https://www.nexusmods.com/survivallog/mods/61) 0.19.0 or newer. Cheat Menu does not load without it. It keeps the game's keys off while you type in the menu's boxes, applies a new `PanelKey` set on the Mod Manager's Mods screen without a restart, and its UI size setting draws the menu bigger or smaller. Cheat Menu's `UiScale` under Interface sets a size for this mod alone. At 0, the default, it uses the Toolkit's size.
 - Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.

@@ -2329,7 +2329,7 @@
   TABS.push(
     { id: 'changes', name: 'Changes', title: 'Changes & Presets', zh: '变更与预设', page: 'changes', blurb: 'Every change you made, with what it was before. Undo one, save a set as a preset, or go back to before you cheated.', groups: [] },
     { id: 'modtests', name: 'Mod tests', zh: '模组测试', page: 'modtests', blurb: 'Test cheats other mods add, to check their features quickly. Each mod adds its own.', groups: [] },
-    { id: 'index', name: 'Game index', zh: '内置目录', page: 'index', blurb: 'Every built-in GM tool in game build 1.1.21671, read off the game code, and where each one is in this menu. Panel commands run from here with their fields.', groups: [] }
+    { id: 'index', name: 'Game index', zh: '内置目录', page: 'index', blurb: 'Every built-in GM tool in game build 1.1.22055, read off the game code, and where each one is in this menu. Panel commands run from here with their fields.', groups: [] }
   );
   window.TAB_ICONS.changes = '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4h4M12 8v4l3 2"/>';
   window.TAB_ICONS.modtests = '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 15h9"/>';

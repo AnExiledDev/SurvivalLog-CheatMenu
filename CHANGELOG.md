@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.8
+
+- The pickers use the game's new names, like LED Light and Old Man.
+- The Game index tab names the right game version, 1.1.22055.
+- Made for Survival Log 1.1.22055.
+
 ## 0.4.7
 
 - Fixed: turning Peaceful off undid a change you made to the furniture durability switch on the GM tab while it was on.
